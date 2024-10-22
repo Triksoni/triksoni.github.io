@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Домашние Задания 6 класса</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 1em 0;
+        }
+        main {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #e2e2e2;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+        input[type="password"],
+        input[type="file"] {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Д/З</h1>
+    </header>
+    <main>
+        <h2>Список домашних заданий</h2>
+        <ul id="assignments">
+            <li>Ниже появится дз, если модерам не лень))</li>
+            <li>Ниже появится дз, если модерам не лень))</li>
+            <li>Ниже появится дз, если модерам не лень))</li>
+        </ul>
+
+        <form id="homeworkForm">
+            <label for="password">Введите пароль для добавления задания:</label>
+            <input type="password" id="password" required>
+            <label for="assignment">Добавить домашнее задание:</label>
+            <textarea id="assignment" required></textarea>
+            
+            <label for="file">Прикрепить файл или изображение:</label>
+            <input type="file" id="file" accept="*">
+            <div id="fileInfo"></div>
+            <img id="imagePreview" class="image-preview" style="display:none;"/>
+
+            <button type="submit">Добавить</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2024 Antonio Cucumber Studio</p>
+    </footer>
+
+    <script>
+        document.getElementById('homeworkForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const passwordInput = document.getElementById('password');
+            const assignmentInput = document.getElementById('assignment');
+            const fileInput = document.getElementById('file');
+            const enteredPassword = passwordInput.value;
+
+            // Проверка правильности пароля
+            if (enteredPassword === '8137') {
+                const newAssignment = assignmentInput.value;
+
+                // Создание нового элемента списка
+                const li = document.createElement('li');
+                li.textContent = newAssignment;
+
+                // Добавление изображения, если файл выбран
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileURL = URL.createObjectURL(file);
+                    
+                    // Проверка типа файла
+                    if (file.type.startsWith('image/')) {
+                        li.innerHTML += ` (прилагается: <img src="${fileURL}" class="image-preview" style="max-width: 100px; height: auto;" alt="Предпросмотр изображения">)`;
+                    } else {
+                        li.innerHTML += ` (прилагается: <a href="${fileURL}" download>${file.name}</a>)`;
+                    }
+                }
+
+                // Добавление нового задания в список
+                document.getElementById('assignments').appendChild(li);
+
+                // Очистка текстовых полей
+                passwordInput.value = '';
+                assignmentInput.value = '';
+                fileInput.value = '';
+                document.getElementById('fileInfo').textContent = '';
+                document.getElementById('imagePreview').style.display = 'none';
+            } else {
+                alert('Неправильный пароль! Попробуйте снова.');
+            }
+        });
+
+        // Отображение имени выбранного файла и предпросмотр изображения
+        document.getElementById('file').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const fileName = file.name;
+                document.getElementById('fileInfo').textContent = `Выбранный файл: ${fileName}`;
+                
+                // Предпросмотр изображения, если выбран файл изображения
+                if (file.type.startsWith('image/')) {
+                    const fileURL = URL.createObjectURL(file);
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.src = fileURL;
+                    imagePreview.style.display = 'block';
+                } else {
+                    document.getElementById('imagePreview').style.display = 'none';
+                }
+            } else {
+                document.getElementById('fileInfo').textContent = '';
+                document.getElementById('imagePreview').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
