@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Социальная сеть</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --container-bg: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(255, 255, 255, 0.12);
+            --button-bg: #00c8ff;
+            --button-hover: #0088cc;
+            --post-bg: rgba(255, 255, 255, 0.1);
+            --border-radius: 12px;
+        }
+
+        .light-theme {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --container-bg: rgba(0, 0, 0, 0.05);
+            --input-bg: rgba(0, 0, 0, 0.1);
+            --button-bg: #0088cc;
+            --button-hover: #00c8ff;
+            --post-bg: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 350px;
+            background: var(--container-bg);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 6px 25px rgba(0, 200, 255, 0.2);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--input-bg);
+            color: var(--text-color);
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid var(--button-bg);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--button-hover);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .social-network {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            overflow-y: auto;
+            max-height: 80vh; /* Ограничиваем максимальную высоту области */
+        }
+
+        .post {
+            background: var(--post-bg);
+            padding: 15px;
+            margin: 12px 0;
+            border-radius: var(--border-radius);
+            transition: 0.3s;
+        }
+
+        .like-button, .post-button, .auth button, .comment-button {
+            background: var(--button-bg);
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .like-button:hover, .post-button:hover, .auth button:hover, .comment-button:hover {
+            background: var(--button-hover);
+        }
+
+        .comment-section {
+            margin-top: 10px;
+        }
+
+        .comments p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            background: var(--button-bg);
+            border: none;
+            color: var(--text-color);
+            font-size: 14px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .pagination button:hover {
+            background: var(--button-hover);
+        }
+
+        /* Добавляем стиль для поля ввода комментариев */
+        .comment-input {
+            width: 100%;
+            background: var(--input-bg);
+            color: var(--text-color);
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid var(--button-bg);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            min-height: 40px;
+            resize: none;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--button-hover);
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
+    <div class="container" id="authContainer">
+        <h2>Вход</h2>
+        <div class="auth">
+            <input type="text" id="username" class="input-field" placeholder="Имя пользователя">
+            <input type="password" id="password" class="input-field" placeholder="Пароль">
+            <button onclick="login()">Войти</button>
+            <button onclick="googleLogin()">Войти через Google</button>
+        </div>
+        <h2>Регистрация</h2>
+        <div class="auth">
+            <input type="text" id="regUsername" class="input-field" placeholder="Имя пользователя">
+            <input type="password" id="regPassword" class="input-field" placeholder="Пароль">
+            <button onclick="register()">Зарегистрироваться</button>
+        </div>
+    </div>
+
+    <div class="social-network" id="socialNetwork">
+        <h1>Добро пожаловать!</h1>
+        <textarea id="postContent" placeholder="Что у вас нового?" class="input-field"></textarea>
+        <button class="post-button" onclick="createPost()">Опубликовать</button>
+        <div id="posts"></div>
+    </div>
+
+    <script>
+        const postsPerPage = 5;  // Количество постов на странице
+        let currentPage = 1;
+
+        function toggleTheme() {
+            document.body.classList.toggle("light-theme");
+        }
+
+        function register() {
+            let username = document.getElementById("regUsername").value.trim();
+            let password = document.getElementById("regPassword").value.trim();
+
+            if (!username || !password) {
+                alert("Введите имя пользователя и пароль");
+                return;
+            }
+
+            if (localStorage.getItem(username)) {
+                alert("Этот логин уже занят. Попробуйте другой.");
+                return;
+            }
+
+            localStorage.setItem(username, password);
+            alert("Регистрация успешна! Теперь войдите в систему.");
+        }
+
+        function login() {
+            let username = document.getElementById("username").value.trim();
+            let password = document.getElementById("password").value.trim();
+
+            if (localStorage.getItem(username) === password) {
+                localStorage.setItem("loggedInUser", username);
+                alert("Вход выполнен успешно!");
+                document.getElementById("authContainer").style.display = "none";
+                document.getElementById("socialNetwork").style.display = "block";
+                loadPosts();
+            } else {
+                alert("Неверное имя пользователя или пароль");
+            }
+        }
+
+        function googleLogin() {
+            alert("Функция входа через Google пока не реализована.");
+        }
+
+        function createPost() {
+            let postContent = document.getElementById("postContent").value.trim();
+            let username = localStorage.getItem("loggedInUser");
+
+            if (!postContent) return;
+
+            let post = {
+                id: Date.now(),
+                username: username,
+                content: postContent,
+                likes: 0,
+                comments: []
+            };
+
+            let posts = JSON.parse(localStorage.getItem("posts")) || [];
+            posts.unshift(post);
+            localStorage.setItem("posts", JSON.stringify(posts));
+
+            document.getElementById("postContent").value = "";
+            loadPosts();
+        }
+
+        function loadPosts() {
+            let posts = JSON.parse(localStorage.getItem("posts")) || [];
+            let postsContainer = document.getElementById("posts");
+            postsContainer.innerHTML = '';
+
+            posts.forEach(post => {
+                let postElement = document.createElement("div");
+                postElement.classList.add("post");
+                postElement.innerHTML = `
+                    <b>${post.username}</b><p>${post.content}</p>
+                    <button class="like-button" onclick="likePost(this, ${post.id})">❤️ ${post.likes}</button>
+                    <div class="comment-section">
+                        <textarea id="commentInput-${post.id}" class="comment-input" placeholder="Написать комментарий..."></textarea>
+                        <button class="comment-button" onclick="addComment(${post.id})">Опубликовать</button>
+                        <div class="comments">${post.comments.map(c => `<p>${c}</p>`).join('')}</div>
+                    </div>
+                `;
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        function likePost(button, postId) {
+            let posts = JSON.parse(localStorage.getItem("posts")) || [];
+            let post = posts.find(p => p.id === postId);
+            let username = localStorage.getItem("loggedInUser");
+
+            if (post.likedUsers && post.likedUsers.includes(username)) {
+                alert("Вы уже поставили лайк этому посту.");
+                return;
+            }
+
+            if (!post.likedUsers) post.likedUsers = [];
+            post.likedUsers.push(username);
+            post.likes++;
+
+            localStorage.setItem("posts", JSON.stringify(posts));
+            button.textContent = `❤️ ${post.likes}`;
+        }
+
+        function addComment(postId) {
+            let commentInput = document.getElementById(`commentInput-${postId}`);
+            let comment = commentInput.value.trim();
+            if (!comment) return;
+
+            let posts = JSON.parse(localStorage.getItem("posts")) || [];
+            let post = posts.find(p => p.id === postId);
+
+            post.comments.push(comment);
+            commentInput.value = "";
+
+            localStorage.setItem("posts", JSON.stringify(posts));
+            loadPosts();
+        }
+
+        function toggleProfile() {
+            let profileContainer = document.getElementById("profileContainer");
+            profileContainer.style.display = profileContainer.style.display === "block" ? "none" : "block";
+            document.getElementById("bio").value = localStorage.getItem("bio") || "";
+        }
+
+        function saveBio() {
+            let bio = document.getElementById("bio").value;
+            localStorage.setItem("bio", bio);
+            alert("Информация сохранена!");
+        }
+
+        // Добавление события прокрутки
+        const postsContainer = document.getElementById("posts");
+
+        postsContainer.addEventListener("scroll", () => {
+            if (postsContainer.scrollTop + postsContainer.clientHeight >= postsContainer.scrollHeight) {
+                currentPage++;
+                loadPosts();
+            }
+
+
+        });
+    </script>
+</body>
+</html>
