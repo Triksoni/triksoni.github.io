@@ -373,6 +373,11 @@
             color: white;
         }
         
+        .friend-action.message {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
         .messages-container {
             display: flex;
             height: 500px;
@@ -391,6 +396,8 @@
             padding: 15px;
             border-bottom: 1px solid #e7e8ec;
             cursor: pointer;
+            display: flex;
+            align-items: center;
         }
         
         .conversation:hover {
@@ -411,17 +418,24 @@
             padding: 15px;
             border-bottom: 1px solid #e7e8ec;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .chat-messages {
             flex: 1;
             padding: 15px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         .message {
             margin-bottom: 15px;
             max-width: 70%;
+            display: flex;
+            flex-direction: column;
         }
         
         .message-incoming {
@@ -430,13 +444,14 @@
         
         .message-outgoing {
             align-self: flex-end;
-            text-align: right;
         }
         
         .message-content {
             padding: 10px 15px;
             border-radius: 18px;
             display: inline-block;
+            word-wrap: break-word;
+            max-width: 100%;
         }
         
         .message-incoming .message-content {
@@ -537,6 +552,7 @@
             padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
+            border: none;
         }
         
         .add-friend {
@@ -552,6 +568,33 @@
         .cancel-request {
             background-color: #f0f2f5;
             border: 1px solid #e7e8ec;
+        }
+        
+        .send-message {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .no-messages {
+            text-align: center;
+            color: #656565;
+            margin-top: 20px;
+        }
+        
+        .sync-button {
+            background-color: #4680C2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .last-seen {
+            font-size: 12px;
+            color: #656565;
+            font-weight: normal;
         }
     </style>
 </head>
@@ -571,6 +614,7 @@
                 <button id="loginBtn" onclick="showModal('loginModal')">Войти</button>
                 <button id="registerBtn" onclick="showModal('registerModal')">Регистрация</button>
                 <button id="logoutBtn" style="display: none;" onclick="logout()">Выйти</button>
+                <button id="syncBtn" style="display: none;" class="sync-button" onclick="syncData()">Синхронизировать</button>
             </div>
         </div>
     </header>
@@ -627,8 +671,10 @@
                         <div class="conversations" id="conversationsList"></div>
                         <div class="chat">
                             <div class="chat-header" id="chatHeader">Выберите диалог</div>
-                            <div class="chat-messages" id="chatMessages"></div>
-                            <div class="chat-input">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="no-messages">Выберите диалог для просмотра сообщений</div>
+                            </div>
+                            <div class="chat-input" style="display: none;">
                                 <form onsubmit="sendMessage(event)">
                                     <input type="text" id="messageInput" placeholder="Написать сообщение...">
                                     <button type="submit">Отправить</button>
@@ -657,6 +703,7 @@
                                 <button class="user-profile-action add-friend" onclick="sendFriendRequest(currentViewingUserId)">Добавить в друзья</button>
                                 <button class="user-profile-action remove-friend" onclick="removeFriend(currentViewingUserId)" style="display: none;">Удалить из друзей</button>
                                 <button class="user-profile-action cancel-request" onclick="cancelFriendRequest(currentViewingUserId)" style="display: none;">Отменить заявку</button>
+                                <button class="user-profile-action send-message" onclick="startNewChat(currentViewingUserId)" style="display: none;">Написать сообщение</button>
                             </div>
                             <div style="margin: 10px 0;">
                                 <button id="editProfileBtn" onclick="showModal('editProfileModal')" class="btn-primary" style="display: none;">Редактировать профиль</button>
@@ -793,7 +840,8 @@
                         about: 'Привет! Я user1 и это мой профиль.',
                         friends: [2, 3],
                         friendRequests: [],
-                        sentFriendRequests: []
+                        sentFriendRequests: [],
+                        lastSeen: new Date().toISOString()
                     },
                     {
                         id: 2,
@@ -804,7 +852,8 @@
                         about: 'user2 здесь! Люблю путешествовать и программировать.',
                         friends: [1],
                         friendRequests: [3],
-                        sentFriendRequests: []
+                        sentFriendRequests: [],
+                        lastSeen: new Date().toISOString()
                     },
                     {
                         id: 3,
@@ -815,7 +864,8 @@
                         about: 'Просто user3, ничего особенного.',
                         friends: [],
                         friendRequests: [2],
-                        sentFriendRequests: [2]
+                        sentFriendRequests: [2],
+                        lastSeen: new Date().toISOString()
                     }
                 ];
                 localStorage.setItem('users', JSON.stringify(initialUsers));
@@ -867,7 +917,7 @@
                         senderId: 1,
                         recipientId: 2,
                         text: 'Привет! Как дела?',
-                        time: '2023-05-15T11:00:00',
+                        time: new Date().toISOString(),
                         read: true
                     },
                     {
@@ -875,7 +925,7 @@
                         senderId: 2,
                         recipientId: 1,
                         text: 'Привет! Все отлично, спасибо!',
-                        time: '2023-05-15T11:05:00',
+                        time: new Date().toISOString(),
                         read: true
                     },
                     {
@@ -883,11 +933,16 @@
                         senderId: 1,
                         recipientId: 2,
                         text: 'Что планируешь на выходные?',
-                        time: '2023-05-15T11:10:00',
+                        time: new Date().toISOString(),
                         read: false
                     }
                 ];
                 localStorage.setItem('messages', JSON.stringify(initialMessages));
+            }
+            
+            // Инициализация синхронизации
+            if (!localStorage.getItem('lastSync')) {
+                localStorage.setItem('lastSync', new Date().toISOString());
             }
         }
 
@@ -895,11 +950,13 @@
         let currentUser = null;
         let currentChat = null;
         let currentViewingUserId = null;
+        let syncInterval = null;
 
         // DOM элементы
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const syncBtn = document.getElementById('syncBtn');
         const postForm = document.getElementById('postForm');
         const postsContainer = document.getElementById('postsContainer');
         const friendsContainer = document.getElementById('friendsContainer');
@@ -907,6 +964,7 @@
         const conversationsList = document.getElementById('conversationsList');
         const chatMessages = document.getElementById('chatMessages');
         const chatHeader = document.getElementById('chatHeader');
+        const chatInput = document.querySelector('.chat-input');
         const profilePostsContainer = document.getElementById('profilePostsContainer');
         const sidebarName = document.getElementById('sidebarName');
         const sidebarAvatar = document.getElementById('sidebarAvatar');
@@ -928,6 +986,9 @@
             renderPosts();
             renderFriends('all');
             renderConversations();
+            
+            // Запускаем синхронизацию каждые 5 секунд
+            syncInterval = setInterval(syncData, 5000);
         });
 
         // Проверка авторизации
@@ -948,6 +1009,7 @@
             loginBtn.style.display = 'none';
             registerBtn.style.display = 'none';
             logoutBtn.style.display = 'block';
+            syncBtn.style.display = 'block';
             postForm.style.display = 'block';
             
             sidebarName.textContent = currentUser.username;
@@ -1014,6 +1076,7 @@
             loginBtn.style.display = 'block';
             registerBtn.style.display = 'block';
             logoutBtn.style.display = 'none';
+            syncBtn.style.display = 'none';
             postForm.style.display = 'none';
             
             sidebarName.textContent = 'Гость';
@@ -1040,8 +1103,9 @@
             postsContainer.innerHTML = '';
             friendsContainer.innerHTML = '';
             conversationsList.innerHTML = '';
-            chatMessages.innerHTML = '';
+            chatMessages.innerHTML = '<div class="no-messages">Выберите диалог для просмотра сообщений</div>';
             chatHeader.textContent = 'Выберите диалог';
+            chatInput.style.display = 'none';
             profilePostsContainer.innerHTML = '';
         }
 
@@ -1137,12 +1201,17 @@
             const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
             
             if (user) {
+                // Обновляем время последнего входа
+                user.lastSeen = new Date().toISOString();
+                localStorage.setItem('users', JSON.stringify(users));
+                
                 currentUser = {
                     id: user.id,
                     username: user.username,
                     email: user.email,
                     avatar: user.avatar,
-                    about: user.about
+                    about: user.about,
+                    lastSeen: user.lastSeen
                 };
                 
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -1235,7 +1304,8 @@
                 about: '',
                 friends: [],
                 friendRequests: [],
-                sentFriendRequests: []
+                sentFriendRequests: [],
+                lastSeen: new Date().toISOString()
             };
             
             users.push(newUser);
@@ -1246,7 +1316,8 @@
                 username: newUser.username,
                 email: newUser.email,
                 avatar: newUser.avatar,
-                about: newUser.about
+                about: newUser.about,
+                lastSeen: newUser.lastSeen
             };
             
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -1265,10 +1336,54 @@
 
         // Выход
         function logout() {
+            // Обновляем время последнего входа перед выходом
+            if (currentUser) {
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.id === currentUser.id);
+                if (user) {
+                    user.lastSeen = new Date().toISOString();
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+            }
+            
             currentUser = null;
             localStorage.removeItem('currentUser');
             updateUIForGuest();
             showPage('home');
+        }
+
+        // Синхронизация данных
+        function syncData() {
+            if (!currentUser) return;
+            
+            // Обновляем время последней активности пользователя
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.id === currentUser.id);
+            if (user) {
+                user.lastSeen = new Date().toISOString();
+                localStorage.setItem('users', JSON.stringify(users));
+                currentUser.lastSeen = user.lastSeen;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            // Обновляем время последней синхронизации
+            localStorage.setItem('lastSync', new Date().toISOString());
+            
+            // Перерисовываем контент, который может измениться
+            renderConversations();
+            renderFriends('all');
+            
+            // Если открыт чат, перерисовываем его
+            if (currentChat) {
+                renderChat(currentChat);
+            }
+            
+            // Обновляем кнопки друзей в профиле
+            if (currentViewingUserId) {
+                updateFriendButtons(currentViewingUserId);
+            }
+            
+            console.log('Данные синхронизированы');
         }
 
         // Создание поста
@@ -1467,8 +1582,12 @@
                 friendsToShow = users.filter(u => currentUserData.friends.includes(u.id));
                 title = 'Все друзья';
             } else if (filter === 'online') {
-                // В этой демо все друзья "онлайн"
-                friendsToShow = users.filter(u => currentUserData.friends.includes(u.id));
+                // Показываем друзей, которые были онлайн в последние 5 минут
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+                friendsToShow = users.filter(u => 
+                    currentUserData.friends.includes(u.id) && 
+                    new Date(u.lastSeen) > new Date(fiveMinutesAgo)
+                );
                 title = 'Друзья онлайн';
             } else if (filter === 'requests') {
                 friendsToShow = users.filter(u => currentUserData.friendRequests.includes(u.id));
@@ -1502,6 +1621,7 @@
                     </div>
                     <div onclick="showUserProfile(${user.id})">
                         <div class="friend-name">${user.username}</div>
+                        ${filter === 'online' ? `<div class="last-seen">online</div>` : ''}
                     </div>
                 `;
                 
@@ -1521,9 +1641,10 @@
                         <button class="friend-action add" onclick="sendFriendRequest(${user.id})">Добавить</button>
                     `;
                 } else if (filter === 'all') {
-                    // Для друзей добавляем кнопку удалить из друзей
+                    // Для друзей добавляем кнопку удалить из друзей и написать сообщение
                     actionsDiv.innerHTML = `
                         <button class="friend-action remove" onclick="removeFriend(${user.id})">Удалить</button>
+                        <button class="friend-action message" onclick="startNewChat(${user.id})">Сообщение</button>
                     `;
                 }
                 
@@ -1794,16 +1915,19 @@
             const addFriendBtn = document.querySelector('.user-profile-action.add-friend');
             const removeFriendBtn = document.querySelector('.user-profile-action.remove-friend');
             const cancelRequestBtn = document.querySelector('.user-profile-action.cancel-request');
+            const sendMessageBtn = document.querySelector('.user-profile-action.send-message');
             
             // Сначала скрываем все кнопки
             addFriendBtn.style.display = 'none';
             removeFriendBtn.style.display = 'none';
             cancelRequestBtn.style.display = 'none';
+            sendMessageBtn.style.display = 'none';
             
             // Проверяем статус дружбы
             if (currentUserData.friends.includes(userId)) {
-                // Если уже друзья - показываем кнопку удаления
+                // Если уже друзья - показываем кнопку удаления и сообщения
                 removeFriendBtn.style.display = 'block';
+                sendMessageBtn.style.display = 'block';
             } else if (currentUserData.sentFriendRequests.includes(userId)) {
                 // Если отправили заявку - показываем кнопку отмены
                 cancelRequestBtn.style.display = 'block';
@@ -1814,6 +1938,13 @@
                 // Иначе - кнопка добавления в друзья
                 addFriendBtn.style.display = 'block';
             }
+        }
+
+        // Начать новый чат
+        function startNewChat(userId) {
+            currentChat = userId;
+            showPage('messages');
+            renderChat(userId);
         }
 
         // Отображение диалогов
@@ -1860,12 +1991,12 @@
                 const conversationAvatarInitial = user.username.charAt(0).toUpperCase();
                 
                 const conversationElement = document.createElement('div');
-                conversationElement.className = 'conversation';
+                conversationElement.className = `conversation ${currentChat === userId ? 'active' : ''}`;
                 conversationElement.innerHTML = `
                     <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background-color: #cccccc; display: flex; justify-content: center; align-items: center; ${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
                         ${user.avatar ? '' : `<span class="avatar-initial">${conversationAvatarInitial}</span>`}
                     </div>
-                    <div>
+                    <div style="flex: 1;">
                         <div style="font-weight: bold;" onclick="showUserProfile(${user.id})">${user.username}</div>
                         <div style="font-size: 12px; color: #656565; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
                             ${lastMessage.senderId === currentUser.id ? 'Вы: ' : ''}${lastMessage.text}
@@ -1890,14 +2021,24 @@
             if (!user) return;
             
             currentChat = userId;
-            chatHeader.textContent = user.username;
+            chatHeader.innerHTML = `
+                <div onclick="showUserProfile(${user.id})" style="cursor: pointer;">${user.username}</div>
+                <div class="last-seen">${getLastSeenStatus(user.lastSeen)}</div>
+            `;
+            
             chatMessages.innerHTML = '';
+            chatInput.style.display = 'flex';
             
             // Фильтруем сообщения текущего диалога
             const dialogMessages = messages.filter(msg => 
                 (msg.senderId === currentUser.id && msg.recipientId === userId) ||
                 (msg.senderId === userId && msg.recipientId === currentUser.id)
             ).sort((a, b) => new Date(a.time) - new Date(b.time));
+            
+            if (dialogMessages.length === 0) {
+                chatMessages.innerHTML = '<div class="no-messages">Нет сообщений</div>';
+                return;
+            }
             
             dialogMessages.forEach(msg => {
                 const isIncoming = msg.senderId === userId;
@@ -1915,6 +2056,49 @@
             
             // Прокручиваем вниз
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Помечаем сообщения как прочитанные
+            markMessagesAsRead(userId);
+            
+            // Обновляем список диалогов
+            renderConversations();
+        }
+
+        // Получить статус "был в сети"
+        function getLastSeenStatus(lastSeen) {
+            if (!lastSeen) return '';
+            
+            const lastSeenDate = new Date(lastSeen);
+            const now = new Date();
+            const diffMinutes = Math.floor((now - lastSeenDate) / (1000 * 60));
+            
+            if (diffMinutes < 5) {
+                return 'online';
+            } else if (diffMinutes < 60) {
+                return `был(а) в сети ${diffMinutes} минут назад`;
+            } else if (diffMinutes < 24 * 60) {
+                const hours = Math.floor(diffMinutes / 60);
+                return `был(а) в сети ${hours} ${hours === 1 ? 'час' : hours < 5 ? 'часа' : 'часов'} назад`;
+            } else {
+                return `был(а) в сети ${lastSeenDate.toLocaleDateString()}`;
+            }
+        }
+
+        // Пометить сообщения как прочитанные
+        function markMessagesAsRead(userId) {
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
+            let updated = false;
+            
+            messages.forEach(msg => {
+                if (msg.senderId === userId && msg.recipientId === currentUser.id && !msg.read) {
+                    msg.read = true;
+                    updated = true;
+                }
+            });
+            
+            if (updated) {
+                localStorage.setItem('messages', JSON.stringify(messages));
+            }
         }
 
         // Отправка сообщения
