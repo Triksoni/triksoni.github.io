@@ -99,6 +99,12 @@
             object-fit: cover;
             margin-bottom: 10px;
             border: 3px solid #4680C2;
+            background-color: #cccccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666666;
+            font-size: 40px;
         }
         
         .menu-item {
@@ -130,6 +136,12 @@
             height: 40px;
             border-radius: 50%;
             margin-right: 10px;
+            background-color: #cccccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666666;
+            font-size: 16px;
         }
         
         .post-user {
@@ -188,6 +200,12 @@
             height: 30px;
             border-radius: 50%;
             margin-right: 10px;
+            background-color: #cccccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666666;
+            font-size: 12px;
         }
         
         .comment-user {
@@ -263,11 +281,16 @@
             margin-bottom: 5px;
         }
         
-        .form-group input {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 8px;
             border: 1px solid #e7e8ec;
             border-radius: 4px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         
         .modal-buttons {
@@ -315,10 +338,39 @@
             height: 50px;
             border-radius: 50%;
             margin-right: 10px;
+            background-color: #cccccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666666;
+            font-size: 20px;
         }
         
         .friend-name {
             font-weight: bold;
+        }
+        
+        .friend-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .friend-action {
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .friend-action.add {
+            background-color: #4680C2;
+            color: white;
+        }
+        
+        .friend-action.remove {
+            background-color: #ff4d4d;
+            color: white;
         }
         
         .messages-container {
@@ -445,6 +497,62 @@
             font-size: 12px;
             margin-top: 5px;
         }
+
+        .avatar-initial {
+            font-weight: bold;
+        }
+        
+        .profile-about {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f2f5;
+            border-radius: 8px;
+        }
+        
+        .profile-about h3 {
+            margin-bottom: 10px;
+        }
+        
+        .profile-about-content {
+            white-space: pre-line;
+        }
+        
+        .edit-about-btn {
+            margin-top: 10px;
+            background-color: #4680C2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .user-profile-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .user-profile-action {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .add-friend {
+            background-color: #4680C2;
+            color: white;
+        }
+        
+        .remove-friend {
+            background-color: #ff4d4d;
+            color: white;
+        }
+        
+        .cancel-request {
+            background-color: #f0f2f5;
+            border: 1px solid #e7e8ec;
+        }
     </style>
 </head>
 <body>
@@ -472,7 +580,9 @@
             <div class="main-content">
                 <div class="sidebar">
                     <div class="profile-card">
-                        <img id="sidebarAvatar" src="https://via.placeholder.com/100" class="profile-avatar" alt="Аватар">
+                        <div id="sidebarAvatar" class="profile-avatar">
+                            <span id="sidebarAvatarInitial" class="avatar-initial">?</span>
+                        </div>
                         <div id="sidebarName">Гость</div>
                     </div>
                     <div class="menu-item" onclick="showPage('home')">Новости</div>
@@ -500,9 +610,10 @@
                     <div class="menu-item" onclick="showFriends('all')">Все друзья</div>
                     <div class="menu-item" onclick="showFriends('online')">Друзья онлайн</div>
                     <div class="menu-item" onclick="showFriends('requests')">Заявки в друзья</div>
+                    <div class="menu-item" onclick="showFriends('suggestions')">Рекомендации</div>
                 </div>
                 <div class="feed">
-                    <h2 style="margin-bottom: 20px;">Друзья</h2>
+                    <h2 style="margin-bottom: 20px;" id="friendsTitle">Друзья</h2>
                     <div id="friendsContainer" class="friends-list"></div>
                 </div>
             </div>
@@ -533,17 +644,29 @@
             <div class="main-content">
                 <div class="feed">
                     <div class="profile-card" style="text-align: left; display: flex;">
-                        <img id="profileAvatar" src="https://via.placeholder.com/150" class="profile-avatar" style="margin-right: 20px;">
+                        <div id="profileAvatar" class="profile-avatar" style="margin-right: 20px;">
+                            <span id="profileAvatarInitial" class="avatar-initial">?</span>
+                        </div>
                         <div>
                             <h2 id="profileName">Гость</h2>
-                            <div style="margin: 10px 0;">
-                                <button onclick="showModal('avatarModal')" class="btn-primary">Изменить аватар</button>
-                            </div>
                             <div id="profileStats">
                                 <div>Друзей: <span id="friendsCount">0</span></div>
                                 <div>Постов: <span id="postsCount">0</span></div>
                             </div>
+                            <div id="userProfileActions" class="user-profile-actions" style="display: none;">
+                                <button class="user-profile-action add-friend" onclick="sendFriendRequest(currentViewingUserId)">Добавить в друзья</button>
+                                <button class="user-profile-action remove-friend" onclick="removeFriend(currentViewingUserId)" style="display: none;">Удалить из друзей</button>
+                                <button class="user-profile-action cancel-request" onclick="cancelFriendRequest(currentViewingUserId)" style="display: none;">Отменить заявку</button>
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <button id="editProfileBtn" onclick="showModal('editProfileModal')" class="btn-primary" style="display: none;">Редактировать профиль</button>
+                            </div>
                         </div>
+                    </div>
+                    <div class="profile-about">
+                        <h3>О себе</h3>
+                        <div id="profileAboutContent" class="profile-about-content">Нет информации</div>
+                        <button id="editAboutBtn" class="edit-about-btn" style="display: none;" onclick="showModal('editAboutModal')">Редактировать</button>
                     </div>
                     <div id="profilePostsContainer" style="margin-top: 30px;"></div>
                 </div>
@@ -617,6 +740,45 @@
         </div>
     </div>
 
+    <div id="editAboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Редактирование информации "О себе"</div>
+            <div class="form-group">
+                <label>Расскажите о себе</label>
+                <textarea id="aboutText"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="hideModal('editAboutModal')">Отмена</button>
+                <button class="btn-primary" onclick="saveAbout()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Редактирование профиля</div>
+            <div class="form-group">
+                <label>Имя пользователя</label>
+                <input type="text" id="editProfileUsername">
+                <div id="editProfileUsernameError" class="error"></div>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="editProfileEmail">
+                <div id="editProfileEmailError" class="error"></div>
+            </div>
+            <div class="form-group">
+                <label>Новый пароль (оставьте пустым, если не хотите менять)</label>
+                <input type="password" id="editProfilePassword">
+                <div id="editProfilePasswordError" class="error"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="hideModal('editProfileModal')">Отмена</button>
+                <button class="btn-primary" onclick="saveProfile()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Инициализация данных
         function initializeData() {
@@ -627,27 +789,33 @@
                         username: 'user1',
                         email: 'user1@example.com',
                         password: 'password1',
-                        avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
+                        avatar: '',
+                        about: 'Привет! Я user1 и это мой профиль.',
                         friends: [2, 3],
-                        friendRequests: []
+                        friendRequests: [],
+                        sentFriendRequests: []
                     },
                     {
                         id: 2,
                         username: 'user2',
                         email: 'user2@example.com',
                         password: 'password2',
-                        avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
+                        avatar: '',
+                        about: 'user2 здесь! Люблю путешествовать и программировать.',
                         friends: [1],
-                        friendRequests: [3]
+                        friendRequests: [3],
+                        sentFriendRequests: []
                     },
                     {
                         id: 3,
                         username: 'user3',
                         email: 'user3@example.com',
                         password: 'password3',
-                        avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
+                        avatar: '',
+                        about: 'Просто user3, ничего особенного.',
                         friends: [],
-                        friendRequests: [2]
+                        friendRequests: [2],
+                        sentFriendRequests: [2]
                     }
                 ];
                 localStorage.setItem('users', JSON.stringify(initialUsers));
@@ -678,6 +846,15 @@
                         likes: [1, 3],
                         comments: [],
                         time: '2023-05-14T15:45:00'
+                    },
+                    {
+                        id: 3,
+                        userId: 3,
+                        text: 'Только что зарегистрировался здесь!',
+                        image: '',
+                        likes: [],
+                        comments: [],
+                        time: '2023-05-13T09:15:00'
                     }
                 ];
                 localStorage.setItem('posts', JSON.stringify(initialPosts));
@@ -714,9 +891,10 @@
             }
         }
 
-        // Текущий пользователь
+        // Текущий пользователь и просматриваемый профиль
         let currentUser = null;
         let currentChat = null;
+        let currentViewingUserId = null;
 
         // DOM элементы
         const loginBtn = document.getElementById('loginBtn');
@@ -725,16 +903,23 @@
         const postForm = document.getElementById('postForm');
         const postsContainer = document.getElementById('postsContainer');
         const friendsContainer = document.getElementById('friendsContainer');
+        const friendsTitle = document.getElementById('friendsTitle');
         const conversationsList = document.getElementById('conversationsList');
         const chatMessages = document.getElementById('chatMessages');
         const chatHeader = document.getElementById('chatHeader');
         const profilePostsContainer = document.getElementById('profilePostsContainer');
         const sidebarName = document.getElementById('sidebarName');
         const sidebarAvatar = document.getElementById('sidebarAvatar');
+        const sidebarAvatarInitial = document.getElementById('sidebarAvatarInitial');
         const profileName = document.getElementById('profileName');
         const profileAvatar = document.getElementById('profileAvatar');
+        const profileAvatarInitial = document.getElementById('profileAvatarInitial');
         const friendsCount = document.getElementById('friendsCount');
         const postsCount = document.getElementById('postsCount');
+        const profileAboutContent = document.getElementById('profileAboutContent');
+        const editAboutBtn = document.getElementById('editAboutBtn');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const userProfileActions = document.getElementById('userProfileActions');
 
         // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', function() {
@@ -751,6 +936,8 @@
             if (user) {
                 currentUser = user;
                 updateUIForAuth();
+                // По умолчанию показываем профиль текущего пользователя
+                showUserProfile(currentUser.id);
             } else {
                 updateUIForGuest();
             }
@@ -764,9 +951,28 @@
             postForm.style.display = 'block';
             
             sidebarName.textContent = currentUser.username;
-            sidebarAvatar.src = currentUser.avatar;
             profileName.textContent = currentUser.username;
-            profileAvatar.src = currentUser.avatar;
+            
+            // Обновляем аватарки
+            updateAvatarDisplay();
+            
+            // Обновляем информацию "О себе"
+            if (currentUser.about) {
+                profileAboutContent.textContent = currentUser.about;
+            } else {
+                profileAboutContent.textContent = 'Нет информации';
+            }
+            
+            // Показываем кнопки редактирования только для своего профиля
+            if (currentViewingUserId === currentUser.id) {
+                editAboutBtn.style.display = 'block';
+                editProfileBtn.style.display = 'block';
+                userProfileActions.style.display = 'none';
+            } else {
+                editAboutBtn.style.display = 'none';
+                editProfileBtn.style.display = 'none';
+                userProfileActions.style.display = 'flex';
+            }
             
             // Обновляем счетчики
             updateCounters();
@@ -778,6 +984,31 @@
             renderProfilePosts();
         }
 
+        // Обновление отображения аватарок
+        function updateAvatarDisplay() {
+            // Для боковой панели
+            if (currentUser.avatar) {
+                sidebarAvatar.style.backgroundImage = `url(${currentUser.avatar})`;
+                sidebarAvatar.style.backgroundSize = 'cover';
+                sidebarAvatarInitial.style.display = 'none';
+            } else {
+                sidebarAvatar.style.backgroundImage = '';
+                sidebarAvatarInitial.style.display = 'flex';
+                sidebarAvatarInitial.textContent = currentUser.username.charAt(0).toUpperCase();
+            }
+            
+            // Для профиля
+            if (currentUser.avatar) {
+                profileAvatar.style.backgroundImage = `url(${currentUser.avatar})`;
+                profileAvatar.style.backgroundSize = 'cover';
+                profileAvatarInitial.style.display = 'none';
+            } else {
+                profileAvatar.style.backgroundImage = '';
+                profileAvatarInitial.style.display = 'flex';
+                profileAvatarInitial.textContent = currentUser.username.charAt(0).toUpperCase();
+            }
+        }
+
         // Обновление UI для гостя
         function updateUIForGuest() {
             loginBtn.style.display = 'block';
@@ -786,9 +1017,24 @@
             postForm.style.display = 'none';
             
             sidebarName.textContent = 'Гость';
-            sidebarAvatar.src = 'https://via.placeholder.com/100';
             profileName.textContent = 'Гость';
-            profileAvatar.src = 'https://via.placeholder.com/150';
+            
+            // Сбрасываем аватарки
+            sidebarAvatar.style.backgroundImage = '';
+            sidebarAvatarInitial.style.display = 'flex';
+            sidebarAvatarInitial.textContent = '?';
+            
+            profileAvatar.style.backgroundImage = '';
+            profileAvatarInitial.style.display = 'flex';
+            profileAvatarInitial.textContent = '?';
+            
+            // Сбрасываем информацию "О себе"
+            profileAboutContent.textContent = 'Нет информации';
+            
+            // Скрываем кнопки редактирования
+            editAboutBtn.style.display = 'none';
+            editProfileBtn.style.display = 'none';
+            userProfileActions.style.display = 'none';
             
             // Очищаем контент
             postsContainer.innerHTML = '';
@@ -803,13 +1049,13 @@
         function updateCounters() {
             if (!currentUser) return;
             
-            const users = JSON.parse(localStorage.getItem('users'));
+            const users = JSON.parse(localStorage.getItem('users')) || [];
             const user = users.find(u => u.id === currentUser.id);
             
             if (user) {
                 friendsCount.textContent = user.friends.length;
                 
-                const posts = JSON.parse(localStorage.getItem('posts'));
+                const posts = JSON.parse(localStorage.getItem('posts')) || [];
                 const userPosts = posts.filter(p => p.userId === currentUser.id);
                 postsCount.textContent = userPosts.length;
             }
@@ -829,17 +1075,32 @@
             document.getElementById(pageId).classList.add('active');
             
             if (pageId === 'profile') {
-                renderProfilePosts();
+                if (!currentViewingUserId) {
+                    showUserProfile(currentUser.id);
+                } else {
+                    renderProfilePosts();
+                }
             } else if (pageId === 'friends') {
                 renderFriends('all');
             } else if (pageId === 'messages') {
                 renderConversations();
+            } else if (pageId === 'home') {
+                renderPosts();
             }
         }
 
         // Показать модальное окно
         function showModal(modalId) {
             document.getElementById(modalId).classList.add('active');
+            
+            // Заполняем данные в модальных окнах редактирования
+            if (modalId === 'editAboutModal') {
+                document.getElementById('aboutText').value = currentUser.about || '';
+            } else if (modalId === 'editProfileModal') {
+                document.getElementById('editProfileUsername').value = currentUser.username;
+                document.getElementById('editProfileEmail').value = currentUser.email;
+                document.getElementById('editProfilePassword').value = '';
+            }
         }
 
         // Скрыть модальное окно
@@ -872,7 +1133,7 @@
             if (!isValid) return;
             
             // Проверка пользователя
-            const users = JSON.parse(localStorage.getItem('users'));
+            const users = JSON.parse(localStorage.getItem('users')) || [];
             const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
             
             if (user) {
@@ -880,7 +1141,8 @@
                     id: user.id,
                     username: user.username,
                     email: user.email,
-                    avatar: user.avatar
+                    avatar: user.avatar,
+                    about: user.about
                 };
                 
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -969,9 +1231,11 @@
                 username,
                 email,
                 password,
-                avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 50)}.jpg`,
+                avatar: '',
+                about: '',
                 friends: [],
-                friendRequests: []
+                friendRequests: [],
+                sentFriendRequests: []
             };
             
             users.push(newUser);
@@ -981,7 +1245,8 @@
                 id: newUser.id,
                 username: newUser.username,
                 email: newUser.email,
-                avatar: newUser.avatar
+                avatar: newUser.avatar,
+                about: newUser.about
             };
             
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -1041,19 +1306,25 @@
             
             postsContainer.innerHTML = '';
             
-            posts.forEach(post => {
+            // Сортируем посты по дате (новые сначала)
+            const sortedPosts = [...posts].sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            sortedPosts.forEach(post => {
                 const user = users.find(u => u.id === post.userId);
                 if (!user) return;
                 
                 const time = new Date(post.time).toLocaleString();
+                const postAvatarInitial = user.username.charAt(0).toUpperCase();
                 
                 const postElement = document.createElement('div');
                 postElement.className = 'post';
                 
                 postElement.innerHTML = `
                     <div class="post-header">
-                        <img src="${user.avatar}" class="post-avatar" alt="${user.username}">
-                        <div class="post-user">${user.username}</div>
+                        <div class="post-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                            ${user.avatar ? '' : `<span class="avatar-initial">${postAvatarInitial}</span>`}
+                        </div>
+                        <div class="post-user" onclick="showUserProfile(${user.id})">${user.username}</div>
                         <div class="post-time">${time}</div>
                     </div>
                     <div class="post-content">${post.text}</div>
@@ -1156,13 +1427,16 @@
                 if (!user) return;
                 
                 const time = new Date(comment.time).toLocaleString();
+                const commentAvatarInitial = user.username.charAt(0).toUpperCase();
                 
                 const commentElement = document.createElement('div');
                 commentElement.className = 'comment';
                 commentElement.innerHTML = `
                     <div class="comment-header">
-                        <img src="${user.avatar}" class="comment-avatar" alt="${user.username}">
-                        <div class="comment-user">${user.username}</div>
+                        <div class="comment-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                            ${user.avatar ? '' : `<span class="avatar-initial">${commentAvatarInitial}</span>`}
+                        </div>
+                        <div class="comment-user" onclick="showUserProfile(${user.id})">${user.username}</div>
                         <div class="comment-time">${time}</div>
                     </div>
                     <div class="comment-content">${comment.text}</div>
@@ -1187,38 +1461,73 @@
             friendsContainer.innerHTML = '';
             
             let friendsToShow = [];
+            let title = 'Друзья';
             
             if (filter === 'all') {
                 friendsToShow = users.filter(u => currentUserData.friends.includes(u.id));
+                title = 'Все друзья';
             } else if (filter === 'online') {
                 // В этой демо все друзья "онлайн"
                 friendsToShow = users.filter(u => currentUserData.friends.includes(u.id));
+                title = 'Друзья онлайн';
             } else if (filter === 'requests') {
                 friendsToShow = users.filter(u => currentUserData.friendRequests.includes(u.id));
+                title = 'Заявки в друзья';
+            } else if (filter === 'suggestions') {
+                // Рекомендации - все пользователи, кроме себя, друзей и тех, кому уже отправили заявку
+                friendsToShow = users.filter(u => 
+                    u.id !== currentUser.id && 
+                    !currentUserData.friends.includes(u.id) && 
+                    !currentUserData.sentFriendRequests.includes(u.id)
+                );
+                title = 'Рекомендации';
             }
             
+            friendsTitle.textContent = title;
+            
             if (friendsToShow.length === 0) {
-                friendsContainer.innerHTML = `<p>${filter === 'requests' ? 'Нет заявок в друзья' : 'Нет друзей'}</p>`;
+                friendsContainer.innerHTML = `<p>${filter === 'requests' ? 'Нет заявок в друзья' : 
+                                             filter === 'suggestions' ? 'Нет рекомендаций' : 'Нет друзей'}</p>`;
                 return;
             }
             
             friendsToShow.forEach(user => {
+                const friendAvatarInitial = user.username.charAt(0).toUpperCase();
+                
                 const friendElement = document.createElement('div');
                 friendElement.className = 'friend-item';
                 friendElement.innerHTML = `
-                    <img src="${user.avatar}" class="friend-avatar" alt="${user.username}">
-                    <div>
+                    <div class="friend-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                        ${user.avatar ? '' : `<span class="avatar-initial">${friendAvatarInitial}</span>`}
+                    </div>
+                    <div onclick="showUserProfile(${user.id})">
                         <div class="friend-name">${user.username}</div>
-                        ${filter === 'requests' ? `
-                        <button onclick="acceptFriendRequest(${user.id})" style="margin-top: 5px; padding: 3px 8px; font-size: 12px;">Принять</button>
-                        ` : ''}
                     </div>
                 `;
                 
-                friendElement.addEventListener('click', () => {
-                    showUserProfile(user.id);
-                });
+                // Добавляем кнопки действий в зависимости от фильтра
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'friend-actions';
                 
+                if (filter === 'requests') {
+                    // Для заявок в друзья добавляем кнопки принять/отклонить
+                    actionsDiv.innerHTML = `
+                        <button class="friend-action add" onclick="acceptFriendRequest(${user.id})">Принять</button>
+                        <button class="friend-action remove" onclick="declineFriendRequest(${user.id})">Отклонить</button>
+                    `;
+                } else if (filter === 'suggestions') {
+                    // Для рекомендаций добавляем кнопку добавить в друзья
+                    actionsDiv.innerHTML = `
+                        <button class="friend-action add" onclick="sendFriendRequest(${user.id})">Добавить</button>
+                    `;
+                } else if (filter === 'all') {
+                    // Для друзей добавляем кнопку удалить из друзей
+                    actionsDiv.innerHTML = `
+                        <button class="friend-action remove" onclick="removeFriend(${user.id})">Удалить</button>
+                    `;
+                }
+                
+                friendElement.appendChild(actionsDiv);
                 friendsContainer.appendChild(friendElement);
             });
         }
@@ -1231,6 +1540,35 @@
             }
             
             renderFriends(filter);
+        }
+
+        // Отправить заявку в друзья
+        function sendFriendRequest(friendId) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const currentUserData = users.find(u => u.id === currentUser.id);
+            const friendData = users.find(u => u.id === friendId);
+            
+            if (currentUserData && friendData) {
+                // Добавляем заявку в друзья
+                if (!friendData.friendRequests.includes(currentUser.id)) {
+                    friendData.friendRequests.push(currentUser.id);
+                }
+                
+                // Добавляем в отправленные заявки
+                if (!currentUserData.sentFriendRequests.includes(friendId)) {
+                    currentUserData.sentFriendRequests.push(friendId);
+                }
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Обновляем отображение
+                renderFriends('suggestions');
+                
+                // Если мы на странице профиля этого пользователя, обновляем кнопки
+                if (currentViewingUserId === friendId) {
+                    updateFriendButtons(friendId);
+                }
+            }
         }
 
         // Принять заявку в друзья
@@ -1246,6 +1584,12 @@
                     currentUserData.friendRequests.splice(requestIndex, 1);
                 }
                 
+                // Удаляем из отправленных заявок другого пользователя
+                const sentRequestIndex = friendData.sentFriendRequests.indexOf(currentUser.id);
+                if (sentRequestIndex !== -1) {
+                    friendData.sentFriendRequests.splice(sentRequestIndex, 1);
+                }
+                
                 // Добавляем в друзья
                 if (!currentUserData.friends.includes(friendId)) {
                     currentUserData.friends.push(friendId);
@@ -1257,19 +1601,218 @@
                 }
                 
                 localStorage.setItem('users', JSON.stringify(users));
+                
+                // Обновляем текущего пользователя
+                currentUser.friends = currentUserData.friends;
+                currentUser.friendRequests = currentUserData.friendRequests;
+                currentUser.sentFriendRequests = currentUserData.sentFriendRequests;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Обновляем отображение
                 renderFriends('requests');
                 updateCounters();
+                
+                // Если мы на странице профиля этого пользователя, обновляем кнопки
+                if (currentViewingUserId === friendId) {
+                    updateFriendButtons(friendId);
+                }
+            }
+        }
+
+        // Отклонить заявку в друзья
+        function declineFriendRequest(friendId) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const currentUserData = users.find(u => u.id === currentUser.id);
+            const friendData = users.find(u => u.id === friendId);
+            
+            if (currentUserData && friendData) {
+                // Удаляем из заявок
+                const requestIndex = currentUserData.friendRequests.indexOf(friendId);
+                if (requestIndex !== -1) {
+                    currentUserData.friendRequests.splice(requestIndex, 1);
+                }
+                
+                // Удаляем из отправленных заявок другого пользователя
+                const sentRequestIndex = friendData.sentFriendRequests.indexOf(currentUser.id);
+                if (sentRequestIndex !== -1) {
+                    friendData.sentFriendRequests.splice(sentRequestIndex, 1);
+                }
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Обновляем текущего пользователя
+                currentUser.friendRequests = currentUserData.friendRequests;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Обновляем отображение
+                renderFriends('requests');
+                
+                // Если мы на странице профиля этого пользователя, обновляем кнопки
+                if (currentViewingUserId === friendId) {
+                    updateFriendButtons(friendId);
+                }
+            }
+        }
+
+        // Отменить заявку в друзья
+        function cancelFriendRequest(friendId) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const currentUserData = users.find(u => u.id === currentUser.id);
+            const friendData = users.find(u => u.id === friendId);
+            
+            if (currentUserData && friendData) {
+                // Удаляем из отправленных заявок
+                const sentRequestIndex = currentUserData.sentFriendRequests.indexOf(friendId);
+                if (sentRequestIndex !== -1) {
+                    currentUserData.sentFriendRequests.splice(sentRequestIndex, 1);
+                }
+                
+                // Удаляем из заявок другого пользователя
+                const requestIndex = friendData.friendRequests.indexOf(currentUser.id);
+                if (requestIndex !== -1) {
+                    friendData.friendRequests.splice(requestIndex, 1);
+                }
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Обновляем текущего пользователя
+                currentUser.sentFriendRequests = currentUserData.sentFriendRequests;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Обновляем отображение
+                if (currentViewingUserId === friendId) {
+                    updateFriendButtons(friendId);
+                }
+            }
+        }
+
+        // Удалить из друзей
+        function removeFriend(friendId) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const currentUserData = users.find(u => u.id === currentUser.id);
+            const friendData = users.find(u => u.id === friendId);
+            
+            if (currentUserData && friendData) {
+                // Удаляем из друзей
+                const friendIndex = currentUserData.friends.indexOf(friendId);
+                if (friendIndex !== -1) {
+                    currentUserData.friends.splice(friendIndex, 1);
+                }
+                
+                // Удаляем себя из друзей другого пользователя
+                const userIndex = friendData.friends.indexOf(currentUser.id);
+                if (userIndex !== -1) {
+                    friendData.friends.splice(userIndex, 1);
+                }
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Обновляем текущего пользователя
+                currentUser.friends = currentUserData.friends;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Обновляем отображение
+                renderFriends('all');
+                updateCounters();
+                
+                // Если мы на странице профиля этого пользователя, обновляем кнопки
+                if (currentViewingUserId === friendId) {
+                    updateFriendButtons(friendId);
+                }
             }
         }
 
         // Показать профиль пользователя
         function showUserProfile(userId) {
+            if (!currentUser && userId !== currentUser?.id) {
+                showModal('loginModal');
+                return;
+            }
+            
+            currentViewingUserId = userId;
+            showPage('profile');
+            
             const users = JSON.parse(localStorage.getItem('users')) || [];
             const user = users.find(u => u.id === userId);
             
-            if (user) {
-                // В этой упрощенной версии просто показываем имя и аватар
-                alert(`Профиль пользователя: ${user.username}`);
+            if (!user) return;
+            
+            // Обновляем информацию в профиле
+            profileName.textContent = user.username;
+            
+            if (user.avatar) {
+                profileAvatar.style.backgroundImage = `url(${user.avatar})`;
+                profileAvatar.style.backgroundSize = 'cover';
+                profileAvatarInitial.style.display = 'none';
+            } else {
+                profileAvatar.style.backgroundImage = '';
+                profileAvatarInitial.style.display = 'flex';
+                profileAvatarInitial.textContent = user.username.charAt(0).toUpperCase();
+            }
+            
+            // Информация "О себе"
+            if (user.about) {
+                profileAboutContent.textContent = user.about;
+            } else {
+                profileAboutContent.textContent = 'Нет информации';
+            }
+            
+            // Статистика
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            const userPosts = posts.filter(p => p.userId === userId);
+            postsCount.textContent = userPosts.length;
+            friendsCount.textContent = user.friends.length;
+            
+            // Кнопки редактирования (только для своего профиля)
+            if (userId === currentUser?.id) {
+                editAboutBtn.style.display = 'block';
+                editProfileBtn.style.display = 'block';
+                userProfileActions.style.display = 'none';
+            } else {
+                editAboutBtn.style.display = 'none';
+                editProfileBtn.style.display = 'none';
+                userProfileActions.style.display = 'flex';
+                
+                // Обновляем кнопки дружбы
+                updateFriendButtons(userId);
+            }
+            
+            // Отображаем посты пользователя
+            renderProfilePosts();
+        }
+
+        // Обновить кнопки дружбы в профиле
+        function updateFriendButtons(userId) {
+            if (!currentUser || currentViewingUserId !== userId) return;
+            
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const currentUserData = users.find(u => u.id === currentUser.id);
+            const viewedUserData = users.find(u => u.id === userId);
+            
+            if (!currentUserData || !viewedUserData) return;
+            
+            const addFriendBtn = document.querySelector('.user-profile-action.add-friend');
+            const removeFriendBtn = document.querySelector('.user-profile-action.remove-friend');
+            const cancelRequestBtn = document.querySelector('.user-profile-action.cancel-request');
+            
+            // Сначала скрываем все кнопки
+            addFriendBtn.style.display = 'none';
+            removeFriendBtn.style.display = 'none';
+            cancelRequestBtn.style.display = 'none';
+            
+            // Проверяем статус дружбы
+            if (currentUserData.friends.includes(userId)) {
+                // Если уже друзья - показываем кнопку удаления
+                removeFriendBtn.style.display = 'block';
+            } else if (currentUserData.sentFriendRequests.includes(userId)) {
+                // Если отправили заявку - показываем кнопку отмены
+                cancelRequestBtn.style.display = 'block';
+            } else if (currentUserData.friendRequests.includes(userId)) {
+                // Если есть входящая заявка - кнопки будут на странице заявок
+                addFriendBtn.style.display = 'none';
+            } else {
+                // Иначе - кнопка добавления в друзья
+                addFriendBtn.style.display = 'block';
             }
         }
 
@@ -1314,13 +1857,16 @@
                 ).sort((a, b) => new Date(b.time) - new Date(a.time));
                 
                 const lastMessage = dialogMessages[0];
+                const conversationAvatarInitial = user.username.charAt(0).toUpperCase();
                 
                 const conversationElement = document.createElement('div');
                 conversationElement.className = 'conversation';
                 conversationElement.innerHTML = `
-                    <img src="${user.avatar}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background-color: #cccccc; display: flex; justify-content: center; align-items: center; ${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                        ${user.avatar ? '' : `<span class="avatar-initial">${conversationAvatarInitial}</span>`}
+                    </div>
                     <div>
-                        <div style="font-weight: bold;">${user.username}</div>
+                        <div style="font-weight: bold;" onclick="showUserProfile(${user.id})">${user.username}</div>
                         <div style="font-size: 12px; color: #656565; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
                             ${lastMessage.senderId === currentUser.id ? 'Вы: ' : ''}${lastMessage.text}
                         </div>
@@ -1419,11 +1965,119 @@
                 currentUser.avatar = avatarUrl;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                sidebarAvatar.src = avatarUrl;
-                profileAvatar.src = avatarUrl;
+                updateAvatarDisplay();
                 
                 hideModal('avatarModal');
                 document.getElementById('avatarUrl').value = '';
+                
+                // Перерисовываем контент, где отображаются аватарки
+                renderPosts();
+                renderFriends('all');
+                renderConversations();
+                renderProfilePosts();
+            }
+        }
+
+        // Сохранение информации "О себе"
+        function saveAbout() {
+            const aboutText = document.getElementById('aboutText').value;
+            
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.id === currentUser.id);
+            
+            if (user) {
+                user.about = aboutText;
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                currentUser.about = aboutText;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                profileAboutContent.textContent = aboutText || 'Нет информации';
+                hideModal('editAboutModal');
+            }
+        }
+
+        // Сохранение профиля
+        function saveProfile() {
+            const username = document.getElementById('editProfileUsername').value;
+            const email = document.getElementById('editProfileEmail').value;
+            const password = document.getElementById('editProfilePassword').value;
+            
+            // Валидация
+            let isValid = true;
+            
+            if (!username) {
+                document.getElementById('editProfileUsernameError').textContent = 'Введите имя пользователя';
+                isValid = false;
+            } else if (username.length < 3) {
+                document.getElementById('editProfileUsernameError').textContent = 'Имя пользователя должно содержать минимум 3 символа';
+                isValid = false;
+            } else {
+                document.getElementById('editProfileUsernameError').textContent = '';
+            }
+            
+            if (!email) {
+                document.getElementById('editProfileEmailError').textContent = 'Введите email';
+                isValid = false;
+            } else if (!email.includes('@')) {
+                document.getElementById('editProfileEmailError').textContent = 'Введите корректный email';
+                isValid = false;
+            } else {
+                document.getElementById('editProfileEmailError').textContent = '';
+            }
+            
+            if (password && password.length < 6) {
+                document.getElementById('editProfilePasswordError').textContent = 'Пароль должен содержать минимум 6 символов';
+                isValid = false;
+            } else {
+                document.getElementById('editProfilePasswordError').textContent = '';
+            }
+            
+            if (!isValid) return;
+            
+            // Проверка на существующего пользователя
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            // Проверяем, не занято ли имя пользователя кем-то другим
+            if (users.some(u => u.username === username && u.id !== currentUser.id)) {
+                document.getElementById('editProfileUsernameError').textContent = 'Это имя пользователя уже занято';
+                return;
+            }
+            
+            // Проверяем, не занят ли email кем-то другим
+            if (users.some(u => u.email === email && u.id !== currentUser.id)) {
+                document.getElementById('editProfileEmailError').textContent = 'Этот email уже зарегистрирован';
+                return;
+            }
+            
+            // Обновляем данные пользователя
+            const user = users.find(u => u.id === currentUser.id);
+            if (user) {
+                user.username = username;
+                user.email = email;
+                if (password) {
+                    user.password = password;
+                }
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Обновляем текущего пользователя
+                currentUser.username = username;
+                currentUser.email = email;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Обновляем UI
+                sidebarName.textContent = username;
+                profileName.textContent = username;
+                updateAvatarDisplay();
+                
+                hideModal('editProfileModal');
+                
+                // Перерисовываем контент, где отображается имя пользователя
+                renderPosts();
+                renderFriends('all');
+                renderConversations();
+                renderProfilePosts();
             }
         }
 
@@ -1433,7 +2087,7 @@
             
             const posts = JSON.parse(localStorage.getItem('posts')) || [];
             const users = JSON.parse(localStorage.getItem('users')) || [];
-            const userPosts = posts.filter(p => p.userId === currentUser?.id);
+            const userPosts = posts.filter(p => p.userId === currentViewingUserId);
             
             profilePostsContainer.innerHTML = '';
             
@@ -1442,18 +2096,24 @@
                 return;
             }
             
-            userPosts.forEach(post => {
+            // Сортируем посты по дате (новые сначала)
+            const sortedPosts = [...userPosts].sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            sortedPosts.forEach(post => {
                 const user = users.find(u => u.id === post.userId);
                 if (!user) return;
                 
                 const time = new Date(post.time).toLocaleString();
+                const postAvatarInitial = user.username.charAt(0).toUpperCase();
                 
                 const postElement = document.createElement('div');
                 postElement.className = 'post';
                 postElement.innerHTML = `
                     <div class="post-header">
-                        <img src="${user.avatar}" class="post-avatar" alt="${user.username}">
-                        <div class="post-user">${user.username}</div>
+                        <div class="post-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                            ${user.avatar ? '' : `<span class="avatar-initial">${postAvatarInitial}</span>`}
+                        </div>
+                        <div class="post-user" onclick="showUserProfile(${user.id})">${user.username}</div>
                         <div class="post-time">${time}</div>
                     </div>
                     <div class="post-content">${post.text}</div>
@@ -1467,10 +2127,12 @@
                         </div>
                     </div>
                     <div id="profile-comments-${post.id}"></div>
+                    ${currentUser ? `
                     <div class="add-comment">
                         <input type="text" id="profile-comment-${post.id}" placeholder="Написать комментарий...">
                         <button onclick="addProfileComment(${post.id})">Отправить</button>
                     </div>
+                    ` : ''}
                 `;
                 
                 profilePostsContainer.appendChild(postElement);
@@ -1521,13 +2183,16 @@
                 if (!user) return;
                 
                 const time = new Date(comment.time).toLocaleString();
+                const commentAvatarInitial = user.username.charAt(0).toUpperCase();
                 
                 const commentElement = document.createElement('div');
                 commentElement.className = 'comment';
                 commentElement.innerHTML = `
                     <div class="comment-header">
-                        <img src="${user.avatar}" class="comment-avatar" alt="${user.username}">
-                        <div class="comment-user">${user.username}</div>
+                        <div class="comment-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                            ${user.avatar ? '' : `<span class="avatar-initial">${commentAvatarInitial}</span>`}
+                        </div>
+                        <div class="comment-user" onclick="showUserProfile(${user.id})">${user.username}</div>
                         <div class="comment-time">${time}</div>
                     </div>
                     <div class="comment-content">${comment.text}</div>
