@@ -596,9 +596,25 @@
             color: #656565;
             font-weight: normal;
         }
+        
+        /* Стиль для уведомлений */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Уведомления -->
+    <div id="notification" class="notification"></div>
+
     <header>
         <div class="container header-content">
             <div class="logo">VK Mini</div>
@@ -614,7 +630,6 @@
                 <button id="loginBtn" onclick="showModal('loginModal')">Войти</button>
                 <button id="registerBtn" onclick="showModal('registerModal')">Регистрация</button>
                 <button id="logoutBtn" style="display: none;" onclick="logout()">Выйти</button>
-                <button id="syncBtn" style="display: none;" class="sync-button" onclick="syncData()">Синхронизировать</button>
             </div>
         </div>
     </header>
@@ -726,9 +741,9 @@
         <div class="modal-content">
             <div class="modal-title">Вход</div>
             <div class="form-group">
-                <label>Логин или email</label>
-                <input type="text" id="loginUsername">
-                <div id="loginUsernameError" class="error"></div>
+                <label>Email</label>
+                <input type="text" id="loginEmail">
+                <div id="loginEmailError" class="error"></div>
             </div>
             <div class="form-group">
                 <label>Пароль</label>
@@ -826,137 +841,38 @@
         </div>
     </div>
 
+    <!-- Подключаем Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+
     <script>
-        // Инициализация данных
-        function initializeData() {
-            if (!localStorage.getItem('users')) {
-                const initialUsers = [
-                    {
-                        id: 1,
-                        username: 'user1',
-                        email: 'user1@example.com',
-                        password: 'password1',
-                        avatar: '',
-                        about: 'Привет! Я user1 и это мой профиль.',
-                        friends: [2, 3],
-                        friendRequests: [],
-                        sentFriendRequests: [],
-                        lastSeen: new Date().toISOString()
-                    },
-                    {
-                        id: 2,
-                        username: 'user2',
-                        email: 'user2@example.com',
-                        password: 'password2',
-                        avatar: '',
-                        about: 'user2 здесь! Люблю путешествовать и программировать.',
-                        friends: [1],
-                        friendRequests: [3],
-                        sentFriendRequests: [],
-                        lastSeen: new Date().toISOString()
-                    },
-                    {
-                        id: 3,
-                        username: 'user3',
-                        email: 'user3@example.com',
-                        password: 'password3',
-                        avatar: '',
-                        about: 'Просто user3, ничего особенного.',
-                        friends: [],
-                        friendRequests: [2],
-                        sentFriendRequests: [2],
-                        lastSeen: new Date().toISOString()
-                    }
-                ];
-                localStorage.setItem('users', JSON.stringify(initialUsers));
-            }
+        // Конфигурация Firebase (замените на свою)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDp8QkQ6z8QZQZQZQZQZQZQZQZQZQZQZQZQ",
+            authDomain: "vk-mini-app.firebaseapp.com",
+            databaseURL: "https://vk-mini-app-default-rtdb.firebaseio.com",
+            projectId: "vk-mini-app",
+            storageBucket: "vk-mini-app.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdefghijklmnopqrstuv"
+        };
 
-            if (!localStorage.getItem('posts')) {
-                const initialPosts = [
-                    {
-                        id: 1,
-                        userId: 1,
-                        text: 'Привет всем! Это мой первый пост в этой социальной сети.',
-                        image: '',
-                        likes: [2],
-                        comments: [
-                            {
-                                userId: 2,
-                                text: 'Привет! Классный пост!',
-                                time: '2023-05-15T10:30:00'
-                            }
-                        ],
-                        time: '2023-05-15T10:00:00'
-                    },
-                    {
-                        id: 2,
-                        userId: 2,
-                        text: 'Сегодня прекрасный день!',
-                        image: 'https://picsum.photos/600/300',
-                        likes: [1, 3],
-                        comments: [],
-                        time: '2023-05-14T15:45:00'
-                    },
-                    {
-                        id: 3,
-                        userId: 3,
-                        text: 'Только что зарегистрировался здесь!',
-                        image: '',
-                        likes: [],
-                        comments: [],
-                        time: '2023-05-13T09:15:00'
-                    }
-                ];
-                localStorage.setItem('posts', JSON.stringify(initialPosts));
-            }
-
-            if (!localStorage.getItem('messages')) {
-                const initialMessages = [
-                    {
-                        id: 1,
-                        senderId: 1,
-                        recipientId: 2,
-                        text: 'Привет! Как дела?',
-                        time: new Date().toISOString(),
-                        read: true
-                    },
-                    {
-                        id: 2,
-                        senderId: 2,
-                        recipientId: 1,
-                        text: 'Привет! Все отлично, спасибо!',
-                        time: new Date().toISOString(),
-                        read: true
-                    },
-                    {
-                        id: 3,
-                        senderId: 1,
-                        recipientId: 2,
-                        text: 'Что планируешь на выходные?',
-                        time: new Date().toISOString(),
-                        read: false
-                    }
-                ];
-                localStorage.setItem('messages', JSON.stringify(initialMessages));
-            }
-            
-            // Инициализация синхронизации
-            if (!localStorage.getItem('lastSync')) {
-                localStorage.setItem('lastSync', new Date().toISOString());
-            }
-        }
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
 
         // Текущий пользователь и просматриваемый профиль
         let currentUser = null;
         let currentChat = null;
         let currentViewingUserId = null;
-        let syncInterval = null;
+        let userStatusRef = null;
 
         // DOM элементы
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const logoutBtn = document.getElementById('logoutBtn');
-        const syncBtn = document.getElementById('syncBtn');
         const postForm = document.getElementById('postForm');
         const postsContainer = document.getElementById('postsContainer');
         const friendsContainer = document.getElementById('friendsContainer');
@@ -978,30 +894,67 @@
         const editAboutBtn = document.getElementById('editAboutBtn');
         const editProfileBtn = document.getElementById('editProfileBtn');
         const userProfileActions = document.getElementById('userProfileActions');
+        const notification = document.getElementById('notification');
 
-        // Инициализация при загрузке
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeData();
-            checkAuth();
-            renderPosts();
-            renderFriends('all');
-            renderConversations();
+        // Показать уведомление
+        function showNotification(message, isError = false) {
+            notification.textContent = message;
+            notification.style.backgroundColor = isError ? '#ff4d4d' : '#4CAF50';
+            notification.style.display = 'block';
             
-            // Запускаем синхронизацию каждые 5 секунд
-            syncInterval = setInterval(syncData, 5000);
-        });
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
 
-        // Проверка авторизации
-        function checkAuth() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
+        // Проверка авторизации при загрузке
+        auth.onAuthStateChanged((user) => {
             if (user) {
-                currentUser = user;
-                updateUIForAuth();
-                // По умолчанию показываем профиль текущего пользователя
-                showUserProfile(currentUser.id);
+                // Пользователь вошел в систему
+                database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                    const userData = snapshot.val();
+                    currentUser = {
+                        id: user.uid,
+                        email: user.email,
+                        username: userData.username,
+                        avatar: userData.avatar,
+                        about: userData.about,
+                        friends: userData.friends || [],
+                        friendRequests: userData.friendRequests || [],
+                        sentFriendRequests: userData.sentFriendRequests || []
+                    };
+                    
+                    updateUIForAuth();
+                    setupOnlineStatus();
+                    
+                    // По умолчанию показываем профиль текущего пользователя
+                    showUserProfile(user.uid);
+                });
             } else {
+                // Пользователь вышел из системы
+                currentUser = null;
                 updateUIForGuest();
             }
+        });
+
+        // Настройка онлайн статуса
+        function setupOnlineStatus() {
+            userStatusRef = database.ref('status/' + currentUser.id);
+            
+            database.ref('.info/connected').on('value', (snapshot) => {
+                if (snapshot.val() === true) {
+                    // Устанавливаем статус "онлайн" и обработчик отключения
+                    userStatusRef.onDisconnect().set({
+                        status: 'offline',
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    }).then(() => {
+                        userStatusRef.set({
+                            status: 'online',
+                            lastSeen: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    });
+                }
+            });
         }
 
         // Обновление UI для авторизованного пользователя
@@ -1009,7 +962,6 @@
             loginBtn.style.display = 'none';
             registerBtn.style.display = 'none';
             logoutBtn.style.display = 'block';
-            syncBtn.style.display = 'block';
             postForm.style.display = 'block';
             
             sidebarName.textContent = currentUser.username;
@@ -1076,7 +1028,6 @@
             loginBtn.style.display = 'block';
             registerBtn.style.display = 'block';
             logoutBtn.style.display = 'none';
-            syncBtn.style.display = 'none';
             postForm.style.display = 'none';
             
             sidebarName.textContent = 'Гость';
@@ -1113,16 +1064,13 @@
         function updateCounters() {
             if (!currentUser) return;
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.id === currentUser.id);
+            friendsCount.textContent = currentUser.friends ? currentUser.friends.length : 0;
             
-            if (user) {
-                friendsCount.textContent = user.friends.length;
-                
-                const posts = JSON.parse(localStorage.getItem('posts')) || [];
-                const userPosts = posts.filter(p => p.userId === currentUser.id);
-                postsCount.textContent = userPosts.length;
-            }
+            // Получаем количество постов пользователя
+            database.ref('posts').orderByChild('userId').equalTo(currentUser.id).once('value')
+                .then((snapshot) => {
+                    postsCount.textContent = snapshot.numChildren();
+                });
         }
 
         // Показать страницу
@@ -1174,17 +1122,17 @@
 
         // Вход
         function login() {
-            const username = document.getElementById('loginUsername').value;
+            const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
             // Валидация
             let isValid = true;
             
-            if (!username) {
-                document.getElementById('loginUsernameError').textContent = 'Введите логин или email';
+            if (!email) {
+                document.getElementById('loginEmailError').textContent = 'Введите email';
                 isValid = false;
             } else {
-                document.getElementById('loginUsernameError').textContent = '';
+                document.getElementById('loginEmailError').textContent = '';
             }
             
             if (!password) {
@@ -1196,37 +1144,15 @@
             
             if (!isValid) return;
             
-            // Проверка пользователя
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
-            
-            if (user) {
-                // Обновляем время последнего входа
-                user.lastSeen = new Date().toISOString();
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                currentUser = {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    avatar: user.avatar,
-                    about: user.about,
-                    lastSeen: user.lastSeen
-                };
-                
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                hideModal('loginModal');
-                updateUIForAuth();
-                
-                // Очищаем поля
-                document.getElementById('loginUsername').value = '';
-                document.getElementById('loginPassword').value = '';
-                
-                // Показываем главную страницу
-                showPage('home');
-            } else {
-                document.getElementById('loginPasswordError').textContent = 'Неверный логин или пароль';
-            }
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    hideModal('loginModal');
+                    document.getElementById('loginEmail').value = '';
+                    document.getElementById('loginPassword').value = '';
+                })
+                .catch((error) => {
+                    document.getElementById('loginPasswordError').textContent = error.message;
+                });
         }
 
         // Регистрация
@@ -1281,109 +1207,59 @@
             
             if (!isValid) return;
             
-            // Проверка на существующего пользователя
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            
-            if (users.some(u => u.username === username)) {
-                document.getElementById('registerUsernameError').textContent = 'Это имя пользователя уже занято';
-                return;
-            }
-            
-            if (users.some(u => u.email === email)) {
-                document.getElementById('registerEmailError').textContent = 'Этот email уже зарегистрирован';
-                return;
-            }
-            
-            // Создание нового пользователя
-            const newUser = {
-                id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-                username,
-                email,
-                password,
-                avatar: '',
-                about: '',
-                friends: [],
-                friendRequests: [],
-                sentFriendRequests: [],
-                lastSeen: new Date().toISOString()
-            };
-            
-            users.push(newUser);
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            currentUser = {
-                id: newUser.id,
-                username: newUser.username,
-                email: newUser.email,
-                avatar: newUser.avatar,
-                about: newUser.about,
-                lastSeen: newUser.lastSeen
-            };
-            
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            hideModal('registerModal');
-            updateUIForAuth();
-            
-            // Очищаем поля
-            document.getElementById('registerUsername').value = '';
-            document.getElementById('registerEmail').value = '';
-            document.getElementById('registerPassword').value = '';
-            document.getElementById('registerPasswordConfirm').value = '';
-            
-            // Показываем главную страницу
-            showPage('home');
+            // Проверка на существующего пользователя с таким именем
+            database.ref('users').orderByChild('username').equalTo(username).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        document.getElementById('registerUsernameError').textContent = 'Это имя пользователя уже занято';
+                        return;
+                    }
+                    
+                    // Создаем пользователя
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            const user = userCredential.user;
+                            
+                            // Сохраняем дополнительные данные пользователя
+                            return database.ref('users/' + user.uid).set({
+                                username: username,
+                                email: email,
+                                avatar: '',
+                                about: '',
+                                friends: [],
+                                friendRequests: [],
+                                sentFriendRequests: [],
+                                lastSeen: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        })
+                        .then(() => {
+                            hideModal('registerModal');
+                            document.getElementById('registerUsername').value = '';
+                            document.getElementById('registerEmail').value = '';
+                            document.getElementById('registerPassword').value = '';
+                            document.getElementById('registerPasswordConfirm').value = '';
+                        })
+                        .catch((error) => {
+                            document.getElementById('registerEmailError').textContent = error.message;
+                        });
+                });
         }
 
         // Выход
         function logout() {
-            // Обновляем время последнего входа перед выходом
-            if (currentUser) {
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                const user = users.find(u => u.id === currentUser.id);
-                if (user) {
-                    user.lastSeen = new Date().toISOString();
-                    localStorage.setItem('users', JSON.stringify(users));
+            auth.signOut().then(() => {
+                // Обновляем статус при выходе
+                if (userStatusRef) {
+                    userStatusRef.set({
+                        status: 'offline',
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
                 }
-            }
-            
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            updateUIForGuest();
-            showPage('home');
-        }
-
-        // Синхронизация данных
-        function syncData() {
-            if (!currentUser) return;
-            
-            // Обновляем время последней активности пользователя
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.id === currentUser.id);
-            if (user) {
-                user.lastSeen = new Date().toISOString();
-                localStorage.setItem('users', JSON.stringify(users));
-                currentUser.lastSeen = user.lastSeen;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            }
-            
-            // Обновляем время последней синхронизации
-            localStorage.setItem('lastSync', new Date().toISOString());
-            
-            // Перерисовываем контент, который может измениться
-            renderConversations();
-            renderFriends('all');
-            
-            // Если открыт чат, перерисовываем его
-            if (currentChat) {
-                renderChat(currentChat);
-            }
-            
-            // Обновляем кнопки друзей в профиле
-            if (currentViewingUserId) {
-                updateFriendButtons(currentViewingUserId);
-            }
-            
-            console.log('Данные синхронизированы');
+                
+                currentUser = null;
+                updateUIForGuest();
+                showPage('home');
+            });
         }
 
         // Создание поста
@@ -1392,40 +1268,66 @@
             
             if (!text) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
             const newPost = {
-                id: posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1,
                 userId: currentUser.id,
-                text,
+                text: text,
                 image: '',
                 likes: [],
                 comments: [],
-                time: new Date().toISOString()
+                time: firebase.database.ServerValue.TIMESTAMP
             };
             
-            posts.unshift(newPost);
-            localStorage.setItem('posts', JSON.stringify(posts));
-            
-            document.getElementById('postText').value = '';
-            renderPosts();
-            renderProfilePosts();
-            updateCounters();
+            database.ref('posts').push(newPost)
+                .then(() => {
+                    document.getElementById('postText').value = '';
+                    showNotification('Пост опубликован');
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при публикации поста', true);
+                });
         }
 
         // Отображение постов
         function renderPosts() {
             if (!postsContainer) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const users = JSON.parse(localStorage.getItem('users')) || [];
+            postsContainer.innerHTML = '<p>Загрузка...</p>';
             
+            database.ref('posts').orderByChild('time').on('value', (snapshot) => {
+                const posts = [];
+                snapshot.forEach((childSnapshot) => {
+                    posts.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                
+                // Сортируем посты по дате (новые сначала)
+                const sortedPosts = posts.sort((a, b) => b.time - a.time);
+                
+                // Получаем информацию о пользователях
+                database.ref('users').once('value').then((userSnapshot) => {
+                    const users = {};
+                    userSnapshot.forEach((childSnapshot) => {
+                        users[childSnapshot.key] = childSnapshot.val();
+                    });
+                    
+                    displayPosts(sortedPosts, users);
+                });
+            });
+        }
+
+        // Отображение списка постов
+        function displayPosts(posts, users) {
             postsContainer.innerHTML = '';
             
-            // Сортируем посты по дате (новые сначала)
-            const sortedPosts = [...posts].sort((a, b) => new Date(b.time) - new Date(a.time));
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<p>Нет постов</p>';
+                return;
+            }
             
-            sortedPosts.forEach(post => {
-                const user = users.find(u => u.id === post.userId);
+            posts.forEach(post => {
+                const user = users[post.userId];
                 if (!user) return;
                 
                 const time = new Date(post.time).toLocaleString();
@@ -1436,27 +1338,27 @@
                 
                 postElement.innerHTML = `
                     <div class="post-header">
-                        <div class="post-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                        <div class="post-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile('${post.userId}')">
                             ${user.avatar ? '' : `<span class="avatar-initial">${postAvatarInitial}</span>`}
                         </div>
-                        <div class="post-user" onclick="showUserProfile(${user.id})">${user.username}</div>
+                        <div class="post-user" onclick="showUserProfile('${post.userId}')">${user.username}</div>
                         <div class="post-time">${time}</div>
                     </div>
                     <div class="post-content">${post.text}</div>
                     ${post.image ? `<img src="${post.image}" class="post-image" alt="Пост">` : ''}
                     <div class="post-actions">
-                        <div class="post-action" onclick="likePost(${post.id})">
-                            <span>${post.likes.length}</span> Нравится
+                        <div class="post-action" onclick="likePost('${post.id}')">
+                            <span>${post.likes ? post.likes.length : 0}</span> Нравится
                         </div>
-                        <div class="post-action" onclick="focusComment(${post.id})">
-                            <span>${post.comments.length}</span> Комментарии
+                        <div class="post-action" onclick="focusComment('${post.id}')">
+                            <span>${post.comments ? post.comments.length : 0}</span> Комментарии
                         </div>
                     </div>
                     <div id="comments-${post.id}"></div>
                     ${currentUser ? `
                     <div class="add-comment">
                         <input type="text" id="comment-${post.id}" placeholder="Написать комментарий...">
-                        <button onclick="addComment(${post.id})">Отправить</button>
+                        <button onclick="addComment('${post.id}')">Отправить</button>
                     </div>
                     ` : ''}
                 `;
@@ -1464,7 +1366,9 @@
                 postsContainer.appendChild(postElement);
                 
                 // Отображаем комментарии
-                renderComments(post.id);
+                if (post.comments) {
+                    renderComments(post.id, post.comments);
+                }
             });
         }
 
@@ -1475,22 +1379,23 @@
                 return;
             }
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const post = posts.find(p => p.id === postId);
-            
-            if (post) {
-                const likeIndex = post.likes.indexOf(currentUser.id);
+            database.ref('posts/' + postId).once('value').then((snapshot) => {
+                const post = snapshot.val();
+                let likes = post.likes || [];
+                const likeIndex = likes.indexOf(currentUser.id);
                 
                 if (likeIndex === -1) {
-                    post.likes.push(currentUser.id);
+                    likes.push(currentUser.id);
                 } else {
-                    post.likes.splice(likeIndex, 1);
+                    likes.splice(likeIndex, 1);
                 }
                 
-                localStorage.setItem('posts', JSON.stringify(posts));
-                renderPosts();
-                renderProfilePosts();
-            }
+                return database.ref('posts/' + postId).update({ likes: likes });
+            }).then(() => {
+                // Обновление UI произойдет автоматически через слушатель
+            }).catch((error) => {
+                showNotification('Ошибка при обработке лайка', true);
+            });
         }
 
         // Фокус на комментарий
@@ -1507,57 +1412,65 @@
             
             if (!commentText) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const post = posts.find(p => p.id === postId);
+            const newComment = {
+                userId: currentUser.id,
+                text: commentText,
+                time: firebase.database.ServerValue.TIMESTAMP
+            };
             
-            if (post) {
-                post.comments.push({
-                    userId: currentUser.id,
-                    text: commentText,
-                    time: new Date().toISOString()
+            database.ref('posts/' + postId + '/comments').push(newComment)
+                .then(() => {
+                    document.getElementById(`comment-${postId}`).value = '';
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при добавлении комментария', true);
                 });
-                
-                localStorage.setItem('posts', JSON.stringify(posts));
-                document.getElementById(`comment-${postId}`).value = '';
-                renderComments(postId);
-                renderProfilePosts();
-            }
         }
 
         // Отображение комментариев
-        function renderComments(postId) {
+        function renderComments(postId, comments) {
             const commentsContainer = document.getElementById(`comments-${postId}`);
             if (!commentsContainer) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const post = posts.find(p => p.id === postId);
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            
             commentsContainer.innerHTML = '';
             
-            if (!post || !post.comments) return;
+            if (!comments) return;
             
-            post.comments.forEach(comment => {
-                const user = users.find(u => u.id === comment.userId);
-                if (!user) return;
+            // Получаем информацию о пользователях
+            database.ref('users').once('value').then((userSnapshot) => {
+                const users = {};
+                userSnapshot.forEach((childSnapshot) => {
+                    users[childSnapshot.key] = childSnapshot.val();
+                });
                 
-                const time = new Date(comment.time).toLocaleString();
-                const commentAvatarInitial = user.username.charAt(0).toUpperCase();
+                // Преобразуем объект комментариев в массив и сортируем по времени
+                const commentsArray = Object.entries(comments).map(([id, comment]) => ({
+                    id,
+                    ...comment
+                })).sort((a, b) => a.time - b.time);
                 
-                const commentElement = document.createElement('div');
-                commentElement.className = 'comment';
-                commentElement.innerHTML = `
-                    <div class="comment-header">
-                        <div class="comment-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
-                            ${user.avatar ? '' : `<span class="avatar-initial">${commentAvatarInitial}</span>`}
+                commentsArray.forEach(comment => {
+                    const user = users[comment.userId];
+                    if (!user) return;
+                    
+                    const time = new Date(comment.time).toLocaleString();
+                    const commentAvatarInitial = user.username.charAt(0).toUpperCase();
+                    
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <div class="comment-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile('${user.id}')">
+                                ${user.avatar ? '' : `<span class="avatar-initial">${commentAvatarInitial}</span>`}
+                            </div>
+                            <div class="comment-user" onclick="showUserProfile('${user.id}')">${user.username}</div>
+                            <div class="comment-time">${time}</div>
                         </div>
-                        <div class="comment-user" onclick="showUserProfile(${user.id})">${user.username}</div>
-                        <div class="comment-time">${time}</div>
-                    </div>
-                    <div class="comment-content">${comment.text}</div>
-                `;
-                
-                commentsContainer.appendChild(commentElement);
+                        <div class="comment-content">${comment.text}</div>
+                    `;
+                    
+                    commentsContainer.appendChild(commentElement);
+                });
             });
         }
 
@@ -1565,92 +1478,124 @@
         function renderFriends(filter) {
             if (!friendsContainer) return;
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser?.id);
+            friendsContainer.innerHTML = '<p>Загрузка...</p>';
             
-            if (!currentUserData) {
-                friendsContainer.innerHTML = '<p>Войдите, чтобы увидеть друзей</p>';
-                return;
-            }
-            
+            database.ref('users').once('value').then((snapshot) => {
+                const users = {};
+                snapshot.forEach((childSnapshot) => {
+                    users[childSnapshot.key] = childSnapshot.val();
+                });
+                
+                let friendsToShow = [];
+                let title = 'Друзья';
+                
+                if (filter === 'all') {
+                    friendsToShow = Object.values(users).filter(u => 
+                        currentUser.friends && currentUser.friends.includes(u.id)
+                    );
+                    title = 'Все друзья';
+                } else if (filter === 'online') {
+                    // Показываем друзей, которые были онлайн в последние 5 минут
+                    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+                    friendsToShow = Object.values(users).filter(u => 
+                        currentUser.friends && currentUser.friends.includes(u.id) && 
+                        u.lastSeen && u.lastSeen > fiveMinutesAgo
+                    );
+                    title = 'Друзья онлайн';
+                } else if (filter === 'requests') {
+                    friendsToShow = Object.values(users).filter(u => 
+                        currentUser.friendRequests && currentUser.friendRequests.includes(u.id)
+                    );
+                    title = 'Заявки в друзья';
+                } else if (filter === 'suggestions') {
+                    // Рекомендации - все пользователи, кроме себя, друзей и тех, кому уже отправили заявку
+                    friendsToShow = Object.values(users).filter(u => 
+                        u.id !== currentUser.id && 
+                        (!currentUser.friends || !currentUser.friends.includes(u.id)) && 
+                        (!currentUser.sentFriendRequests || !currentUser.sentFriendRequests.includes(u.id))
+                    );
+                    title = 'Рекомендации';
+                }
+                
+                friendsTitle.textContent = title;
+                displayFriends(friendsToShow, filter);
+            });
+        }
+
+        // Отображение списка друзей
+        function displayFriends(friends, filter) {
             friendsContainer.innerHTML = '';
             
-            let friendsToShow = [];
-            let title = 'Друзья';
-            
-            if (filter === 'all') {
-                friendsToShow = users.filter(u => currentUserData.friends.includes(u.id));
-                title = 'Все друзья';
-            } else if (filter === 'online') {
-                // Показываем друзей, которые были онлайн в последние 5 минут
-                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-                friendsToShow = users.filter(u => 
-                    currentUserData.friends.includes(u.id) && 
-                    new Date(u.lastSeen) > new Date(fiveMinutesAgo)
-                );
-                title = 'Друзья онлайн';
-            } else if (filter === 'requests') {
-                friendsToShow = users.filter(u => currentUserData.friendRequests.includes(u.id));
-                title = 'Заявки в друзья';
-            } else if (filter === 'suggestions') {
-                // Рекомендации - все пользователи, кроме себя, друзей и тех, кому уже отправили заявку
-                friendsToShow = users.filter(u => 
-                    u.id !== currentUser.id && 
-                    !currentUserData.friends.includes(u.id) && 
-                    !currentUserData.sentFriendRequests.includes(u.id)
-                );
-                title = 'Рекомендации';
-            }
-            
-            friendsTitle.textContent = title;
-            
-            if (friendsToShow.length === 0) {
+            if (friends.length === 0) {
                 friendsContainer.innerHTML = `<p>${filter === 'requests' ? 'Нет заявок в друзья' : 
                                              filter === 'suggestions' ? 'Нет рекомендаций' : 'Нет друзей'}</p>`;
                 return;
             }
             
-            friendsToShow.forEach(user => {
-                const friendAvatarInitial = user.username.charAt(0).toUpperCase();
+            // Получаем статусы онлайн
+            database.ref('status').once('value').then((statusSnapshot) => {
+                const statuses = statusSnapshot.val() || {};
                 
-                const friendElement = document.createElement('div');
-                friendElement.className = 'friend-item';
-                friendElement.innerHTML = `
-                    <div class="friend-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
-                        ${user.avatar ? '' : `<span class="avatar-initial">${friendAvatarInitial}</span>`}
-                    </div>
-                    <div onclick="showUserProfile(${user.id})">
-                        <div class="friend-name">${user.username}</div>
-                        ${filter === 'online' ? `<div class="last-seen">online</div>` : ''}
-                    </div>
-                `;
-                
-                // Добавляем кнопки действий в зависимости от фильтра
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'friend-actions';
-                
-                if (filter === 'requests') {
-                    // Для заявок в друзья добавляем кнопки принять/отклонить
-                    actionsDiv.innerHTML = `
-                        <button class="friend-action add" onclick="acceptFriendRequest(${user.id})">Принять</button>
-                        <button class="friend-action remove" onclick="declineFriendRequest(${user.id})">Отклонить</button>
+                friends.forEach(user => {
+                    const friendAvatarInitial = user.username.charAt(0).toUpperCase();
+                    const isOnline = statuses[user.id] && statuses[user.id].status === 'online';
+                    
+                    const friendElement = document.createElement('div');
+                    friendElement.className = 'friend-item';
+                    friendElement.innerHTML = `
+                        <div class="friend-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile('${user.id}')">
+                            ${user.avatar ? '' : `<span class="avatar-initial">${friendAvatarInitial}</span>`}
+                        </div>
+                        <div onclick="showUserProfile('${user.id}')">
+                            <div class="friend-name">${user.username}</div>
+                            ${isOnline ? `<div class="last-seen">online</div>` : 
+                              user.lastSeen ? `<div class="last-seen">${getLastSeenText(user.lastSeen)}</div>` : ''}
+                        </div>
                     `;
-                } else if (filter === 'suggestions') {
-                    // Для рекомендаций добавляем кнопку добавить в друзья
-                    actionsDiv.innerHTML = `
-                        <button class="friend-action add" onclick="sendFriendRequest(${user.id})">Добавить</button>
-                    `;
-                } else if (filter === 'all') {
-                    // Для друзей добавляем кнопку удалить из друзей и написать сообщение
-                    actionsDiv.innerHTML = `
-                        <button class="friend-action remove" onclick="removeFriend(${user.id})">Удалить</button>
-                        <button class="friend-action message" onclick="startNewChat(${user.id})">Сообщение</button>
-                    `;
-                }
-                
-                friendElement.appendChild(actionsDiv);
-                friendsContainer.appendChild(friendElement);
+                    
+                    // Добавляем кнопки действий в зависимости от фильтра
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'friend-actions';
+                    
+                    if (filter === 'requests') {
+                        // Для заявок в друзья добавляем кнопки принять/отклонить
+                        actionsDiv.innerHTML = `
+                            <button class="friend-action add" onclick="acceptFriendRequest('${user.id}')">Принять</button>
+                            <button class="friend-action remove" onclick="declineFriendRequest('${user.id}')">Отклонить</button>
+                        `;
+                    } else if (filter === 'suggestions') {
+                        // Для рекомендаций добавляем кнопку добавить в друзья
+                        actionsDiv.innerHTML = `
+                            <button class="friend-action add" onclick="sendFriendRequest('${user.id}')">Добавить</button>
+                        `;
+                    } else if (filter === 'all') {
+                        // Для друзей добавляем кнопку удалить из друзей и написать сообщение
+                        actionsDiv.innerHTML = `
+                            <button class="friend-action remove" onclick="removeFriend('${user.id}')">Удалить</button>
+                            <button class="friend-action message" onclick="startNewChat('${user.id}')">Сообщение</button>
+                        `;
+                    }
+                    
+                    friendElement.appendChild(actionsDiv);
+                    friendsContainer.appendChild(friendElement);
+                });
             });
+        }
+
+        // Получить текст для статуса "был в сети"
+        function getLastSeenText(lastSeen) {
+            const lastSeenDate = new Date(lastSeen);
+            const now = new Date();
+            const diffMinutes = Math.floor((now - lastSeenDate) / (1000 * 60));
+            
+            if (diffMinutes < 60) {
+                return `был(а) в сети ${diffMinutes} мин назад`;
+            } else if (diffMinutes < 24 * 60) {
+                const hours = Math.floor(diffMinutes / 60);
+                return `был(а) в сети ${hours} ч назад`;
+            } else {
+                return `был(а) в сети ${lastSeenDate.toLocaleDateString()}`;
+            }
         }
 
         // Показать друзей по фильтру
@@ -1665,182 +1610,164 @@
 
         // Отправить заявку в друзья
         function sendFriendRequest(friendId) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser.id);
-            const friendData = users.find(u => u.id === friendId);
+            // Добавляем в отправленные заявки текущего пользователя
+            database.ref('users/' + currentUser.id + '/sentFriendRequests').push(friendId);
             
-            if (currentUserData && friendData) {
-                // Добавляем заявку в друзья
-                if (!friendData.friendRequests.includes(currentUser.id)) {
-                    friendData.friendRequests.push(currentUser.id);
-                }
-                
-                // Добавляем в отправленные заявки
-                if (!currentUserData.sentFriendRequests.includes(friendId)) {
-                    currentUserData.sentFriendRequests.push(friendId);
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Обновляем отображение
-                renderFriends('suggestions');
-                
-                // Если мы на странице профиля этого пользователя, обновляем кнопки
-                if (currentViewingUserId === friendId) {
-                    updateFriendButtons(friendId);
-                }
-            }
+            // Добавляем в заявки получателя
+            database.ref('users/' + friendId + '/friendRequests').push(currentUser.id)
+                .then(() => {
+                    showNotification('Заявка отправлена');
+                    renderFriends('suggestions');
+                    
+                    // Если мы на странице профиля этого пользователя, обновляем кнопки
+                    if (currentViewingUserId === friendId) {
+                        updateFriendButtons(friendId);
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при отправке заявки', true);
+                });
         }
 
         // Принять заявку в друзья
         function acceptFriendRequest(friendId) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser.id);
-            const friendData = users.find(u => u.id === friendId);
-            
-            if (currentUserData && friendData) {
-                // Удаляем из заявок
-                const requestIndex = currentUserData.friendRequests.indexOf(friendId);
-                if (requestIndex !== -1) {
-                    currentUserData.friendRequests.splice(requestIndex, 1);
-                }
-                
-                // Удаляем из отправленных заявок другого пользователя
-                const sentRequestIndex = friendData.sentFriendRequests.indexOf(currentUser.id);
-                if (sentRequestIndex !== -1) {
-                    friendData.sentFriendRequests.splice(sentRequestIndex, 1);
-                }
-                
-                // Добавляем в друзья
-                if (!currentUserData.friends.includes(friendId)) {
-                    currentUserData.friends.push(friendId);
-                }
-                
-                // Добавляем себя в друзья другого пользователя
-                if (!friendData.friends.includes(currentUser.id)) {
-                    friendData.friends.push(currentUser.id);
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Обновляем текущего пользователя
-                currentUser.friends = currentUserData.friends;
-                currentUser.friendRequests = currentUserData.friendRequests;
-                currentUser.sentFriendRequests = currentUserData.sentFriendRequests;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Обновляем отображение
-                renderFriends('requests');
-                updateCounters();
-                
-                // Если мы на странице профиля этого пользователя, обновляем кнопки
-                if (currentViewingUserId === friendId) {
-                    updateFriendButtons(friendId);
-                }
-            }
+            // Удаляем из заявок текущего пользователя
+            database.ref('users/' + currentUser.id + '/friendRequests').orderByValue().equalTo(friendId).once('value')
+                .then((snapshot) => {
+                    const updates = {};
+                    snapshot.forEach((childSnapshot) => {
+                        updates['users/' + currentUser.id + '/friendRequests/' + childSnapshot.key] = null;
+                    });
+                    
+                    // Удаляем из отправленных заявок друга
+                    return database.ref('users/' + friendId + '/sentFriendRequests').orderByValue().equalTo(currentUser.id).once('value')
+                        .then((sentSnapshot) => {
+                            sentSnapshot.forEach((childSnapshot) => {
+                                updates['users/' + friendId + '/sentFriendRequests/' + childSnapshot.key] = null;
+                            });
+                            
+                            // Добавляем в друзья
+                            updates['users/' + currentUser.id + '/friends/' + firebase.database().ref().push().key] = friendId;
+                            updates['users/' + friendId + '/friends/' + firebase.database().ref().push().key] = currentUser.id;
+                            
+                            return database.ref().update(updates);
+                        });
+                })
+                .then(() => {
+                    showNotification('Пользователь добавлен в друзья');
+                    renderFriends('requests');
+                    updateCounters();
+                    
+                    // Если мы на странице профиля этого пользователя, обновляем кнопки
+                    if (currentViewingUserId === friendId) {
+                        updateFriendButtons(friendId);
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при принятии заявки', true);
+                });
         }
 
         // Отклонить заявку в друзья
         function declineFriendRequest(friendId) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser.id);
-            const friendData = users.find(u => u.id === friendId);
-            
-            if (currentUserData && friendData) {
-                // Удаляем из заявок
-                const requestIndex = currentUserData.friendRequests.indexOf(friendId);
-                if (requestIndex !== -1) {
-                    currentUserData.friendRequests.splice(requestIndex, 1);
-                }
-                
-                // Удаляем из отправленных заявок другого пользователя
-                const sentRequestIndex = friendData.sentFriendRequests.indexOf(currentUser.id);
-                if (sentRequestIndex !== -1) {
-                    friendData.sentFriendRequests.splice(sentRequestIndex, 1);
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Обновляем текущего пользователя
-                currentUser.friendRequests = currentUserData.friendRequests;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Обновляем отображение
-                renderFriends('requests');
-                
-                // Если мы на странице профиля этого пользователя, обновляем кнопки
-                if (currentViewingUserId === friendId) {
-                    updateFriendButtons(friendId);
-                }
-            }
+            // Удаляем из заявок текущего пользователя
+            database.ref('users/' + currentUser.id + '/friendRequests').orderByValue().equalTo(friendId).once('value')
+                .then((snapshot) => {
+                    const updates = {};
+                    snapshot.forEach((childSnapshot) => {
+                        updates['users/' + currentUser.id + '/friendRequests/' + childSnapshot.key] = null;
+                    });
+                    
+                    // Удаляем из отправленных заявок друга
+                    return database.ref('users/' + friendId + '/sentFriendRequests').orderByValue().equalTo(currentUser.id).once('value')
+                        .then((sentSnapshot) => {
+                            sentSnapshot.forEach((childSnapshot) => {
+                                updates['users/' + friendId + '/sentFriendRequests/' + childSnapshot.key] = null;
+                            });
+                            
+                            return database.ref().update(updates);
+                        });
+                })
+                .then(() => {
+                    showNotification('Заявка отклонена');
+                    renderFriends('requests');
+                    
+                    // Если мы на странице профиля этого пользователя, обновляем кнопки
+                    if (currentViewingUserId === friendId) {
+                        updateFriendButtons(friendId);
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при отклонении заявки', true);
+                });
         }
 
         // Отменить заявку в друзья
         function cancelFriendRequest(friendId) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser.id);
-            const friendData = users.find(u => u.id === friendId);
-            
-            if (currentUserData && friendData) {
-                // Удаляем из отправленных заявок
-                const sentRequestIndex = currentUserData.sentFriendRequests.indexOf(friendId);
-                if (sentRequestIndex !== -1) {
-                    currentUserData.sentFriendRequests.splice(sentRequestIndex, 1);
-                }
-                
-                // Удаляем из заявок другого пользователя
-                const requestIndex = friendData.friendRequests.indexOf(currentUser.id);
-                if (requestIndex !== -1) {
-                    friendData.friendRequests.splice(requestIndex, 1);
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Обновляем текущего пользователя
-                currentUser.sentFriendRequests = currentUserData.sentFriendRequests;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Обновляем отображение
-                if (currentViewingUserId === friendId) {
-                    updateFriendButtons(friendId);
-                }
-            }
+            // Удаляем из отправленных заявок текущего пользователя
+            database.ref('users/' + currentUser.id + '/sentFriendRequests').orderByValue().equalTo(friendId).once('value')
+                .then((snapshot) => {
+                    const updates = {};
+                    snapshot.forEach((childSnapshot) => {
+                        updates['users/' + currentUser.id + '/sentFriendRequests/' + childSnapshot.key] = null;
+                    });
+                    
+                    // Удаляем из заявок друга
+                    return database.ref('users/' + friendId + '/friendRequests').orderByValue().equalTo(currentUser.id).once('value')
+                        .then((requestSnapshot) => {
+                            requestSnapshot.forEach((childSnapshot) => {
+                                updates['users/' + friendId + '/friendRequests/' + childSnapshot.key] = null;
+                            });
+                            
+                            return database.ref().update(updates);
+                        });
+                })
+                .then(() => {
+                    showNotification('Заявка отменена');
+                    
+                    // Если мы на странице профиля этого пользователя, обновляем кнопки
+                    if (currentViewingUserId === friendId) {
+                        updateFriendButtons(friendId);
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при отмене заявки', true);
+                });
         }
 
         // Удалить из друзей
         function removeFriend(friendId) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser.id);
-            const friendData = users.find(u => u.id === friendId);
-            
-            if (currentUserData && friendData) {
-                // Удаляем из друзей
-                const friendIndex = currentUserData.friends.indexOf(friendId);
-                if (friendIndex !== -1) {
-                    currentUserData.friends.splice(friendIndex, 1);
-                }
-                
-                // Удаляем себя из друзей другого пользователя
-                const userIndex = friendData.friends.indexOf(currentUser.id);
-                if (userIndex !== -1) {
-                    friendData.friends.splice(userIndex, 1);
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Обновляем текущего пользователя
-                currentUser.friends = currentUserData.friends;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Обновляем отображение
-                renderFriends('all');
-                updateCounters();
-                
-                // Если мы на странице профиля этого пользователя, обновляем кнопки
-                if (currentViewingUserId === friendId) {
-                    updateFriendButtons(friendId);
-                }
-            }
+            // Удаляем из друзей текущего пользователя
+            database.ref('users/' + currentUser.id + '/friends').orderByValue().equalTo(friendId).once('value')
+                .then((snapshot) => {
+                    const updates = {};
+                    snapshot.forEach((childSnapshot) => {
+                        updates['users/' + currentUser.id + '/friends/' + childSnapshot.key] = null;
+                    });
+                    
+                    // Удаляем из друзей друга
+                    return database.ref('users/' + friendId + '/friends').orderByValue().equalTo(currentUser.id).once('value')
+                        .then((friendSnapshot) => {
+                            friendSnapshot.forEach((childSnapshot) => {
+                                updates['users/' + friendId + '/friends/' + childSnapshot.key] = null;
+                            });
+                            
+                            return database.ref().update(updates);
+                        });
+                })
+                .then(() => {
+                    showNotification('Пользователь удален из друзей');
+                    renderFriends('all');
+                    updateCounters();
+                    
+                    // Если мы на странице профиля этого пользователя, обновляем кнопки
+                    if (currentViewingUserId === friendId) {
+                        updateFriendButtons(friendId);
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при удалении из друзей', true);
+                });
         }
 
         // Показать профиль пользователя
@@ -1853,64 +1780,65 @@
             currentViewingUserId = userId;
             showPage('profile');
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.id === userId);
-            
-            if (!user) return;
-            
-            // Обновляем информацию в профиле
-            profileName.textContent = user.username;
-            
-            if (user.avatar) {
-                profileAvatar.style.backgroundImage = `url(${user.avatar})`;
-                profileAvatar.style.backgroundSize = 'cover';
-                profileAvatarInitial.style.display = 'none';
-            } else {
-                profileAvatar.style.backgroundImage = '';
-                profileAvatarInitial.style.display = 'flex';
-                profileAvatarInitial.textContent = user.username.charAt(0).toUpperCase();
-            }
-            
-            // Информация "О себе"
-            if (user.about) {
-                profileAboutContent.textContent = user.about;
-            } else {
-                profileAboutContent.textContent = 'Нет информации';
-            }
-            
-            // Статистика
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const userPosts = posts.filter(p => p.userId === userId);
-            postsCount.textContent = userPosts.length;
-            friendsCount.textContent = user.friends.length;
-            
-            // Кнопки редактирования (только для своего профиля)
-            if (userId === currentUser?.id) {
-                editAboutBtn.style.display = 'block';
-                editProfileBtn.style.display = 'block';
-                userProfileActions.style.display = 'none';
-            } else {
-                editAboutBtn.style.display = 'none';
-                editProfileBtn.style.display = 'none';
-                userProfileActions.style.display = 'flex';
+            database.ref('users/' + userId).once('value').then((snapshot) => {
+                const user = snapshot.val();
+                if (!user) return;
                 
-                // Обновляем кнопки дружбы
-                updateFriendButtons(userId);
-            }
-            
-            // Отображаем посты пользователя
-            renderProfilePosts();
+                // Обновляем информацию в профиле
+                profileName.textContent = user.username;
+                
+                if (user.avatar) {
+                    profileAvatar.style.backgroundImage = `url(${user.avatar})`;
+                    profileAvatar.style.backgroundSize = 'cover';
+                    profileAvatarInitial.style.display = 'none';
+                } else {
+                    profileAvatar.style.backgroundImage = '';
+                    profileAvatarInitial.style.display = 'flex';
+                    profileAvatarInitial.textContent = user.username.charAt(0).toUpperCase();
+                }
+                
+                // Информация "О себе"
+                if (user.about) {
+                    profileAboutContent.textContent = user.about;
+                } else {
+                    profileAboutContent.textContent = 'Нет информации';
+                }
+                
+                // Статистика
+                if (user.friends) {
+                    friendsCount.textContent = Object.keys(user.friends).length;
+                } else {
+                    friendsCount.textContent = 0;
+                }
+                
+                // Получаем количество постов
+                database.ref('posts').orderByChild('userId').equalTo(userId).once('value')
+                    .then((postSnapshot) => {
+                        postsCount.textContent = postSnapshot.numChildren();
+                    });
+                
+                // Кнопки редактирования (только для своего профиля)
+                if (userId === currentUser?.id) {
+                    editAboutBtn.style.display = 'block';
+                    editProfileBtn.style.display = 'block';
+                    userProfileActions.style.display = 'none';
+                } else {
+                    editAboutBtn.style.display = 'none';
+                    editProfileBtn.style.display = 'none';
+                    userProfileActions.style.display = 'flex';
+                    
+                    // Обновляем кнопки дружбы
+                    updateFriendButtons(userId);
+                }
+                
+                // Отображаем посты пользователя
+                renderProfilePosts();
+            });
         }
 
         // Обновить кнопки дружбы в профиле
         function updateFriendButtons(userId) {
             if (!currentUser || currentViewingUserId !== userId) return;
-            
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const currentUserData = users.find(u => u.id === currentUser.id);
-            const viewedUserData = users.find(u => u.id === userId);
-            
-            if (!currentUserData || !viewedUserData) return;
             
             const addFriendBtn = document.querySelector('.user-profile-action.add-friend');
             const removeFriendBtn = document.querySelector('.user-profile-action.remove-friend');
@@ -1924,20 +1852,33 @@
             sendMessageBtn.style.display = 'none';
             
             // Проверяем статус дружбы
-            if (currentUserData.friends.includes(userId)) {
-                // Если уже друзья - показываем кнопку удаления и сообщения
-                removeFriendBtn.style.display = 'block';
-                sendMessageBtn.style.display = 'block';
-            } else if (currentUserData.sentFriendRequests.includes(userId)) {
-                // Если отправили заявку - показываем кнопку отмены
-                cancelRequestBtn.style.display = 'block';
-            } else if (currentUserData.friendRequests.includes(userId)) {
-                // Если есть входящая заявка - кнопки будут на странице заявок
-                addFriendBtn.style.display = 'none';
-            } else {
-                // Иначе - кнопка добавления в друзья
-                addFriendBtn.style.display = 'block';
-            }
+            database.ref('users/' + currentUser.id).once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                
+                // Проверяем, есть ли пользователь в друзьях
+                let isFriend = false;
+                if (userData.friends) {
+                    isFriend = Object.values(userData.friends).includes(userId);
+                }
+                
+                // Проверяем, есть ли исходящая заявка
+                let hasSentRequest = false;
+                if (userData.sentFriendRequests) {
+                    hasSentRequest = Object.values(userData.sentFriendRequests).includes(userId);
+                }
+                
+                if (isFriend) {
+                    // Если уже друзья - показываем кнопку удаления и сообщения
+                    removeFriendBtn.style.display = 'block';
+                    sendMessageBtn.style.display = 'block';
+                } else if (hasSentRequest) {
+                    // Если отправили заявку - показываем кнопку отмены
+                    cancelRequestBtn.style.display = 'block';
+                } else {
+                    // Иначе - кнопка добавления в друзья
+                    addFriendBtn.style.display = 'block';
+                }
+            });
         }
 
         // Начать новый чат
@@ -1951,97 +1892,153 @@
         function renderConversations() {
             if (!conversationsList) return;
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const messages = JSON.parse(localStorage.getItem('messages')) || [];
-            const currentUserData = users.find(u => u.id === currentUser?.id);
+            conversationsList.innerHTML = '<p>Загрузка...</p>';
             
-            if (!currentUserData) {
-                conversationsList.innerHTML = '<p>Войдите, чтобы увидеть сообщения</p>';
-                return;
-            }
-            
-            // Находим всех пользователей, с которыми есть переписка
-            const interlocutors = new Set();
-            messages.forEach(msg => {
-                if (msg.senderId === currentUser.id) {
-                    interlocutors.add(msg.recipientId);
-                } else if (msg.recipientId === currentUser.id) {
-                    interlocutors.add(msg.senderId);
-                }
-            });
-            
-            conversationsList.innerHTML = '';
-            
-            if (interlocutors.size === 0) {
-                conversationsList.innerHTML = '<p>Нет сообщений</p>';
-                return;
-            }
-            
-            Array.from(interlocutors).forEach(userId => {
-                const user = users.find(u => u.id === userId);
-                if (!user) return;
-                
-                // Находим последнее сообщение в диалоге
-                const dialogMessages = messages.filter(msg => 
-                    (msg.senderId === currentUser.id && msg.recipientId === userId) ||
-                    (msg.senderId === userId && msg.recipientId === currentUser.id)
-                ).sort((a, b) => new Date(b.time) - new Date(a.time));
-                
-                const lastMessage = dialogMessages[0];
-                const conversationAvatarInitial = user.username.charAt(0).toUpperCase();
-                
-                const conversationElement = document.createElement('div');
-                conversationElement.className = `conversation ${currentChat === userId ? 'active' : ''}`;
-                conversationElement.innerHTML = `
-                    <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background-color: #cccccc; display: flex; justify-content: center; align-items: center; ${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
-                        ${user.avatar ? '' : `<span class="avatar-initial">${conversationAvatarInitial}</span>`}
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: bold;" onclick="showUserProfile(${user.id})">${user.username}</div>
-                        <div style="font-size: 12px; color: #656565; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
-                            ${lastMessage.senderId === currentUser.id ? 'Вы: ' : ''}${lastMessage.text}
-                        </div>
-                    </div>
-                `;
-                
-                conversationElement.addEventListener('click', () => {
-                    renderChat(userId);
+            // Получаем все сообщения текущего пользователя
+            database.ref('messages').orderByChild('time').on('value', (snapshot) => {
+                const messages = [];
+                snapshot.forEach((childSnapshot) => {
+                    const msg = childSnapshot.val();
+                    if (msg.senderId === currentUser.id || msg.recipientId === currentUser.id) {
+                        messages.push({
+                            id: childSnapshot.key,
+                            ...msg
+                        });
+                    }
                 });
                 
-                conversationsList.appendChild(conversationElement);
+                // Группируем сообщения по собеседникам
+                const interlocutors = new Set();
+                messages.forEach(msg => {
+                    if (msg.senderId === currentUser.id) {
+                        interlocutors.add(msg.recipientId);
+                    } else if (msg.recipientId === currentUser.id) {
+                        interlocutors.add(msg.senderId);
+                    }
+                });
+                
+                if (interlocutors.size === 0) {
+                    conversationsList.innerHTML = '<p>Нет сообщений</p>';
+                    return;
+                }
+                
+                // Получаем информацию о пользователях
+                database.ref('users').once('value').then((userSnapshot) => {
+                    const users = {};
+                    userSnapshot.forEach((childSnapshot) => {
+                        users[childSnapshot.key] = childSnapshot.val();
+                    });
+                    
+                    // Получаем статусы онлайн
+                    return database.ref('status').once('value').then((statusSnapshot) => {
+                        const statuses = statusSnapshot.val() || {};
+                        
+                        conversationsList.innerHTML = '';
+                        
+                        Array.from(interlocutors).forEach(userId => {
+                            const user = users[userId];
+                            if (!user) return;
+                            
+                            // Находим последнее сообщение в диалоге
+                            const lastMessage = messages
+                                .filter(msg => 
+                                    (msg.senderId === currentUser.id && msg.recipientId === userId) ||
+                                    (msg.senderId === userId && msg.recipientId === currentUser.id)
+                                )
+                                .sort((a, b) => b.time - a.time)[0];
+                            
+                            const conversationAvatarInitial = user.username.charAt(0).toUpperCase();
+                            const isOnline = statuses[userId] && statuses[userId].status === 'online';
+                            
+                            const conversationElement = document.createElement('div');
+                            conversationElement.className = `conversation ${currentChat === userId ? 'active' : ''}`;
+                            conversationElement.innerHTML = `
+                                <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background-color: #cccccc; display: flex; justify-content: center; align-items: center; ${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile('${user.id}')">
+                                    ${user.avatar ? '' : `<span class="avatar-initial">${conversationAvatarInitial}</span>`}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: bold;" onclick="showUserProfile('${user.id}')">${user.username}</div>
+                                    <div style="font-size: 12px; color: #656565; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
+                                        ${lastMessage.senderId === currentUser.id ? 'Вы: ' : ''}${lastMessage.text}
+                                    </div>
+                                </div>
+                                ${isOnline ? '<div style="width: 10px; height: 10px; background-color: #4CAF50; border-radius: 50%;"></div>' : ''}
+                            `;
+                            
+                            conversationElement.addEventListener('click', () => {
+                                renderChat(userId);
+                            });
+                            
+                            conversationsList.appendChild(conversationElement);
+                        });
+                    });
+                });
             });
         }
 
         // Отображение чата
         function renderChat(userId) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const messages = JSON.parse(localStorage.getItem('messages')) || [];
-            const user = users.find(u => u.id === userId);
-            
-            if (!user) return;
-            
             currentChat = userId;
-            chatHeader.innerHTML = `
-                <div onclick="showUserProfile(${user.id})" style="cursor: pointer;">${user.username}</div>
-                <div class="last-seen">${getLastSeenStatus(user.lastSeen)}</div>
-            `;
             
+            // Получаем информацию о пользователе
+            database.ref('users/' + userId).once('value').then((userSnapshot) => {
+                const user = userSnapshot.val();
+                if (!user) return;
+                
+                // Получаем статус онлайн
+                return database.ref('status/' + userId).once('value').then((statusSnapshot) => {
+                    const status = statusSnapshot.val();
+                    
+                    chatHeader.innerHTML = `
+                        <div onclick="showUserProfile('${user.id}')" style="cursor: pointer;">${user.username}</div>
+                        <div class="last-seen">${status && status.status === 'online' ? 'online' : getLastSeenText(status ? status.lastSeen : user.lastSeen)}</div>
+                    `;
+                    
+                    chatMessages.innerHTML = '';
+                    chatInput.style.display = 'flex';
+                    
+                    // Получаем сообщения для текущего диалога
+                    database.ref('messages')
+                        .orderByChild('time')
+                        .on('value', (snapshot) => {
+                            const messages = [];
+                            snapshot.forEach((childSnapshot) => {
+                                const msg = childSnapshot.val();
+                                if ((msg.senderId === currentUser.id && msg.recipientId === userId) || 
+                                    (msg.senderId === userId && msg.recipientId === currentUser.id)) {
+                                    messages.push({
+                                        id: childSnapshot.key,
+                                        ...msg
+                                    });
+                                }
+                            });
+                            
+                            if (messages.length === 0) {
+                                chatMessages.innerHTML = '<div class="no-messages">Нет сообщений</div>';
+                                return;
+                            }
+                            
+                            // Получаем информацию о пользователях
+                            database.ref('users').once('value').then((usersSnapshot) => {
+                                const users = {};
+                                usersSnapshot.forEach((childSnapshot) => {
+                                    users[childSnapshot.key] = childSnapshot.val();
+                                });
+                                
+                                displayMessages(messages.sort((a, b) => a.time - b.time), users);
+                            });
+                        });
+                });
+            });
+        }
+
+        // Отображение сообщений в чате
+        function displayMessages(messages, users) {
             chatMessages.innerHTML = '';
-            chatInput.style.display = 'flex';
             
-            // Фильтруем сообщения текущего диалога
-            const dialogMessages = messages.filter(msg => 
-                (msg.senderId === currentUser.id && msg.recipientId === userId) ||
-                (msg.senderId === userId && msg.recipientId === currentUser.id)
-            ).sort((a, b) => new Date(a.time) - new Date(b.time));
-            
-            if (dialogMessages.length === 0) {
-                chatMessages.innerHTML = '<div class="no-messages">Нет сообщений</div>';
-                return;
-            }
-            
-            dialogMessages.forEach(msg => {
-                const isIncoming = msg.senderId === userId;
+            messages.forEach(msg => {
+                const isIncoming = msg.senderId === currentChat;
+                const user = users[msg.senderId];
                 const time = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 
                 const messageElement = document.createElement('div');
@@ -2057,48 +2054,31 @@
             // Прокручиваем вниз
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            // Помечаем сообщения как прочитанные
-            markMessagesAsRead(userId);
-            
-            // Обновляем список диалогов
-            renderConversations();
-        }
-
-        // Получить статус "был в сети"
-        function getLastSeenStatus(lastSeen) {
-            if (!lastSeen) return '';
-            
-            const lastSeenDate = new Date(lastSeen);
-            const now = new Date();
-            const diffMinutes = Math.floor((now - lastSeenDate) / (1000 * 60));
-            
-            if (diffMinutes < 5) {
-                return 'online';
-            } else if (diffMinutes < 60) {
-                return `был(а) в сети ${diffMinutes} минут назад`;
-            } else if (diffMinutes < 24 * 60) {
-                const hours = Math.floor(diffMinutes / 60);
-                return `был(а) в сети ${hours} ${hours === 1 ? 'час' : hours < 5 ? 'часа' : 'часов'} назад`;
-            } else {
-                return `был(а) в сети ${lastSeenDate.toLocaleDateString()}`;
-            }
+            // Помечаем входящие сообщения как прочитанные
+            markMessagesAsRead();
         }
 
         // Пометить сообщения как прочитанные
-        function markMessagesAsRead(userId) {
-            const messages = JSON.parse(localStorage.getItem('messages')) || [];
-            let updated = false;
+        function markMessagesAsRead() {
+            if (!currentChat) return;
             
-            messages.forEach(msg => {
-                if (msg.senderId === userId && msg.recipientId === currentUser.id && !msg.read) {
-                    msg.read = true;
-                    updated = true;
-                }
-            });
-            
-            if (updated) {
-                localStorage.setItem('messages', JSON.stringify(messages));
-            }
+            database.ref('messages')
+                .orderByChild('recipientId')
+                .equalTo(currentUser.id)
+                .once('value')
+                .then((snapshot) => {
+                    const updates = {};
+                    snapshot.forEach((childSnapshot) => {
+                        const msg = childSnapshot.val();
+                        if (msg.senderId === currentChat && !msg.read) {
+                            updates['messages/' + childSnapshot.key + '/read'] = true;
+                        }
+                    });
+                    
+                    if (Object.keys(updates).length > 0) {
+                        return database.ref().update(updates);
+                    }
+                });
         }
 
         // Отправка сообщения
@@ -2112,22 +2092,21 @@
             
             if (!text) return;
             
-            const messages = JSON.parse(localStorage.getItem('messages')) || [];
             const newMessage = {
-                id: messages.length > 0 ? Math.max(...messages.map(m => m.id)) + 1 : 1,
                 senderId: currentUser.id,
                 recipientId: currentChat,
-                text,
-                time: new Date().toISOString(),
+                text: text,
+                time: firebase.database.ServerValue.TIMESTAMP,
                 read: false
             };
             
-            messages.push(newMessage);
-            localStorage.setItem('messages', JSON.stringify(messages));
-            
-            input.value = '';
-            renderChat(currentChat);
-            renderConversations();
+            database.ref('messages').push(newMessage)
+                .then(() => {
+                    input.value = '';
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при отправке сообщения', true);
+                });
         }
 
         // Обновление аватара
@@ -2139,46 +2118,34 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.id === currentUser.id);
-            
-            if (user) {
-                user.avatar = avatarUrl;
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                currentUser.avatar = avatarUrl;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                updateAvatarDisplay();
-                
-                hideModal('avatarModal');
-                document.getElementById('avatarUrl').value = '';
-                
-                // Перерисовываем контент, где отображаются аватарки
-                renderPosts();
-                renderFriends('all');
-                renderConversations();
-                renderProfilePosts();
-            }
+            database.ref('users/' + currentUser.id).update({ avatar: avatarUrl })
+                .then(() => {
+                    currentUser.avatar = avatarUrl;
+                    updateAvatarDisplay();
+                    
+                    hideModal('avatarModal');
+                    document.getElementById('avatarUrl').value = '';
+                    showNotification('Аватар обновлен');
+                })
+                .catch((error) => {
+                    document.getElementById('avatarUrlError').textContent = error.message;
+                });
         }
 
         // Сохранение информации "О себе"
         function saveAbout() {
             const aboutText = document.getElementById('aboutText').value;
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.id === currentUser.id);
-            
-            if (user) {
-                user.about = aboutText;
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                currentUser.about = aboutText;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                profileAboutContent.textContent = aboutText || 'Нет информации';
-                hideModal('editAboutModal');
-            }
+            database.ref('users/' + currentUser.id).update({ about: aboutText })
+                .then(() => {
+                    currentUser.about = aboutText;
+                    profileAboutContent.textContent = aboutText || 'Нет информации';
+                    hideModal('editAboutModal');
+                    showNotification('Информация сохранена');
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при сохранении информации', true);
+                });
         }
 
         // Сохранение профиля
@@ -2219,72 +2186,96 @@
             
             if (!isValid) return;
             
-            // Проверка на существующего пользователя
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            
             // Проверяем, не занято ли имя пользователя кем-то другим
-            if (users.some(u => u.username === username && u.id !== currentUser.id)) {
-                document.getElementById('editProfileUsernameError').textContent = 'Это имя пользователя уже занято';
-                return;
-            }
-            
-            // Проверяем, не занят ли email кем-то другим
-            if (users.some(u => u.email === email && u.id !== currentUser.id)) {
-                document.getElementById('editProfileEmailError').textContent = 'Этот email уже зарегистрирован';
-                return;
-            }
-            
-            // Обновляем данные пользователя
-            const user = users.find(u => u.id === currentUser.id);
-            if (user) {
-                user.username = username;
-                user.email = email;
-                if (password) {
-                    user.password = password;
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Обновляем текущего пользователя
-                currentUser.username = username;
-                currentUser.email = email;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Обновляем UI
-                sidebarName.textContent = username;
-                profileName.textContent = username;
-                updateAvatarDisplay();
-                
-                hideModal('editProfileModal');
-                
-                // Перерисовываем контент, где отображается имя пользователя
-                renderPosts();
-                renderFriends('all');
-                renderConversations();
-                renderProfilePosts();
-            }
+            database.ref('users').orderByChild('username').equalTo(username).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // Проверяем, что это не текущий пользователь
+                        let isCurrentUser = false;
+                        snapshot.forEach((childSnapshot) => {
+                            if (childSnapshot.key === currentUser.id) {
+                                isCurrentUser = true;
+                            }
+                        });
+                        
+                        if (!isCurrentUser) {
+                            document.getElementById('editProfileUsernameError').textContent = 'Это имя пользователя уже занято';
+                            return;
+                        }
+                    }
+                    
+                    // Обновляем данные пользователя
+                    const updates = {
+                        username: username,
+                        email: email
+                    };
+                    
+                    // Если указан новый пароль, обновляем его
+                    if (password) {
+                        return auth.currentUser.updatePassword(password)
+                            .then(() => {
+                                return database.ref('users/' + currentUser.id).update(updates);
+                            });
+                    } else {
+                        return database.ref('users/' + currentUser.id).update(updates);
+                    }
+                })
+                .then(() => {
+                    // Обновляем текущего пользователя
+                    currentUser.username = username;
+                    currentUser.email = email;
+                    
+                    // Обновляем UI
+                    sidebarName.textContent = username;
+                    profileName.textContent = username;
+                    
+                    hideModal('editProfileModal');
+                    showNotification('Профиль обновлен');
+                })
+                .catch((error) => {
+                    document.getElementById('editProfileEmailError').textContent = error.message;
+                });
         }
 
         // Отображение постов профиля
         function renderProfilePosts() {
-            if (!profilePostsContainer) return;
+            if (!profilePostsContainer || !currentViewingUserId) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const userPosts = posts.filter(p => p.userId === currentViewingUserId);
+            profilePostsContainer.innerHTML = '<p>Загрузка...</p>';
             
+            database.ref('posts').orderByChild('userId').equalTo(currentViewingUserId).once('value')
+                .then((snapshot) => {
+                    const posts = [];
+                    snapshot.forEach((childSnapshot) => {
+                        posts.push({
+                            id: childSnapshot.key,
+                            ...childSnapshot.val()
+                        });
+                    });
+                    
+                    // Получаем информацию о пользователях
+                    return database.ref('users').once('value').then((userSnapshot) => {
+                        const users = {};
+                        userSnapshot.forEach((childSnapshot) => {
+                            users[childSnapshot.key] = childSnapshot.val();
+                        });
+                        
+                        displayProfilePosts(posts.sort((a, b) => b.time - a.time), users);
+                    });
+                });
+        }
+
+        // Отображение списка постов в профиле
+        function displayProfilePosts(posts, users) {
             profilePostsContainer.innerHTML = '';
             
-            if (userPosts.length === 0) {
+            if (posts.length === 0) {
                 profilePostsContainer.innerHTML = '<p>Нет постов</p>';
                 return;
             }
             
-            // Сортируем посты по дате (новые сначала)
-            const sortedPosts = [...userPosts].sort((a, b) => new Date(b.time) - new Date(a.time));
-            
-            sortedPosts.forEach(post => {
-                const user = users.find(u => u.id === post.userId);
+            posts.forEach(post => {
+                const user = users[post.userId];
                 if (!user) return;
                 
                 const time = new Date(post.time).toLocaleString();
@@ -2294,27 +2285,27 @@
                 postElement.className = 'post';
                 postElement.innerHTML = `
                     <div class="post-header">
-                        <div class="post-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
+                        <div class="post-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile('${post.userId}')">
                             ${user.avatar ? '' : `<span class="avatar-initial">${postAvatarInitial}</span>`}
                         </div>
-                        <div class="post-user" onclick="showUserProfile(${user.id})">${user.username}</div>
+                        <div class="post-user" onclick="showUserProfile('${post.userId}')">${user.username}</div>
                         <div class="post-time">${time}</div>
                     </div>
                     <div class="post-content">${post.text}</div>
                     ${post.image ? `<img src="${post.image}" class="post-image" alt="Пост">` : ''}
                     <div class="post-actions">
-                        <div class="post-action" onclick="likePost(${post.id})">
-                            <span>${post.likes.length}</span> Нравится
+                        <div class="post-action" onclick="likePost('${post.id}')">
+                            <span>${post.likes ? post.likes.length : 0}</span> Нравится
                         </div>
-                        <div class="post-action" onclick="focusComment(${post.id})">
-                            <span>${post.comments.length}</span> Комментарии
+                        <div class="post-action" onclick="focusComment('${post.id}')">
+                            <span>${post.comments ? Object.keys(post.comments).length : 0}</span> Комментарии
                         </div>
                     </div>
                     <div id="profile-comments-${post.id}"></div>
                     ${currentUser ? `
                     <div class="add-comment">
                         <input type="text" id="profile-comment-${post.id}" placeholder="Написать комментарий...">
-                        <button onclick="addProfileComment(${post.id})">Отправить</button>
+                        <button onclick="addProfileComment('${post.id}')">Отправить</button>
                     </div>
                     ` : ''}
                 `;
@@ -2322,7 +2313,9 @@
                 profilePostsContainer.appendChild(postElement);
                 
                 // Отображаем комментарии
-                renderProfileComments(post.id);
+                if (post.comments) {
+                    renderProfileComments(post.id, post.comments);
+                }
             });
         }
 
@@ -2332,57 +2325,65 @@
             
             if (!commentText) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const post = posts.find(p => p.id === postId);
+            const newComment = {
+                userId: currentUser.id,
+                text: commentText,
+                time: firebase.database.ServerValue.TIMESTAMP
+            };
             
-            if (post) {
-                post.comments.push({
-                    userId: currentUser.id,
-                    text: commentText,
-                    time: new Date().toISOString()
+            database.ref('posts/' + postId + '/comments').push(newComment)
+                .then(() => {
+                    document.getElementById(`profile-comment-${postId}`).value = '';
+                })
+                .catch((error) => {
+                    showNotification('Ошибка при добавлении комментария', true);
                 });
-                
-                localStorage.setItem('posts', JSON.stringify(posts));
-                document.getElementById(`profile-comment-${postId}`).value = '';
-                renderProfileComments(postId);
-                renderPosts();
-            }
         }
 
         // Отображение комментариев в профиле
-        function renderProfileComments(postId) {
+        function renderProfileComments(postId, comments) {
             const commentsContainer = document.getElementById(`profile-comments-${postId}`);
             if (!commentsContainer) return;
             
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            const post = posts.find(p => p.id === postId);
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            
             commentsContainer.innerHTML = '';
             
-            if (!post || !post.comments) return;
+            if (!comments) return;
             
-            post.comments.forEach(comment => {
-                const user = users.find(u => u.id === comment.userId);
-                if (!user) return;
+            // Получаем информацию о пользователях
+            database.ref('users').once('value').then((userSnapshot) => {
+                const users = {};
+                userSnapshot.forEach((childSnapshot) => {
+                    users[childSnapshot.key] = childSnapshot.val();
+                });
                 
-                const time = new Date(comment.time).toLocaleString();
-                const commentAvatarInitial = user.username.charAt(0).toUpperCase();
+                // Преобразуем объект комментариев в массив и сортируем по времени
+                const commentsArray = Object.entries(comments).map(([id, comment]) => ({
+                    id,
+                    ...comment
+                })).sort((a, b) => a.time - b.time);
                 
-                const commentElement = document.createElement('div');
-                commentElement.className = 'comment';
-                commentElement.innerHTML = `
-                    <div class="comment-header">
-                        <div class="comment-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile(${user.id})">
-                            ${user.avatar ? '' : `<span class="avatar-initial">${commentAvatarInitial}</span>`}
+                commentsArray.forEach(comment => {
+                    const user = users[comment.userId];
+                    if (!user) return;
+                    
+                    const time = new Date(comment.time).toLocaleString();
+                    const commentAvatarInitial = user.username.charAt(0).toUpperCase();
+                    
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <div class="comment-avatar" style="${user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : ''}" onclick="showUserProfile('${user.id}')">
+                                ${user.avatar ? '' : `<span class="avatar-initial">${commentAvatarInitial}</span>`}
+                            </div>
+                            <div class="comment-user" onclick="showUserProfile('${user.id}')">${user.username}</div>
+                            <div class="comment-time">${time}</div>
                         </div>
-                        <div class="comment-user" onclick="showUserProfile(${user.id})">${user.username}</div>
-                        <div class="comment-time">${time}</div>
-                    </div>
-                    <div class="comment-content">${comment.text}</div>
-                `;
-                
-                commentsContainer.appendChild(commentElement);
+                        <div class="comment-content">${comment.text}</div>
+                    `;
+                    
+                    commentsContainer.appendChild(commentElement);
+                });
             });
         }
     </script>
