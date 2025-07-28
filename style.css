@@ -1,0 +1,48 @@
+body {
+	font-family: Arial, sans-serif;
+	background-color: whitesmoke;
+}
+
+            .article {
+                margin: 20px 12px 20px 12px;
+            }
+            .art-heading {
+                margin-bottom: 14px;
+                margin-top: 14px;
+            }
+            .container_w {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                height: 100px;
+            }
+            .box {
+                width: 500px;
+                min-height:500px;
+                background-color: #cfcccc;
+                border-radius: 20px;
+            }
+            .rubrika {
+                width: 100%;
+                background-color: darkblue;
+                font-size: large;
+                border-radius: 10px;
+                color: white;
+            }
+.press {
+  transition: transform 0.3s ease; /* Плавный переход в течение 0.3 секунды */
+}
+
+.press:hover {
+  transform: scale(1.2); /* Увеличение в 1.2 раза при наведении */
+}
+
+@media (max-width: 768px) {
+    .container_w {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        height: 100px;
+        font-size: large;
+    }
+}
