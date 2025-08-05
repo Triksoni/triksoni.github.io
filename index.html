@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="main.js"></script>
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="weather-container">
+        <div class="search-container">
+            <input type="text" id="city-input" placeholder="Введите город...">
+            <button id="search-btn"><i class="fas fa-search"></i></button>
+            <button id="location-btn"><i class="fas fa-location-arrow"></i></button>
+        </div>
+        
+        <div class="weather-info">
+            <div class="main-info">
+                <h1 id="city-name">Город</h1>
+                <div id="date">Дата</div>
+                <div class="temp-container">
+                    <div id="temperature">--</div>
+                    <div class="unit-switcher">
+                        <span class="unit active" id="celsius">°C</span>
+                        <span class="unit" id="fahrenheit">°F</span>
+                    </div>
+                </div>
+                <div id="weather-description">Описание</div>
+                <img id="weather-icon" src="" alt="Weather Icon">
+            </div>
+            
+            <div class="details">
+                <div class="detail">
+                    <i class="fas fa-tint"></i>
+                    <span id="humidity">--%</span>
+                </div>
+                <div class="detail">
+                    <i class="fas fa-wind"></i>
+                    <span id="wind">-- км/ч</span>
+                </div>
+                <div class="detail">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span id="pressure">-- hPa</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="forecast-container">
+            <h2>Прогноз на 5 дней</h2>
+            <div class="forecast" id="forecast">
+                <!-- Прогноз будет добавлен через JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
