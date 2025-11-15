@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Clone - P2P Voice Chat</title>
+    <title>Discord Clone - Simple P2P</title>
     <style>
         * {
             margin: 0;
@@ -416,7 +416,7 @@
             margin: 10px 0;
         }
 
-        .invite-section {
+        .data-exchange {
             background: rgba(59, 165, 92, 0.1);
             border: 1px solid rgba(59, 165, 92, 0.3);
             border-radius: 8px;
@@ -424,13 +424,16 @@
             margin: 10px 0;
         }
 
-        .room-id {
-            font-family: monospace;
+        .data-area {
             background: rgba(0, 0, 0, 0.3);
             padding: 8px 12px;
             border-radius: 4px;
             margin: 8px 0;
             word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 100px;
+            overflow-y: auto;
         }
 
         .btn {
@@ -493,16 +496,25 @@
             gap: 6px;
         }
 
-        .qr-code {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            text-align: center;
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin: 8px 0;
+            font-size: 14px;
         }
 
-        .qr-code canvas {
-            border-radius: 4px;
+        .step-number {
+            background: #5865f2;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -523,31 +535,53 @@
                 </div>
             </div>
             
-            <div class="invite-section">
-                <div class="section-title">📨 Пригласить друга:</div>
-                <div class="room-id" id="room-id">Загрузка...</div>
-                <button class="btn btn-success" onclick="copyInviteLink()">📋 Копировать ссылку приглашения</button>
-                <button class="btn" onclick="shareTelegram()">📱 Поделиться в Telegram</button>
-                <button class="btn btn-secondary" onclick="showQRCode()">📱 Показать QR-код</button>
+            <div class="data-exchange">
+                <div class="section-title">🔄 Обмен данными для подключения:</div>
                 
-                <div id="qr-code-container" style="display: none;">
-                    <div class="qr-code">
-                        <canvas id="qr-code-canvas"></canvas>
-                    </div>
-                    <div style="font-size: 12px; color: #8e9297; text-align: center;">
-                        Отсканируйте код для быстрого подключения
-                    </div>
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>Создайте предложение (Offer):</div>
                 </div>
+                <button class="btn btn-success" onclick="createOffer()">📨 Создать Offer</button>
+                <div class="data-area" id="offer-data">Нажмите кнопку выше</div>
+                <button class="btn" onclick="copyOffer()">📋 Копировать Offer</button>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>Получите ответ (Answer) от друга:</div>
+                </div>
+                <textarea id="answer-input" placeholder="Вставьте сюда Answer от друга..." style="width: 100%; height: 60px; background: rgba(0,0,0,0.3); border: 1px solid #40444b; border-radius: 4px; color: #dcddde; padding: 8px; margin: 8px 0;"></textarea>
+                <button class="btn btn-success" onclick="applyAnswer()">✅ Применить Answer</button>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>Ваш Answer для друга:</div>
+                </div>
+                <div class="data-area" id="answer-data">Сначала примите Offer</div>
+                <button class="btn" onclick="copyAnswer()">📋 Копировать Answer</button>
             </div>
 
             <div class="connection-section">
-                <div class="section-title">💡 Простой способ:</div>
-                <div style="font-size: 14px; line-height: 1.4;">
-                    <div>1. 📋 Скопируйте ссылку приглашения</div>
-                    <div>2. 📤 Отправьте другу (Telegram, WhatsApp)</div>
-                    <div>3. 🔗 Друг открывает ссылку</div>
-                    <div>4. 🔊 Подключайтесь к каналу</div>
-                    <div>5. 🎉 Говорите!</div>
+                <div class="section-title">💡 Инструкция по подключению:</div>
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div><strong>Первый пользователь</strong> нажимает "Создать Offer" и копирует данные</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div><strong>Второй пользователь</strong> вставляет Offer в поле и нажимает "Применить Answer"</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div><strong>Второй пользователь</strong> копирует Answer и отправляет первому</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div><strong>Первый пользователь</strong> вставляет Answer и нажимает "Применить Answer"</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div>Оба нажимают "🔊 Общий чат" и начинают говорить!</div>
                 </div>
             </div>
         </div>
@@ -572,7 +606,7 @@
                         <div class="message-author">Система</div>
                         <div class="message-time">Сейчас</div>
                     </div>
-                    <div class="message-text">Добро пожаловать! Отправьте ссылку другу для подключения.</div>
+                    <div class="message-text">Для подключения следуйте инструкции слева. Нужно обменяться данными вручную.</div>
                 </div>
             </div>
         </div>
@@ -603,7 +637,7 @@
             <div class="participant video-off" id="remote-participant">
                 <div style="text-align: center; color: #8e9297;">
                     <div style="font-size: 48px; margin-bottom: 10px;">👤</div>
-                    <div>Ожидание друга...</div>
+                    <div>Ожидание подключения...</div>
                 </div>
                 <div class="participant-info">
                     <div class="participant-name" id="remote-user-name">Ожидание...</div>
@@ -626,8 +660,7 @@
         let isVideoOn = true;
         let currentUser = null;
         let dataChannel = null;
-        let currentRoomId = null;
-        let isInitiator = false;
+        let currentOffer = null;
 
         // Конфигурация WebRTC
         const pcConfig = {
@@ -653,7 +686,9 @@
             messageInput: document.getElementById('message-input'),
             channelStatus: document.getElementById('channel-status'),
             callStatus: document.getElementById('call-status'),
-            roomId: document.getElementById('room-id'),
+            offerData: document.getElementById('offer-data'),
+            answerData: document.getElementById('answer-data'),
+            answerInput: document.getElementById('answer-input'),
             localParticipant: document.getElementById('local-participant'),
             remoteParticipant: document.getElementById('remote-participant')
         };
@@ -662,8 +697,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeUser();
             setupEventListeners();
-            initializeRoom();
-            startSignaling();
         });
 
         function initializeUser() {
@@ -681,6 +714,7 @@
             document.getElementById('user-avatar').textContent = currentUser.avatar;
 
             addSystemMessage('🎉 Добро пожаловать в P2P голосовой чат!');
+            addSystemMessage('💡 Следуйте инструкции слева для подключения к другу.');
         }
 
         function setupEventListeners() {
@@ -702,145 +736,14 @@
             });
         }
 
-        function initializeRoom() {
-            // Генерируем или получаем ID комнаты из URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomFromUrl = urlParams.get('room');
-            
-            if (roomFromUrl) {
-                // Присоединяемся к существующей комнате
-                currentRoomId = roomFromUrl;
-                isInitiator = false;
-                addSystemMessage(`🔗 Присоединились к комнате: ${currentRoomId}`);
-            } else {
-                // Создаем новую комнату
-                currentRoomId = generateRoomId();
-                isInitiator = true;
-                // Обновляем URL чтобы можно было делиться
-                window.history.replaceState({}, '', `?room=${currentRoomId}`);
-                addSystemMessage(`🏠 Создана комната: ${currentRoomId}`);
-            }
-            
-            elements.roomId.textContent = currentRoomId;
-        }
-
-        function generateRoomId() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        // Signaling через LocalStorage (работает между вкладками)
-        function startSignaling() {
-            // Слушаем сообщения от других вкладок
-            window.addEventListener('storage', handleStorageEvent);
-            window.addEventListener('message', handlePostMessage);
-            
-            // Периодически проверяем наличие партнера
-            setInterval(checkForPartner, 2000);
-            
-            // Отправляем сигнал о своем присутствии
-            broadcastSignal('user_online', { user: currentUser });
-        }
-
-        function handleStorageEvent(e) {
-            if (e.key === `webrtc_signal_${currentRoomId}` && e.newValue) {
-                try {
-                    const signal = JSON.parse(e.newValue);
-                    if (signal.from !== currentUser.id) {
-                        handleWebRTCSignal(signal);
-                    }
-                } catch (error) {
-                    console.error('Ошибка обработки сигнала:', error);
-                }
-            }
-        }
-
-        function handlePostMessage(e) {
-            if (e.data && e.data.type === 'webrtc_signal' && e.data.roomId === currentRoomId) {
-                if (e.data.from !== currentUser.id) {
-                    handleWebRTCSignal(e.data);
-                }
-            }
-        }
-
-        function broadcastSignal(type, data) {
-            const signal = {
-                type: type,
-                from: currentUser.id,
-                roomId: currentRoomId,
-                data: data,
-                timestamp: Date.now()
-            };
-            
-            // Отправляем через LocalStorage
-            localStorage.setItem(`webrtc_signal_${currentRoomId}`, JSON.stringify(signal));
-            
-            // И через postMessage для той же вкладки
-            window.postMessage({
-                type: 'webrtc_signal',
-                ...signal
-            }, '*');
-            
-            // Очищаем через секунду чтобы не засорять storage
-            setTimeout(() => {
-                localStorage.removeItem(`webrtc_signal_${currentRoomId}`);
-            }, 1000);
-        }
-
-        function handleWebRTCSignal(signal) {
-            switch (signal.type) {
-                case 'user_online':
-                    addSystemMessage(`👤 ${signal.data.user.username} в сети`);
-                    if (isInitiator && !isInCall) {
-                        setTimeout(() => createOffer(), 1000);
-                    }
-                    break;
-                    
-                case 'offer':
-                    handleOffer(signal.data);
-                    break;
-                    
-                case 'answer':
-                    handleAnswer(signal.data);
-                    break;
-                    
-                case 'ice_candidate':
-                    handleIceCandidate(signal.data);
-                    break;
-                    
-                case 'chat_message':
-                    addChatMessage(signal.data);
-                    break;
-            }
-        }
-
-        function checkForPartner() {
-            // Периодически отправляем сигнал о своем присутствии
-            if (!isInCall) {
-                broadcastSignal('user_online', { user: currentUser });
-            }
-        }
-
-        // Основная функция подключения к голосовому чату
-        async function joinVoiceCall() {
-            if (isInCall) {
-                addSystemMessage('❌ Вы уже в звонке');
-                return;
-            }
-
+        // Создание предложения (первый пользователь)
+        async function createOffer() {
             try {
-                addSystemMessage('🎯 Подключаемся к голосовому каналу...');
-
+                addSystemMessage('🔄 Создаем предложение для подключения...');
+                
                 // Получаем доступ к медиаустройствам
                 localStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
+                    video: true,
                     audio: {
                         echoCancellation: true,
                         noiseSuppression: true,
@@ -848,65 +751,34 @@
                     }
                 });
 
-                // Показываем интерфейс звонка
-                showCallInterface();
-                
                 // Создаем PeerConnection
-                await createPeerConnection();
-                
+                peerConnection = new RTCPeerConnection(pcConfig);
+
+                // Настраиваем обработчики
+                setupPeerConnection();
+
                 // Добавляем локальный поток
                 localStream.getTracks().forEach(track => {
                     peerConnection.addTrack(track, localStream);
                 });
 
-                // Показываем локальное видео
-                elements.localVideo.srcObject = localStream;
-                elements.localParticipant.classList.remove('video-off');
+                // Создаем предложение
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
 
-                addSystemMessage('✅ Готов к подключению!');
-                elements.channelStatus.className = 'status-indicator status-connecting';
-
-                // Если мы инициатор, создаем оффер
-                if (isInitiator) {
-                    setTimeout(() => createOffer(), 1000);
-                }
+                // Сохраняем и показываем предложение
+                currentOffer = offer;
+                elements.offerData.textContent = JSON.stringify(offer);
+                
+                addSystemMessage('✅ Предложение создано! Скопируйте и отправьте другу.');
 
             } catch (error) {
-                console.error('Ошибка подключения:', error);
-                
-                // Пробуем без видео
-                try {
-                    addSystemMessage('🔄 Пробуем подключиться без видео...');
-                    localStream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true
-                        }
-                    });
-                    
-                    showCallInterface();
-                    await createPeerConnection();
-                    localStream.getTracks().forEach(track => {
-                        peerConnection.addTrack(track, localStream);
-                    });
-                    
-                    addSystemMessage('✅ Готов к подключению (только аудио)!');
-                    elements.channelStatus.className = 'status-indicator status-connecting';
-                    
-                    if (isInitiator) {
-                        setTimeout(() => createOffer(), 1000);
-                    }
-                    
-                } catch (audioError) {
-                    addSystemMessage('❌ Не удалось получить доступ к микрофону');
-                }
+                console.error('Ошибка создания предложения:', error);
+                addSystemMessage('❌ Ошибка создания предложения: ' + error.message);
             }
         }
 
-        async function createPeerConnection() {
-            peerConnection = new RTCPeerConnection(pcConfig);
-
+        function setupPeerConnection() {
             // Обработчик входящих потоков
             peerConnection.ontrack = (event) => {
                 console.log('Получен удаленный поток');
@@ -916,7 +788,7 @@
                 
                 elements.remoteVideo.onloadedmetadata = () => {
                     document.getElementById('remote-user-name').textContent = 'Друг';
-                    addSystemMessage('👤 Друг присоединился к звонку! 🎉');
+                    addSystemMessage('🎉 Подключение установлено! Говорите!');
                     elements.callStatus.className = 'status-indicator status-online';
                 };
             };
@@ -924,9 +796,7 @@
             // Обработчик ICE кандидатов
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    broadcastSignal('ice_candidate', {
-                        candidate: event.candidate
-                    });
+                    console.log('Новый ICE кандидат:', event.candidate);
                 }
             };
 
@@ -935,7 +805,7 @@
                 console.log('Connection state:', peerConnection.connectionState);
                 switch(peerConnection.connectionState) {
                     case 'connected':
-                        addSystemMessage('✅ Соединение установлено! Говорите! 🎉');
+                        addSystemMessage('✅ Соединение установлено!');
                         elements.callStatus.className = 'status-indicator status-online';
                         break;
                     case 'disconnected':
@@ -971,63 +841,130 @@
             };
         }
 
-        async function createOffer() {
-            if (!peerConnection) return;
+        // Применение ответа (второй пользователь)
+        async function applyAnswer() {
+            const answerText = elements.answerInput.value.trim();
+            
+            if (!answerText) {
+                addSystemMessage('❌ Введите Answer от друга');
+                return;
+            }
 
             try {
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-
-                broadcastSignal('offer', {
-                    sdp: offer
-                });
+                const answer = JSON.parse(answerText);
                 
-                addSystemMessage('📨 Отправлено приглашение к звонку...');
+                if (!peerConnection) {
+                    // Если это второй пользователь, создаем PeerConnection
+                    await initializeAsAnswerer();
+                }
+                
+                await peerConnection.setRemoteDescription(answer);
+                addSystemMessage('✅ Answer применен! Соединение устанавливается...');
+                
+                // Показываем Answer для отправки обратно
+                if (peerConnection.localDescription) {
+                    elements.answerData.textContent = JSON.stringify(peerConnection.localDescription);
+                }
+
             } catch (error) {
-                console.error('Ошибка создания offer:', error);
+                console.error('Ошибка применения Answer:', error);
+                addSystemMessage('❌ Ошибка применения Answer: ' + error.message);
             }
         }
 
-        async function handleOffer(offerData) {
-            if (isInCall || !peerConnection) return;
-
+        // Инициализация для второго пользователя
+        async function initializeAsAnswerer() {
             try {
-                await peerConnection.setRemoteDescription(offerData.sdp);
+                addSystemMessage('🔄 Инициализируем подключение...');
+                
+                // Получаем доступ к медиаустройствам
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
 
+                // Создаем PeerConnection
+                peerConnection = new RTCPeerConnection(pcConfig);
+                setupPeerConnection();
+
+                // Добавляем локальный поток
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                // Устанавливаем удаленное описание (Offer)
+                const offer = JSON.parse(elements.offerData.textContent);
+                await peerConnection.setRemoteDescription(offer);
+
+                // Создаем ответ
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
 
-                broadcastSignal('answer', {
-                    sdp: answer
-                });
-
-                addSystemMessage('✅ Принято приглашение к звонку!');
-                elements.callStatus.className = 'status-indicator status-online';
+                // Показываем Answer
+                elements.answerData.textContent = JSON.stringify(answer);
+                addSystemMessage('✅ Answer создан! Скопируйте и отправьте другу.');
 
             } catch (error) {
-                console.error('Ошибка обработки предложения:', error);
+                console.error('Ошибка инициализации:', error);
+                addSystemMessage('❌ Ошибка инициализации: ' + error.message);
             }
         }
 
-        async function handleAnswer(answerData) {
-            if (!peerConnection) return;
-
-            try {
-                await peerConnection.setRemoteDescription(answerData.sdp);
-                addSystemMessage('✅ Друг присоединился к звонку! 🎉');
-                elements.callStatus.className = 'status-indicator status-online';
-            } catch (error) {
-                console.error('Ошибка обработки ответа:', error);
-            }
+        // Функции копирования
+        function copyOffer() {
+            copyToClipboard(elements.offerData.textContent, 'Offer');
         }
 
-        async function handleIceCandidate(candidateData) {
-            if (!peerConnection) return;
+        function copyAnswer() {
+            copyToClipboard(elements.answerData.textContent, 'Answer');
+        }
+
+        function copyToClipboard(text, type) {
+            navigator.clipboard.writeText(text).then(() => {
+                addSystemMessage(`✅ ${type} скопирован в буфер обмена!`);
+            }).catch(() => {
+                // Fallback
+                const tempInput = document.createElement('textarea');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                addSystemMessage(`✅ ${type} скопирован в буфер обмена!`);
+            });
+        }
+
+        // Подключение к голосовому чату
+        async function joinVoiceCall() {
+            if (isInCall) {
+                addSystemMessage('❌ Вы уже в звонке');
+                return;
+            }
+
+            if (!peerConnection) {
+                addSystemMessage('❌ Сначала настройте подключение через обмен данными');
+                return;
+            }
 
             try {
-                await peerConnection.addIceCandidate(candidateData.candidate);
+                showCallInterface();
+                
+                // Показываем локальное видео
+                if (localStream) {
+                    elements.localVideo.srcObject = localStream;
+                    elements.localParticipant.classList.remove('video-off');
+                }
+
+                addSystemMessage('🔊 Подключение к голосовому чату...');
+                elements.channelStatus.className = 'status-indicator status-connecting';
+
             } catch (error) {
-                console.error('Ошибка добавления ICE кандидата:', error);
+                console.error('Ошибка подключения:', error);
+                addSystemMessage('❌ Ошибка подключения к голосовому чату');
             }
         }
 
@@ -1107,9 +1044,6 @@
                     type: 'chat',
                     data: message
                 }));
-            } else {
-                // Или через signaling
-                broadcastSignal('chat_message', message);
             }
 
             // Показываем локально
@@ -1175,77 +1109,12 @@
             return Math.random().toString(36).substr(2, 9);
         }
 
-        // Функции для приглашения
-        function copyInviteLink() {
-            const inviteLink = window.location.href;
-            navigator.clipboard.writeText(inviteLink).then(() => {
-                addSystemMessage('✅ Ссылка скопирована! Отправьте другу.');
-            }).catch(() => {
-                // Fallback
-                const tempInput = document.createElement('input');
-                tempInput.value = inviteLink;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                addSystemMessage('✅ Ссылка скопирована! Отправьте другу.');
-            });
-        }
-
-        function shareTelegram() {
-            const inviteLink = window.location.href;
-            const text = `Присоединяйся к голосовому чату: ${inviteLink}`;
-            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(text)}`;
-            window.open(telegramUrl, '_blank');
-        }
-
-        function showQRCode() {
-            const container = document.getElementById('qr-code-container');
-            const canvas = document.getElementById('qr-code-canvas');
-            
-            if (container.style.display === 'none') {
-                // Простой QR-код (без библиотеки)
-                const ctx = canvas.getContext('2d');
-                const size = 200;
-                canvas.width = size;
-                canvas.height = size;
-                
-                // Очищаем canvas
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, size, size);
-                
-                // Рисуем ссылку как текст (упрощенная версия)
-                ctx.fillStyle = 'black';
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Ссылка:', size/2, 30);
-                ctx.fillText(currentRoomId, size/2, 60);
-                ctx.font = '10px Arial';
-                ctx.fillText('Отсканируйте камерой', size/2, 80);
-                ctx.fillText('или отправьте ссылку', size/2, 95);
-                
-                container.style.display = 'block';
-            } else {
-                container.style.display = 'none';
-            }
-        }
-
         // Автоматическая очистка при закрытии страницы
         window.addEventListener('beforeunload', function() {
             if (isInCall) {
                 endCall();
             }
         });
-
-        // Инструкция
-        setTimeout(() => {
-            addSystemMessage('💡 Простая инструкция:');
-            addSystemMessage('1. 📋 Нажмите "Копировать ссылку приглашения"');
-            addSystemMessage('2. 📤 Отправьте ссылку другу (Telegram, WhatsApp)');
-            addSystemMessage('3. 🔗 Друг открывает ссылку в браузере');
-            addSystemMessage('4. 🔊 Оба нажимают "Общий чат"');
-            addSystemMessage('5. 🎉 Говорите! Работает без серверов!');
-        }, 2000);
     </script>
 </body>
 </html>
