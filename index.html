@@ -1,339 +1,272 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Send, Copy, Check } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Видеозвонки и Чат</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <div id="app" class="min-h-screen p-4">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6 text-center">Видеозвонки и Чат</h1>
+            
+            <div id="connectionPanel" class="bg-gray-800 rounded-lg p-6 mb-6">
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium">Ваш ID (отправьте другу):</label>
+                    <div class="flex gap-2">
+                        <input id="myId" type="text" readonly class="flex-1 bg-gray-700 rounded px-3 py-2 text-sm">
+                        <button id="copyBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                            Копировать
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block mb-2 text-sm font-medium">ID друга:</label>
+                    <div class="flex gap-2">
+                        <input id="peerId" type="text" placeholder="Вставьте ID друга" class="flex-1 bg-gray-700 rounded px-3 py-2">
+                        <button id="connectBtn" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded font-medium">
+                            Подключиться
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-export default function VideoChatApp() {
-  const [myId, setMyId] = useState('');
-  const [peerId, setPeerId] = useState('');
-  const [peer, setPeer] = useState(null);
-  const [conn, setConn] = useState(null);
-  const [call, setCall] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [isAudioOn, setIsAudioOn] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isCalling, setIsCalling] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [localStream, setLocalStream] = useState(null);
-  
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-  const messagesEndRef = useRef(null);
+            <div id="mainPanel" class="grid md:grid-cols-3 gap-4 hidden">
+                <div class="md:col-span-2 space-y-4">
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="relative bg-black rounded-lg overflow-hidden mb-4" style="padding-bottom: 56.25%">
+                            <video id="remoteVideo" autoplay playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+                            <div id="noCallMessage" class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                Нет активного звонка
+                            </div>
+                        </div>
 
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js';
-    script.async = true;
-    script.onload = initializePeer;
-    document.body.appendChild(script);
+                        <div id="localVideoContainer" class="relative bg-gray-900 rounded-lg overflow-hidden hidden" style="padding-bottom: 28%">
+                            <video id="localVideo" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
+                        </div>
 
-    return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      if (peer) peer.destroy();
-    };
-  }, []);
+                        <div class="flex justify-center gap-3 mt-4">
+                            <button id="startCallBtn" class="bg-green-600 hover:bg-green-700 p-4 rounded-full">
+                                &#128222;
+                            </button>
+                            <button id="toggleVideoBtn" class="bg-gray-700 hover:bg-gray-600 p-4 rounded-full hidden">
+                                &#128249;
+                            </button>
+                            <button id="toggleAudioBtn" class="bg-gray-700 hover:bg-gray-600 p-4 rounded-full hidden">
+                                &#127908;
+                            </button>
+                            <button id="endCallBtn" class="bg-red-600 hover:bg-red-700 p-4 rounded-full hidden">
+                                &#128245;
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+                <div class="bg-gray-800 rounded-lg p-4 flex flex-col h-[600px]">
+                    <h2 class="text-xl font-semibold mb-4">Сообщения</h2>
+                    
+                    <div id="messages" class="flex-1 overflow-y-auto mb-4 space-y-2"></div>
 
-  const initializePeer = () => {
-    const newPeer = new window.Peer();
-    
-    newPeer.on('open', (id) => {
-      setMyId(id);
-      console.log('Мой ID:', id);
-    });
+                    <div class="flex gap-2">
+                        <input id="messageInput" type="text" placeholder="Напишите сообщение..." class="flex-1 bg-gray-700 rounded px-3 py-2">
+                        <button id="sendBtn" class="bg-blue-600 hover:bg-blue-700 p-2 rounded">
+                            &#10148;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    newPeer.on('connection', (connection) => {
-      setConn(connection);
-      setIsConnected(true);
-      setupConnection(connection);
-    });
+    <script>
+        var peer, conn, call, localStream;
+        var isVideoOn = true;
+        var isAudioOn = true;
 
-    newPeer.on('call', (incomingCall) => {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          setLocalStream(stream);
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = stream;
-          }
-          incomingCall.answer(stream);
-          incomingCall.on('stream', (remoteStream) => {
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteStream;
-            }
-          });
-          setCall(incomingCall);
-          setIsCalling(true);
-        })
-        .catch(err => {
-          console.error('Ошибка доступа к камере/микрофону:', err);
-          alert('Не удалось получить доступ к камере или микрофону');
+        peer = new Peer();
+
+        peer.on('open', function(id) {
+            document.getElementById('myId').value = id;
+            console.log('Мой ID:', id);
         });
-    });
 
-    setPeer(newPeer);
-  };
+        peer.on('connection', function(connection) {
+            conn = connection;
+            setupConnection(connection);
+            showMainPanel();
+        });
 
-  const setupConnection = (connection) => {
-    connection.on('data', (data) => {
-      setMessages(prev => [...prev, { text: data, isOwn: false }]);
-    });
+        peer.on('call', function(incomingCall) {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    localStream = stream;
+                    document.getElementById('localVideo').srcObject = stream;
+                    incomingCall.answer(stream);
+                    incomingCall.on('stream', function(remoteStream) {
+                        document.getElementById('remoteVideo').srcObject = remoteStream;
+                    });
+                    call = incomingCall;
+                    showCallControls();
+                })
+                .catch(function(err) {
+                    console.error('Ошибка:', err);
+                    alert('Не удалось получить доступ к камере/микрофону');
+                });
+        });
 
-    connection.on('close', () => {
-      setIsConnected(false);
-      endCall();
-    });
-  };
+        function setupConnection(connection) {
+            connection.on('data', function(data) {
+                addMessage(data, false);
+            });
 
-  const connectToPeer = () => {
-    if (!peer || !peerId.trim()) return;
-
-    const connection = peer.connect(peerId.trim());
-    connection.on('open', () => {
-      setConn(connection);
-      setIsConnected(true);
-      setupConnection(connection);
-    });
-
-    connection.on('error', (err) => {
-      console.error('Ошибка подключения:', err);
-      alert('Не удалось подключиться. Проверьте ID друга.');
-    });
-  };
-
-  const startCall = () => {
-    if (!conn || !peer) {
-      alert('Сначала подключитесь к другу');
-      return;
-    }
-
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        setLocalStream(stream);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
+            connection.on('close', function() {
+                alert('Соединение разорвано');
+                location.reload();
+            });
         }
 
-        const outgoingCall = peer.call(conn.peer, stream);
-        outgoingCall.on('stream', (remoteStream) => {
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-          }
-        });
-        setCall(outgoingCall);
-        setIsCalling(true);
-      })
-      .catch(err => {
-        console.error('Ошибка доступа к камере/микрофону:', err);
-        alert('Не удалось получить доступ к камере или микрофону');
-      });
-  };
+        document.getElementById('copyBtn').onclick = function() {
+            var myId = document.getElementById('myId').value;
+            navigator.clipboard.writeText(myId);
+            document.getElementById('copyBtn').textContent = 'Скопировано!';
+            setTimeout(function() {
+                document.getElementById('copyBtn').textContent = 'Копировать';
+            }, 2000);
+        };
 
-  const endCall = () => {
-    if (call) call.close();
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-    }
-    if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-    setCall(null);
-    setLocalStream(null);
-    setIsCalling(false);
-    setIsVideoOn(true);
-    setIsAudioOn(true);
-  };
+        document.getElementById('connectBtn').onclick = function() {
+            var peerId = document.getElementById('peerId').value.trim();
+            if (!peerId) return;
 
-  const toggleVideo = () => {
-    if (localStream) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsVideoOn(videoTrack.enabled);
-      }
-    }
-  };
+            conn = peer.connect(peerId);
+            conn.on('open', function() {
+                setupConnection(conn);
+                showMainPanel();
+            });
 
-  const toggleAudio = () => {
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsAudioOn(audioTrack.enabled);
-      }
-    }
-  };
+            conn.on('error', function(err) {
+                console.error('Ошибка:', err);
+                alert('Не удалось подключиться. Проверьте ID друга.');
+            });
+        };
 
-  const sendMessage = () => {
-    if (!conn || !newMessage.trim()) return;
-    
-    conn.send(newMessage);
-    setMessages(prev => [...prev, { text: newMessage, isOwn: true }]);
-    setNewMessage('');
-  };
+        document.getElementById('startCallBtn').onclick = function() {
+            if (!conn) {
+                alert('Сначала подключитесь к другу');
+                return;
+            }
 
-  const copyId = () => {
-    navigator.clipboard.writeText(myId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    localStream = stream;
+                    document.getElementById('localVideo').srcObject = stream;
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">Видеозвонки и Чат</h1>
-        
-        {/* Подключение */}
-        {!isConnected && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
-            <div className="mb-4">
-              <label className="block mb-2 text-sm font-medium">Ваш ID (отправьте другу):</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={myId}
-                  readOnly
-                  className="flex-1 bg-gray-700 rounded px-3 py-2 text-sm"
-                />
-                <button
-                  onClick={copyId}
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center gap-2"
-                >
-                  {copied ? <Check size={18} /> : <Copy size={18} />}
-                  {copied ? 'Скопировано' : 'Копировать'}
-                </button>
-              </div>
-            </div>
+                    var outgoingCall = peer.call(conn.peer, stream);
+                    outgoingCall.on('stream', function(remoteStream) {
+                        document.getElementById('remoteVideo').srcObject = remoteStream;
+                    });
+                    call = outgoingCall;
+                    showCallControls();
+                })
+                .catch(function(err) {
+                    console.error('Ошибка:', err);
+                    alert('Не удалось получить доступ к камере/микрофону');
+                });
+        };
+
+        document.getElementById('endCallBtn').onclick = function() {
+            if (call) call.close();
+            if (localStream) {
+                localStream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+            }
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('remoteVideo').srcObject = null;
+            document.getElementById('localVideoContainer').classList.add('hidden');
+            document.getElementById('noCallMessage').classList.remove('hidden');
+            document.getElementById('startCallBtn').classList.remove('hidden');
+            document.getElementById('toggleVideoBtn').classList.add('hidden');
+            document.getElementById('toggleAudioBtn').classList.add('hidden');
+            document.getElementById('endCallBtn').classList.add('hidden');
+            isVideoOn = true;
+            isAudioOn = true;
+        };
+
+        document.getElementById('toggleVideoBtn').onclick = function() {
+            if (localStream) {
+                var videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                    isVideoOn = videoTrack.enabled;
+                    document.getElementById('toggleVideoBtn').innerHTML = isVideoOn ? '&#128249;' : '&#128249;&#10060;';
+                    document.getElementById('toggleVideoBtn').className = isVideoOn 
+                        ? 'bg-gray-700 hover:bg-gray-600 p-4 rounded-full'
+                        : 'bg-red-600 hover:bg-red-700 p-4 rounded-full';
+                }
+            }
+        };
+
+        document.getElementById('toggleAudioBtn').onclick = function() {
+            if (localStream) {
+                var audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    isAudioOn = audioTrack.enabled;
+                    document.getElementById('toggleAudioBtn').innerHTML = isAudioOn ? '&#127908;' : '&#127908;&#10060;';
+                    document.getElementById('toggleAudioBtn').className = isAudioOn 
+                        ? 'bg-gray-700 hover:bg-gray-600 p-4 rounded-full'
+                        : 'bg-red-600 hover:bg-red-700 p-4 rounded-full';
+                }
+            }
+        };
+
+        document.getElementById('sendBtn').onclick = sendMessage;
+        document.getElementById('messageInput').onkeypress = function(e) {
+            if (e.key === 'Enter') sendMessage();
+        };
+
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var message = input.value.trim();
+            if (!conn || !message) return;
             
-            <div>
-              <label className="block mb-2 text-sm font-medium">ID друга:</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={peerId}
-                  onChange={(e) => setPeerId(e.target.value)}
-                  placeholder="Вставьте ID друга"
-                  className="flex-1 bg-gray-700 rounded px-3 py-2"
-                  onKeyPress={(e) => e.key === 'Enter' && connectToPeer()}
-                />
-                <button
-                  onClick={connectToPeer}
-                  className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded font-medium"
-                >
-                  Подключиться
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+            conn.send(message);
+            addMessage(message, true);
+            input.value = '';
+        }
 
-        {isConnected && (
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Видео */}
-            <div className="md:col-span-2 space-y-4">
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="relative bg-black rounded-lg overflow-hidden mb-4" style={{ paddingBottom: '56.25%' }}>
-                  <video
-                    ref={remoteVideoRef}
-                    autoPlay
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  {!isCalling && (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      Нет активного звонка
-                    </div>
-                  )}
-                </div>
+        function addMessage(text, isOwn) {
+            var messagesDiv = document.getElementById('messages');
+            var msgDiv = document.createElement('div');
+            var className = 'p-3 rounded-lg ';
+            if (isOwn) {
+                className = className + 'bg-blue-600 ml-auto text-right max-w-[80%]';
+            } else {
+                className = className + 'bg-gray-700 max-w-[80%]';
+            }
+            msgDiv.className = className;
+            msgDiv.textContent = text;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
 
-                {isCalling && (
-                  <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ paddingBottom: '28%' }}>
-                    <video
-                      ref={localVideoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  </div>
-                )}
+        function showMainPanel() {
+            document.getElementById('connectionPanel').classList.add('hidden');
+            document.getElementById('mainPanel').classList.remove('hidden');
+        }
 
-                {/* Кнопки управления звонком */}
-                <div className="flex justify-center gap-3 mt-4">
-                  {!isCalling ? (
-                    <button
-                      onClick={startCall}
-                      className="bg-green-600 hover:bg-green-700 p-4 rounded-full"
-                    >
-                      <Phone size={24} />
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={toggleVideo}
-                        className={`p-4 rounded-full ${isVideoOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}
-                      >
-                        {isVideoOn ? <Video size={24} /> : <VideoOff size={24} />}
-                      </button>
-                      <button
-                        onClick={toggleAudio}
-                        className={`p-4 rounded-full ${isAudioOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}
-                      >
-                        {isAudioOn ? <Mic size={24} /> : <MicOff size={24} />}
-                      </button>
-                      <button
-                        onClick={endCall}
-                        className="bg-red-600 hover:bg-red-700 p-4 rounded-full"
-                      >
-                        <PhoneOff size={24} />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Чат */}
-            <div className="bg-gray-800 rounded-lg p-4 flex flex-col h-[600px]">
-              <h2 className="text-xl font-semibold mb-4">Сообщения</h2>
-              
-              <div className="flex-1 overflow-y-auto mb-4 space-y-2">
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`p-3 rounded-lg ${
-                      msg.isOwn ? 'bg-blue-600 ml-auto' : 'bg-gray-700'
-                    } max-w-[80%] ${msg.isOwn ? 'text-right' : ''}`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Напишите сообщение..."
-                  className="flex-1 bg-gray-700 rounded px-3 py-2"
-                />
-                <button
-                  onClick={sendMessage}
-                  className="bg-blue-600 hover:bg-blue-700 p-2 rounded"
-                >
-                  <Send size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        function showCallControls() {
+            document.getElementById('localVideoContainer').classList.remove('hidden');
+            document.getElementById('noCallMessage').classList.add('hidden');
+            document.getElementById('startCallBtn').classList.add('hidden');
+            document.getElementById('toggleVideoBtn').classList.remove('hidden');
+            document.getElementById('toggleAudioBtn').classList.remove('hidden');
+            document.getElementById('endCallBtn').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
