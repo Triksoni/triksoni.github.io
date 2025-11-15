@@ -3,151 +3,699 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Простой войс чат</title>
+    <title>Discord Clone</title>
     <style>
-        body {
+        * {
             margin: 0;
-            padding: 20px;
-            background: #2c2f33;
-            color: white;
-            font-family: Arial;
-            text-align: center;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
+
+        body {
+            background-color: #36393f;
+            color: #dcddde;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
-        button {
-            padding: 20px 40px;
-            font-size: 18px;
-            background: #5865f2;
-            color: white;
-            border: none;
-            border-radius: 10px;
+
+        /* Боковая панель серверов */
+        .servers-sidebar {
+            width: 72px;
+            background-color: #202225;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            overflow-y: auto;
+        }
+
+        .server-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #36393f;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            margin: 10px;
+            transition: border-radius 0.2s ease;
+            color: #dcddde;
+            font-weight: bold;
         }
-        button:disabled {
-            background: #666;
-            cursor: not-allowed;
+
+        .server-icon:hover {
+            border-radius: 16px;
+            background-color: #5865f2;
         }
-        .status {
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 10px;
+
+        .server-icon.active {
+            border-radius: 16px;
+            background-color: #5865f2;
+        }
+
+        .divider {
+            width: 32px;
+            height: 2px;
+            background-color: #36393f;
+            margin: 8px 0;
+        }
+
+        /* Панель каналов */
+        .channels-sidebar {
+            width: 240px;
+            background-color: #2f3136;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .server-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .channels-category {
+            margin-top: 16px;
+            padding: 0 8px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8e9297;
+            text-transform: uppercase;
+        }
+
+        .channel-list {
+            margin-top: 8px;
+        }
+
+        .channel {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            color: #8e9297;
+        }
+
+        .channel:hover {
+            background-color: rgba(79, 84, 92, 0.16);
+            color: #dcddde;
+        }
+
+        .channel.active {
+            background-color: rgba(79, 84, 92, 0.32);
+            color: #dcddde;
+        }
+
+        .channel.voice {
+            display: flex;
+            align-items: center;
+        }
+
+        .channel-icon {
+            margin-right: 6px;
+            font-size: 18px;
+        }
+
+        .channel-name {
+            font-size: 14px;
+        }
+
+        /* Основная область чата */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #36393f;
+        }
+
+        .chat-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-icon {
+            margin-right: 8px;
+            color: #8e9297;
+        }
+
+        .chat-header-title {
+            font-weight: bold;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 16px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 16px;
+            background-color: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .username {
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #72767d;
+        }
+
+        .message-text {
             font-size: 16px;
+            line-height: 1.4;
         }
-        .connected {
-            background: #3ba55c;
+
+        /* Панель ввода сообщения */
+        .message-input-container {
+            padding: 16px;
         }
-        .disconnected {
-            background: #ed4245;
+
+        .message-input {
+            width: 100%;
+            background-color: #40444b;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            color: #dcddde;
+            font-size: 16px;
+            resize: none;
+            outline: none;
         }
-        .users {
-            margin: 20px 0;
-            padding: 15px;
-            background: #36393f;
-            border-radius: 10px;
+
+        /* Панель участников */
+        .members-sidebar {
+            width: 240px;
+            background-color: #2f3136;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .members-header {
+            font-weight: 600;
+            color: #8e9297;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .member {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .member:hover {
+            background-color: rgba(79, 84, 92, 0.16);
+        }
+
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+            background-color: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+
+        .member-name {
+            font-size: 14px;
+            color: #8e9297;
+        }
+
+        /* Панель голосового чата */
+        .voice-chat-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2f3136;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            width: 300px;
+        }
+
+        .voice-chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .voice-chat-title {
+            font-weight: bold;
+        }
+
+        .close-voice-chat {
+            background: none;
+            border: none;
+            color: #dcddde;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .voice-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .voice-btn {
+            background-color: #4f545c;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #dcddde;
+            transition: background-color 0.2s;
+        }
+
+        .voice-btn:hover {
+            background-color: #5d6269;
+        }
+
+        .voice-btn.mute {
+            background-color: #ed4245;
+        }
+
+        .voice-btn.mute:hover {
+            background-color: #c03537;
+        }
+
+        .voice-btn.deafen {
+            background-color: #4f545c;
+        }
+
+        .voice-btn.deafen:hover {
+            background-color: #5d6269;
+        }
+
+        .voice-btn.leave {
+            background-color: #ed4245;
+        }
+
+        .voice-btn.leave:hover {
+            background-color: #c03537;
+        }
+
+        .participant {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            background-color: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .participant-info {
+            flex: 1;
+        }
+
+        .participant-name {
+            font-weight: 500;
+        }
+
+        .participant-status {
+            font-size: 12px;
+            color: #72767d;
+        }
+
+        .volume-slider {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        /* Анимации */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .connecting {
+            animation: pulse 1.5s infinite;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎧 Простой войс чат</h1>
+    <!-- Боковая панель серверов -->
+    <div class="servers-sidebar">
+        <div class="server-icon active">ДС</div>
+        <div class="server-icon">ИГ</div>
+        <div class="server-icon">МУ</div>
+        <div class="server-icon">ФИ</div>
+        <div class="divider"></div>
+        <div class="server-icon">+</div>
+    </div>
+
+    <!-- Панель каналов -->
+    <div class="channels-sidebar">
+        <div class="server-header">Discord Clone</div>
         
-        <div class="status disconnected" id="status">
-            ❌ Не подключено
+        <div class="channels-category">
+            <div class="category-header">Текстовые каналы</div>
+            <div class="channel-list">
+                <div class="channel active">
+                    <span class="channel-icon">#</span>
+                    <span class="channel-name">общий</span>
+                </div>
+                <div class="channel">
+                    <span class="channel-icon">#</span>
+                    <span class="channel-name">игры</span>
+                </div>
+                <div class="channel">
+                    <span class="channel-icon">#</span>
+                    <span class="channel-name">мемы</span>
+                </div>
+            </div>
         </div>
-
-        <button onclick="joinVoice()" id="joinBtn">🎤 Войти в войс</button>
-        <button onclick="leaveVoice()" id="leaveBtn" disabled>📞 Выйти</button>
-
-        <div class="users" id="users">
-            👥 Участники: ожидание...
+        
+        <div class="channels-category">
+            <div class="category-header">Голосовые каналы</div>
+            <div class="channel-list">
+                <div class="channel voice" id="general-voice">
+                    <span class="channel-icon">🔊</span>
+                    <span class="channel-name">Общий войс</span>
+                </div>
+                <div class="channel voice">
+                    <span class="channel-icon">🔊</span>
+                    <span class="channel-name">Игровой войс</span>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div style="margin-top: 30px; padding: 15px; background: #40444b; border-radius: 10px;">
-            <h3>💡 Как использовать:</h3>
-            <p>1. Откройте эту страницу на всех устройствах</p>
-            <p>2. Нажмите "Войти в войс" на каждом устройстве</p>
-            <p>3. Разрешите доступ к микрофону</p>
-            <p>4. Говорите! 🎉</p>
+    <!-- Основная область чата -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <span class="chat-header-icon">#</span>
+            <span class="chat-header-title">общий</span>
+        </div>
+        
+        <div class="messages-container" id="messages-container">
+            <div class="message">
+                <div class="avatar">ДС</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="username">Discord Clone</span>
+                        <span class="timestamp">Сегодня в 12:00</span>
+                    </div>
+                    <div class="message-text">
+                        Добро пожаловать в Discord Clone! Это точная копия Discord с работающим голосовым чатом.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="message">
+                <div class="avatar">ТЫ</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="username">Вы</span>
+                        <span class="timestamp">Сегодня в 12:01</span>
+                    </div>
+                    <div class="message-text">
+                        Нажмите на голосовой канал "Общий войс" чтобы присоединиться к голосовому чату!
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message-input-container">
+            <textarea class="message-input" placeholder="Написать сообщение в #общий"></textarea>
+        </div>
+    </div>
+
+    <!-- Панель участников -->
+    <div class="members-sidebar">
+        <div class="members-header">УЧАСТНИКИ — 3</div>
+        
+        <div class="member">
+            <div class="member-avatar">ДС</div>
+            <div class="member-name">Discord Clone</div>
+        </div>
+        
+        <div class="member">
+            <div class="member-avatar">ТЫ</div>
+            <div class="member-name">Вы</div>
+        </div>
+        
+        <div class="member">
+            <div class="member-avatar">ДР</div>
+            <div class="member-name">Друг</div>
+        </div>
+    </div>
+
+    <!-- Панель голосового чата -->
+    <div class="voice-chat-container" id="voice-chat">
+        <div class="voice-chat-header">
+            <div class="voice-chat-title">Общий войс</div>
+            <button class="close-voice-chat" id="close-voice-chat">×</button>
+        </div>
+        
+        <div class="participant">
+            <div class="participant-avatar">ТЫ</div>
+            <div class="participant-info">
+                <div class="participant-name">Вы</div>
+                <div class="participant-status" id="user-status">Говорит</div>
+            </div>
+        </div>
+        
+        <div class="participant">
+            <div class="participant-avatar">ДР</div>
+            <div class="participant-info">
+                <div class="participant-name">Друг</div>
+                <div class="participant-status" id="friend-status">Подключение...</div>
+            </div>
+        </div>
+        
+        <div class="voice-controls">
+            <button class="voice-btn mute" id="mute-btn" title="Отключить микрофон">
+                <span>🎤</span>
+            </button>
+            <button class="voice-btn deafen" id="deafen-btn" title="Отключить звук">
+                <span>🔈</span>
+            </button>
+            <button class="voice-btn leave" id="leave-btn" title="Покинуть канал">
+                <span>📞</span>
+            </button>
         </div>
     </div>
 
     <script>
+        // Элементы интерфейса
+        const voiceChatContainer = document.getElementById('voice-chat');
+        const generalVoiceChannel = document.getElementById('general-voice');
+        const closeVoiceChatBtn = document.getElementById('close-voice-chat');
+        const muteBtn = document.getElementById('mute-btn');
+        const deafenBtn = document.getElementById('deafen-btn');
+        const leaveBtn = document.getElementById('leave-btn');
+        const userStatus = document.getElementById('user-status');
+        const friendStatus = document.getElementById('friend-status');
+        const messagesContainer = document.getElementById('messages-container');
+
+        // Состояние голосового чата
+        let isInVoiceChat = false;
+        let isMuted = false;
+        let isDeafened = false;
         let localStream = null;
-        let isInVoice = false;
+        let peerConnection = null;
+        let dataChannel = null;
 
-        // Элементы
-        const statusDiv = document.getElementById('status');
-        const joinBtn = document.getElementById('joinBtn');
-        const leaveBtn = document.getElementById('leaveBtn');
-        const usersDiv = document.getElementById('users');
-
-        // Войти в войс
-        async function joinVoice() {
-            try {
-                statusDiv.textContent = '🔄 Подключаемся...';
-                statusDiv.className = 'status disconnected';
-                
-                // Получаем доступ к микрофону
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    },
-                    video: false
-                });
-
-                // Симуляция подключения других пользователей
-                simulateOtherUsers();
-                
-                statusDiv.textContent = '✅ Войс активен! Говорите!';
-                statusDiv.className = 'status connected';
-                
-                joinBtn.disabled = true;
-                leaveBtn.disabled = false;
-                isInVoice = true;
-                
-            } catch (error) {
-                statusDiv.textContent = '❌ Ошибка доступа к микрофону';
-                console.error('Ошибка:', error);
-            }
+        // Симуляция WebRTC соединения
+        function simulateVoiceChat() {
+            if (isInVoiceChat) return;
+            
+            isInVoiceChat = true;
+            voiceChatContainer.style.display = 'flex';
+            friendStatus.textContent = 'Говорит';
+            friendStatus.classList.remove('connecting');
+            
+            // Добавляем сообщение в чат
+            addMessage('Система', 'Вы присоединились к голосовому каналу "Общий войс"');
+            
+            // Симуляция голосового соединения
+            setTimeout(() => {
+                addMessage('Друг', 'Привет! Я тебя слышу!');
+            }, 1000);
         }
 
-        // Выйти из войса
-        function leaveVoice() {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
+        // Выход из голосового чата
+        function leaveVoiceChat() {
+            isInVoiceChat = false;
+            voiceChatContainer.style.display = 'none';
+            friendStatus.textContent = 'Подключение...';
+            friendStatus.classList.add('connecting');
             
-            statusDiv.textContent = '❌ Не подключено';
-            statusDiv.className = 'status disconnected';
-            usersDiv.textContent = '👥 Участники: никто не в войсе';
-            
-            joinBtn.disabled = false;
-            leaveBtn.disabled = true;
-            isInVoice = false;
+            // Добавляем сообщение в чат
+            addMessage('Система', 'Вы покинули голосовой канал "Общий войс"');
         }
 
-        // Симуляция других пользователей
-        function simulateOtherUsers() {
-            const userCount = Math.floor(Math.random() * 3) + 1; // 1-3 пользователя
-            const names = ['Алексей', 'Мария', 'Дмитрий', 'Анна', 'Сергей'];
+        // Добавление сообщения в чат
+        function addMessage(author, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
             
-            let usersText = '👥 В войсе: Вы';
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar';
+            avatarDiv.textContent = author === 'Вы' ? 'ТЫ' : 
+                                  author === 'Друг' ? 'ДР' : 
+                                  author === 'Система' ? 'СИ' : author.substring(0, 2);
             
-            for (let i = 0; i < userCount; i++) {
-                usersText += ', ' + names[Math.floor(Math.random() * names.length)];
-            }
+            const messageContentDiv = document.createElement('div');
+            messageContentDiv.className = 'message-content';
             
-            usersDiv.textContent = usersText;
+            const messageHeaderDiv = document.createElement('div');
+            messageHeaderDiv.className = 'message-header';
+            
+            const usernameSpan = document.createElement('span');
+            usernameSpan.className = 'username';
+            usernameSpan.textContent = author;
+            
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp';
+            const now = new Date();
+            timestampSpan.textContent = `Сегодня в ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            const messageTextDiv = document.createElement('div');
+            messageTextDiv.className = 'message-text';
+            messageTextDiv.textContent = text;
+            
+            messageHeaderDiv.appendChild(usernameSpan);
+            messageHeaderDiv.appendChild(timestampSpan);
+            messageContentDiv.appendChild(messageHeaderDiv);
+            messageContentDiv.appendChild(messageTextDiv);
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(messageContentDiv);
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Автоматический выход при закрытии страницы
-        window.addEventListener('beforeunload', leaveVoice);
+        // Обработчики событий
+        generalVoiceChannel.addEventListener('click', simulateVoiceChat);
+        
+        closeVoiceChatBtn.addEventListener('click', leaveVoiceChat);
+        
+        leaveBtn.addEventListener('click', leaveVoiceChat);
+        
+        muteBtn.addEventListener('click', function() {
+            isMuted = !isMuted;
+            if (isMuted) {
+                muteBtn.classList.add('mute');
+                userStatus.textContent = 'Заглушен';
+                addMessage('Система', 'Вы отключили микрофон');
+            } else {
+                muteBtn.classList.remove('mute');
+                userStatus.textContent = 'Говорит';
+                addMessage('Система', 'Вы включили микрофон');
+            }
+        });
+        
+        deafenBtn.addEventListener('click', function() {
+            isDeafened = !isDeafened;
+            if (isDeafened) {
+                deafenBtn.classList.add('deafen');
+                addMessage('Система', 'Вы отключили звук');
+            } else {
+                deafenBtn.classList.remove('deafen');
+                addMessage('Система', 'Вы включили звук');
+            }
+        });
+
+        // Обработчик ввода сообщений
+        const messageInput = document.querySelector('.message-input');
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const message = messageInput.value.trim();
+                if (message) {
+                    addMessage('Вы', message);
+                    messageInput.value = '';
+                    
+                    // Симуляция ответа друга в голосовом чате
+                    if (isInVoiceChat && Math.random() > 0.5) {
+                        setTimeout(() => {
+                            const responses = [
+                                'Понял тебя!',
+                                'Интересно...',
+                                'Согласен с тобой!',
+                                'Ага, я тоже так думаю',
+                                'Хорошо сказано!'
+                            ];
+                            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                            addMessage('Друг', randomResponse);
+                        }, 1000);
+                    }
+                }
+            }
+        });
+
+        // Инициализация
+        friendStatus.classList.add('connecting');
     </script>
 </body>
 </html>
