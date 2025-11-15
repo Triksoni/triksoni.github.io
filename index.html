@@ -86,12 +86,14 @@
         var isVideoOn = true;
         var isAudioOn = true;
 
-        peer = new Peer();
+        window.onload = function() {
+            peer = new Peer();
 
-        peer.on('open', function(id) {
-            document.getElementById('myId').value = id;
-            console.log('Мой ID:', id);
-        });
+            peer.on('open', function(id) {
+                document.getElementById('myId').value = id;
+                console.log('Мой ID:', id);
+            });
+        };
 
         peer.on('connection', function(connection) {
             conn = connection;
@@ -202,10 +204,12 @@
                 if (videoTrack) {
                     videoTrack.enabled = !videoTrack.enabled;
                     isVideoOn = videoTrack.enabled;
-                    document.getElementById('toggleVideoBtn').innerHTML = isVideoOn ? '&#128249;' : '&#128249;&#10060;';
-                    document.getElementById('toggleVideoBtn').className = isVideoOn 
+                    var icon = isVideoOn ? '&#128249;' : '&#128249;&#10060;';
+                    document.getElementById('toggleVideoBtn').innerHTML = icon;
+                    var btnClass = isVideoOn 
                         ? 'bg-gray-700 hover:bg-gray-600 p-4 rounded-full'
                         : 'bg-red-600 hover:bg-red-700 p-4 rounded-full';
+                    document.getElementById('toggleVideoBtn').className = btnClass;
                 }
             }
         };
@@ -216,10 +220,12 @@
                 if (audioTrack) {
                     audioTrack.enabled = !audioTrack.enabled;
                     isAudioOn = audioTrack.enabled;
-                    document.getElementById('toggleAudioBtn').innerHTML = isAudioOn ? '&#127908;' : '&#127908;&#10060;';
-                    document.getElementById('toggleAudioBtn').className = isAudioOn 
+                    var icon = isAudioOn ? '&#127908;' : '&#127908;&#10060;';
+                    document.getElementById('toggleAudioBtn').innerHTML = icon;
+                    var btnClass = isAudioOn 
                         ? 'bg-gray-700 hover:bg-gray-600 p-4 rounded-full'
                         : 'bg-red-600 hover:bg-red-700 p-4 rounded-full';
+                    document.getElementById('toggleAudioBtn').className = btnClass;
                 }
             }
         };
