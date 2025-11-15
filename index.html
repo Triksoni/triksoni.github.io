@@ -1,930 +1,339 @@
-=<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Clone - Голосовой чат</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: #36393f;
-            color: #dcddde;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Боковая панель серверов */
-        .servers-sidebar {
-            width: 72px;
-            background-color: #202225;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px 0;
-            overflow-y: auto;
-        }
-
-        .server-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background-color: #36393f;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: border-radius 0.2s ease;
-            color: #dcddde;
-            font-weight: bold;
-        }
-
-        .server-icon:hover {
-            border-radius: 16px;
-            background-color: #5865f2;
-        }
-
-        .server-icon.active {
-            border-radius: 16px;
-            background-color: #5865f2;
-        }
-
-        .divider {
-            width: 32px;
-            height: 2px;
-            background-color: #36393f;
-            margin: 8px 0;
-        }
-
-        /* Панель каналов */
-        .channels-sidebar {
-            width: 240px;
-            background-color: #2f3136;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .server-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-            font-weight: bold;
-            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .channels-category {
-            margin-top: 16px;
-            padding: 0 8px;
-        }
-
-        .category-header {
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #8e9297;
-            text-transform: uppercase;
-        }
-
-        .channel-list {
-            margin-top: 8px;
-        }
-
-        .channel {
-            display: flex;
-            align-items: center;
-            padding: 6px 8px;
-            border-radius: 4px;
-            margin-bottom: 2px;
-            cursor: pointer;
-            color: #8e9297;
-        }
-
-        .channel:hover {
-            background-color: rgba(79, 84, 92, 0.16);
-            color: #dcddde;
-        }
-
-        .channel.active {
-            background-color: rgba(79, 84, 92, 0.32);
-            color: #dcddde;
-        }
-
-        .channel.voice {
-            display: flex;
-            align-items: center;
-        }
-
-        .channel-icon {
-            margin-right: 6px;
-            font-size: 18px;
-        }
-
-        .channel-name {
-            font-size: 14px;
-        }
-
-        /* Основная область чата */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: #36393f;
-        }
-
-        .chat-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-        }
-
-        .chat-header-icon {
-            margin-right: 8px;
-            color: #8e9297;
-        }
-
-        .chat-header-title {
-            font-weight: bold;
-        }
-
-        .messages-container {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-        }
-
-        .message {
-            display: flex;
-            margin-bottom: 16px;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 16px;
-            background-color: #5865f2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-        }
-
-        .message-content {
-            flex: 1;
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .username {
-            font-weight: 500;
-            margin-right: 8px;
-        }
-
-        .timestamp {
-            font-size: 12px;
-            color: #72767d;
-        }
-
-        .message-text {
-            font-size: 16px;
-            line-height: 1.4;
-        }
-
-        /* Панель ввода сообщения */
-        .message-input-container {
-            padding: 16px;
-        }
-
-        .message-input {
-            width: 100%;
-            background-color: #40444b;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            color: #dcddde;
-            font-size: 16px;
-            resize: none;
-            outline: none;
-        }
-
-        /* Панель участников */
-        .members-sidebar {
-            width: 240px;
-            background-color: #2f3136;
-            padding: 16px;
-            overflow-y: auto;
-        }
-
-        .members-header {
-            font-weight: 600;
-            color: #8e9297;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            font-size: 12px;
-        }
-
-        .member {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            padding: 4px;
-            border-radius: 4px;
-        }
-
-        .member:hover {
-            background-color: rgba(79, 84, 92, 0.16);
-        }
-
-        .member-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin-right: 12px;
-            background-color: #5865f2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            font-size: 14px;
-        }
-
-        .member-name {
-            font-size: 14px;
-            color: #8e9297;
-        }
-
-        /* Панель голосового чата */
-        .voice-chat-container {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #2f3136;
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            width: 300px;
-        }
-
-        .voice-chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .voice-chat-title {
-            font-weight: bold;
-        }
-
-        .close-voice-chat {
-            background: none;
-            border: none;
-            color: #dcddde;
-            cursor: pointer;
-            font-size: 18px;
-        }
-
-        .voice-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 16px;
-        }
-
-        .voice-btn {
-            background-color: #4f545c;
-            border: none;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #dcddde;
-            transition: background-color 0.2s;
-        }
-
-        .voice-btn:hover {
-            background-color: #5d6269;
-        }
-
-        .voice-btn.mute {
-            background-color: #ed4245;
-        }
-
-        .voice-btn.mute:hover {
-            background-color: #c03537;
-        }
-
-        .voice-btn.deafen {
-            background-color: #4f545c;
-        }
-
-        .voice-btn.deafen:hover {
-            background-color: #5d6269;
-        }
-
-        .voice-btn.leave {
-            background-color: #ed4245;
-        }
-
-        .voice-btn.leave:hover {
-            background-color: #c03537;
-        }
-
-        .participant {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .participant-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 12px;
-            background-color: #5865f2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-        }
-
-        .participant-info {
-            flex: 1;
-        }
-
-        .participant-name {
-            font-weight: 500;
-        }
-
-        .participant-status {
-            font-size: 12px;
-            color: #72767d;
-        }
-
-        .volume-slider {
-            width: 100%;
-            margin-top: 8px;
-        }
-
-        /* Панель подключения */
-        .connection-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #2f3136;
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-            width: 300px;
-        }
-
-        .connection-header {
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-
-        .connection-input {
-            width: 100%;
-            background-color: #40444b;
-            border: none;
-            border-radius: 4px;
-            padding: 8px;
-            color: #dcddde;
-            margin-bottom: 8px;
-        }
-
-        .connection-btn {
-            width: 100%;
-            background-color: #5865f2;
-            border: none;
-            border-radius: 4px;
-            padding: 10px;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-
-        .connection-btn:hover {
-            background-color: #4752c4;
-        }
-
-        .connection-btn:disabled {
-            background-color: #4f545c;
-            cursor: not-allowed;
-        }
-
-        /* Анимации */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .connecting {
-            animation: pulse 1.5s infinite;
-        }
-    </style>
-</head>
-<body>
-    <!-- Боковая панель серверов -->
-    <div class="servers-sidebar">
-        <div class="server-icon active">ДС</div>
-        <div class="server-icon">ИГ</div>
-        <div class="server-icon">МУ</div>
-        <div class="server-icon">ФИ</div>
-        <div class="divider"></div>
-        <div class="server-icon">+</div>
-    </div>
-
-    <!-- Панель каналов -->
-    <div class="channels-sidebar">
-        <div class="server-header">Discord Clone</div>
+import React, { useState, useEffect, useRef } from 'react';
+import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Send, Copy, Check } from 'lucide-react';
+
+export default function VideoChatApp() {
+  const [myId, setMyId] = useState('');
+  const [peerId, setPeerId] = useState('');
+  const [peer, setPeer] = useState(null);
+  const [conn, setConn] = useState(null);
+  const [call, setCall] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isCalling, setIsCalling] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [localStream, setLocalStream] = useState(null);
+  
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js';
+    script.async = true;
+    script.onload = initializePeer;
+    document.body.appendChild(script);
+
+    return () => {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      if (peer) peer.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const initializePeer = () => {
+    const newPeer = new window.Peer();
+    
+    newPeer.on('open', (id) => {
+      setMyId(id);
+      console.log('Мой ID:', id);
+    });
+
+    newPeer.on('connection', (connection) => {
+      setConn(connection);
+      setIsConnected(true);
+      setupConnection(connection);
+    });
+
+    newPeer.on('call', (incomingCall) => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          setLocalStream(stream);
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+          incomingCall.answer(stream);
+          incomingCall.on('stream', (remoteStream) => {
+            if (remoteVideoRef.current) {
+              remoteVideoRef.current.srcObject = remoteStream;
+            }
+          });
+          setCall(incomingCall);
+          setIsCalling(true);
+        })
+        .catch(err => {
+          console.error('Ошибка доступа к камере/микрофону:', err);
+          alert('Не удалось получить доступ к камере или микрофону');
+        });
+    });
+
+    setPeer(newPeer);
+  };
+
+  const setupConnection = (connection) => {
+    connection.on('data', (data) => {
+      setMessages(prev => [...prev, { text: data, isOwn: false }]);
+    });
+
+    connection.on('close', () => {
+      setIsConnected(false);
+      endCall();
+    });
+  };
+
+  const connectToPeer = () => {
+    if (!peer || !peerId.trim()) return;
+
+    const connection = peer.connect(peerId.trim());
+    connection.on('open', () => {
+      setConn(connection);
+      setIsConnected(true);
+      setupConnection(connection);
+    });
+
+    connection.on('error', (err) => {
+      console.error('Ошибка подключения:', err);
+      alert('Не удалось подключиться. Проверьте ID друга.');
+    });
+  };
+
+  const startCall = () => {
+    if (!conn || !peer) {
+      alert('Сначала подключитесь к другу');
+      return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        setLocalStream(stream);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+
+        const outgoingCall = peer.call(conn.peer, stream);
+        outgoingCall.on('stream', (remoteStream) => {
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+          }
+        });
+        setCall(outgoingCall);
+        setIsCalling(true);
+      })
+      .catch(err => {
+        console.error('Ошибка доступа к камере/микрофону:', err);
+        alert('Не удалось получить доступ к камере или микрофону');
+      });
+  };
+
+  const endCall = () => {
+    if (call) call.close();
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    setCall(null);
+    setLocalStream(null);
+    setIsCalling(false);
+    setIsVideoOn(true);
+    setIsAudioOn(true);
+  };
+
+  const toggleVideo = () => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoOn(videoTrack.enabled);
+      }
+    }
+  };
+
+  const toggleAudio = () => {
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsAudioOn(audioTrack.enabled);
+      }
+    }
+  };
+
+  const sendMessage = () => {
+    if (!conn || !newMessage.trim()) return;
+    
+    conn.send(newMessage);
+    setMessages(prev => [...prev, { text: newMessage, isOwn: true }]);
+    setNewMessage('');
+  };
+
+  const copyId = () => {
+    navigator.clipboard.writeText(myId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white p-4">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center">Видеозвонки и Чат</h1>
         
-        <div class="channels-category">
-            <div class="category-header">Текстовые каналы</div>
-            <div class="channel-list">
-                <div class="channel active">
-                    <span class="channel-icon">#</span>
-                    <span class="channel-name">общий</span>
-                </div>
-                <div class="channel">
-                    <span class="channel-icon">#</span>
-                    <span class="channel-name">игры</span>
-                </div>
-                <div class="channel">
-                    <span class="channel-icon">#</span>
-                    <span class="channel-name">мемы</span>
-                </div>
+        {/* Подключение */}
+        {!isConnected && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <div className="mb-4">
+              <label className="block mb-2 text-sm font-medium">Ваш ID (отправьте другу):</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={myId}
+                  readOnly
+                  className="flex-1 bg-gray-700 rounded px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={copyId}
+                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center gap-2"
+                >
+                  {copied ? <Check size={18} /> : <Copy size={18} />}
+                  {copied ? 'Скопировано' : 'Копировать'}
+                </button>
+              </div>
             </div>
-        </div>
-        
-        <div class="channels-category">
-            <div class="category-header">Голосовые каналы</div>
-            <div class="channel-list">
-                <div class="channel voice" id="general-voice">
-                    <span class="channel-icon">🔊</span>
-                    <span class="channel-name">Общий войс</span>
-                </div>
-                <div class="channel voice">
-                    <span class="channel-icon">🔊</span>
-                    <span class="channel-name">Игровой войс</span>
-                </div>
+            
+            <div>
+              <label className="block mb-2 text-sm font-medium">ID друга:</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={peerId}
+                  onChange={(e) => setPeerId(e.target.value)}
+                  placeholder="Вставьте ID друга"
+                  className="flex-1 bg-gray-700 rounded px-3 py-2"
+                  onKeyPress={(e) => e.key === 'Enter' && connectToPeer()}
+                />
+                <button
+                  onClick={connectToPeer}
+                  className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded font-medium"
+                >
+                  Подключиться
+                </button>
+              </div>
             </div>
-        </div>
-    </div>
+          </div>
+        )}
 
-    <!-- Основная область чата -->
-    <div class="chat-area">
-        <div class="chat-header">
-            <span class="chat-header-icon">#</span>
-            <span class="chat-header-title">общий</span>
-        </div>
-        
-        <div class="messages-container" id="messages-container">
-            <div class="message">
-                <div class="avatar">ДС</div>
-                <div class="message-content">
-                    <div class="message-header">
-                        <span class="username">Discord Clone</span>
-                        <span class="timestamp">Сегодня в 12:00</span>
+        {isConnected && (
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Видео */}
+            <div className="md:col-span-2 space-y-4">
+              <div className="bg-gray-800 rounded-lg p-4">
+                <div className="relative bg-black rounded-lg overflow-hidden mb-4" style={{ paddingBottom: '56.25%' }}>
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  {!isCalling && (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      Нет активного звонка
                     </div>
-                    <div class="message-text">
-                        Добро пожаловать в Discord Clone с реальным голосовым чатом! 
-                        Для подключения:
-                        <br>1. Один из вас создает комнату и отправляет ID другому
-                        <br>2. Второй вводит этот ID и подключается
-                        <br>3. Наслаждайтесь общением!
-                    </div>
+                  )}
                 </div>
+
+                {isCalling && (
+                  <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ paddingBottom: '28%' }}>
+                    <video
+                      ref={localVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Кнопки управления звонком */}
+                <div className="flex justify-center gap-3 mt-4">
+                  {!isCalling ? (
+                    <button
+                      onClick={startCall}
+                      className="bg-green-600 hover:bg-green-700 p-4 rounded-full"
+                    >
+                      <Phone size={24} />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={toggleVideo}
+                        className={`p-4 rounded-full ${isVideoOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}
+                      >
+                        {isVideoOn ? <Video size={24} /> : <VideoOff size={24} />}
+                      </button>
+                      <button
+                        onClick={toggleAudio}
+                        className={`p-4 rounded-full ${isAudioOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}
+                      >
+                        {isAudioOn ? <Mic size={24} /> : <MicOff size={24} />}
+                      </button>
+                      <button
+                        onClick={endCall}
+                        className="bg-red-600 hover:bg-red-700 p-4 rounded-full"
+                      >
+                        <PhoneOff size={24} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-        </div>
-        
-        <div class="message-input-container">
-            <textarea class="message-input" placeholder="Написать сообщение в #общий"></textarea>
-        </div>
-    </div>
 
-    <!-- Панель участников -->
-    <div class="members-sidebar">
-        <div class="members-header">УЧАСТНИКИ — 1</div>
-        
-        <div class="member">
-            <div class="member-avatar">ВЫ</div>
-            <div class="member-name">Вы</div>
-        </div>
-        
-        <div class="member" id="friend-member" style="display: none;">
-            <div class="member-avatar">ДР</div>
-            <div class="member-name">Друг</div>
-        </div>
-    </div>
+            {/* Чат */}
+            <div className="bg-gray-800 rounded-lg p-4 flex flex-col h-[600px]">
+              <h2 className="text-xl font-semibold mb-4">Сообщения</h2>
+              
+              <div className="flex-1 overflow-y-auto mb-4 space-y-2">
+                {messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`p-3 rounded-lg ${
+                      msg.isOwn ? 'bg-blue-600 ml-auto' : 'bg-gray-700'
+                    } max-w-[80%] ${msg.isOwn ? 'text-right' : ''}`}
+                  >
+                    {msg.text}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
 
-    <!-- Панель подключения -->
-    <div class="connection-panel">
-        <div class="connection-header">Подключение к голосовому чату</div>
-        <input type="text" class="connection-input" id="room-id" placeholder="ID комнаты для подключения">
-        <button class="connection-btn" id="create-room">Создать комнату</button>
-        <button class="connection-btn" id="join-room">Присоединиться</button>
-        <div id="connection-status" style="margin-top: 10px; font-size: 14px; color: #72767d;"></div>
-    </div>
-
-    <!-- Панель голосового чата -->
-    <div class="voice-chat-container" id="voice-chat">
-        <div class="voice-chat-header">
-            <div class="voice-chat-title">Общий войс</div>
-            <button class="close-voice-chat" id="close-voice-chat">×</button>
-        </div>
-        
-        <div class="participant">
-            <div class="participant-avatar">ВЫ</div>
-            <div class="participant-info">
-                <div class="participant-name">Вы</div>
-                <div class="participant-status" id="user-status">Говорит</div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  placeholder="Напишите сообщение..."
+                  className="flex-1 bg-gray-700 rounded px-3 py-2"
+                />
+                <button
+                  onClick={sendMessage}
+                  className="bg-blue-600 hover:bg-blue-700 p-2 rounded"
+                >
+                  <Send size={20} />
+                </button>
+              </div>
             </div>
-        </div>
-        
-        <div class="participant">
-            <div class="participant-avatar">ДР</div>
-            <div class="participant-info">
-                <div class="participant-name">Друг</div>
-                <div class="participant-status" id="friend-status">Не подключен</div>
-            </div>
-        </div>
-        
-        <div class="voice-controls">
-            <button class="voice-btn" id="mute-btn" title="Отключить микрофон">
-                <span>🎤</span>
-            </button>
-            <button class="voice-btn" id="deafen-btn" title="Отключить звук">
-                <span>🔈</span>
-            </button>
-            <button class="voice-btn leave" id="leave-btn" title="Покинуть канал">
-                <span>📞</span>
-            </button>
-        </div>
+          </div>
+        )}
+      </div>
     </div>
-
-    <script>
-        // Элементы интерфейса
-        const voiceChatContainer = document.getElementById('voice-chat');
-        const generalVoiceChannel = document.getElementById('general-voice');
-        const closeVoiceChatBtn = document.getElementById('close-voice-chat');
-        const muteBtn = document.getElementById('mute-btn');
-        const deafenBtn = document.getElementById('deafen-btn');
-        const leaveBtn = document.getElementById('leave-btn');
-        const userStatus = document.getElementById('user-status');
-        const friendStatus = document.getElementById('friend-status');
-        const messagesContainer = document.getElementById('messages-container');
-        const friendMember = document.getElementById('friend-member');
-        const roomIdInput = document.getElementById('room-id');
-        const createRoomBtn = document.getElementById('create-room');
-        const joinRoomBtn = document.getElementById('join-room');
-        const connectionStatus = document.getElementById('connection-status');
-
-        // Переменные WebRTC
-        let localStream = null;
-        let peerConnection = null;
-        let dataChannel = null;
-        let isCaller = false;
-        let roomId = null;
-        let isInVoiceChat = false;
-        let isMuted = false;
-        let isDeafened = false;
-
-        // Конфигурация STUN-серверов для WebRTC
-        const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
-        };
-
-        // Создание комнаты
-        createRoomBtn.addEventListener('click', async () => {
-            try {
-                // Генерируем случайный ID комнаты
-                roomId = Math.random().toString(36).substring(2, 10).toUpperCase();
-                roomIdInput.value = roomId;
-                isCaller = true;
-                
-                // Запрашиваем доступ к микрофону
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // Создаем PeerConnection
-                peerConnection = new RTCPeerConnection(configuration);
-                
-                // Добавляем локальный поток
-                localStream.getTracks().forEach(track => {
-                    peerConnection.addTrack(track, localStream);
-                });
-                
-                // Создаем канал данных для обмена сообщениями
-                dataChannel = peerConnection.createDataChannel('chat');
-                setupDataChannel();
-                
-                // Создаем предложение
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                
-                connectionStatus.textContent = `Комната создана! ID: ${roomId}. Отправьте его другу.`;
-                connectionStatus.style.color = '#43b581';
-                
-                // Ждем ответа
-                peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        // Кандидат доступен, но в упрощенной версии мы его игнорируем
-                    }
-                };
-                
-            } catch (error) {
-                console.error('Ошибка создания комнаты:', error);
-                connectionStatus.textContent = 'Ошибка: ' + error.message;
-                connectionStatus.style.color = '#ed4245';
-            }
-        });
-
-        // Присоединение к комнате
-        joinRoomBtn.addEventListener('click', async () => {
-            try {
-                roomId = roomIdInput.value.trim();
-                if (!roomId) {
-                    connectionStatus.textContent = 'Введите ID комнаты';
-                    connectionStatus.style.color = '#ed4245';
-                    return;
-                }
-                
-                isCaller = false;
-                
-                // Запрашиваем доступ к микрофону
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // Создаем PeerConnection
-                peerConnection = new RTCPeerConnection(configuration);
-                
-                // Добавляем локальный поток
-                localStream.getTracks().forEach(track => {
-                    peerConnection.addTrack(track, localStream);
-                });
-                
-                // Настраиваем обработчик канала данных
-                peerConnection.ondatachannel = (event) => {
-                    dataChannel = event.channel;
-                    setupDataChannel();
-                };
-                
-                // Получаем предложение от создателя комнаты
-                // В реальном приложении здесь должен быть сигнальный сервер
-                // Для демонстрации мы просто создаем предложение и ответ
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                
-                // В реальном приложении здесь должен быть обмен SDP через сигнальный сервер
-                // Для демонстрации мы просто создаем ответ
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                
-                connectionStatus.textContent = 'Подключение...';
-                connectionStatus.style.color = '#faa61a';
-                
-                // Ждем установления соединения
-                peerConnection.onconnectionstatechange = () => {
-                    if (peerConnection.connectionState === 'connected') {
-                        connectionStatus.textContent = 'Подключено!';
-                        connectionStatus.style.color = '#43b581';
-                        joinVoiceChat();
-                    }
-                };
-                
-            } catch (error) {
-                console.error('Ошибка подключения:', error);
-                connectionStatus.textContent = 'Ошибка: ' + error.message;
-                connectionStatus.style.color = '#ed4245';
-            }
-        });
-
-        // Настройка канала данных
-        function setupDataChannel() {
-            dataChannel.onopen = () => {
-                console.log('Канал данных открыт');
-                // Отправляем приветственное сообщение
-                if (dataChannel.readyState === 'open') {
-                    dataChannel.send(JSON.stringify({
-                        type: 'user_joined',
-                        username: 'Друг'
-                    }));
-                }
-            };
-            
-            dataChannel.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                handleDataMessage(data);
-            };
-        }
-
-        // Обработка сообщений через канал данных
-        function handleDataMessage(data) {
-            switch (data.type) {
-                case 'user_joined':
-                    friendStatus.textContent = 'Говорит';
-                    friendStatus.classList.remove('connecting');
-                    friendMember.style.display = 'flex';
-                    addMessage('Система', 'Друг присоединился к голосовому чату');
-                    break;
-                case 'user_left':
-                    friendStatus.textContent = 'Не подключен';
-                    friendStatus.classList.add('connecting');
-                    friendMember.style.display = 'none';
-                    addMessage('Система', 'Друг покинул голосовой чат');
-                    break;
-                case 'chat_message':
-                    addMessage('Друг', data.message);
-                    break;
-            }
-        }
-
-        // Присоединение к голосовому чату
-        function joinVoiceChat() {
-            isInVoiceChat = true;
-            voiceChatContainer.style.display = 'flex';
-            userStatus.textContent = 'Говорит';
-            
-            // Добавляем сообщение в чат
-            addMessage('Система', 'Вы присоединились к голосовому каналу "Общий войс"');
-            
-            // Уведомляем друга о подключении
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify({
-                    type: 'user_joined',
-                    username: 'Вы'
-                }));
-            }
-        }
-
-        // Выход из голосового чата
-        function leaveVoiceChat() {
-            isInVoiceChat = false;
-            voiceChatContainer.style.display = 'none';
-            friendStatus.textContent = 'Не подключен';
-            friendStatus.classList.add('connecting');
-            friendMember.style.display = 'none';
-            
-            // Добавляем сообщение в чат
-            addMessage('Система', 'Вы покинули голосовой канал "Общий войс"');
-            
-            // Уведомляем друга о выходе
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify({
-                    type: 'user_left'
-                }));
-            }
-            
-            // Закрываем соединение
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            
-            // Останавливаем локальный поток
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            
-            connectionStatus.textContent = 'Отключено';
-            connectionStatus.style.color = '#72767d';
-        }
-
-        // Добавление сообщения в чат
-        function addMessage(author, text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            
-            const avatarDiv = document.createElement('div');
-            avatarDiv.className = 'avatar';
-            avatarDiv.textContent = author === 'Вы' ? 'ВЫ' : 
-                                  author === 'Друг' ? 'ДР' : 
-                                  author === 'Система' ? 'СИ' : author.substring(0, 2);
-            
-            const messageContentDiv = document.createElement('div');
-            messageContentDiv.className = 'message-content';
-            
-            const messageHeaderDiv = document.createElement('div');
-            messageHeaderDiv.className = 'message-header';
-            
-            const usernameSpan = document.createElement('span');
-            usernameSpan.className = 'username';
-            usernameSpan.textContent = author;
-            
-            const timestampSpan = document.createElement('span');
-            timestampSpan.className = 'timestamp';
-            const now = new Date();
-            timestampSpan.textContent = `Сегодня в ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            const messageTextDiv = document.createElement('div');
-            messageTextDiv.className = 'message-text';
-            messageTextDiv.textContent = text;
-            
-            messageHeaderDiv.appendChild(usernameSpan);
-            messageHeaderDiv.appendChild(timestampSpan);
-            messageContentDiv.appendChild(messageHeaderDiv);
-            messageContentDiv.appendChild(messageTextDiv);
-            messageDiv.appendChild(avatarDiv);
-            messageDiv.appendChild(messageContentDiv);
-            
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        // Обработчики событий
-        generalVoiceChannel.addEventListener('click', () => {
-            if (!isInVoiceChat) {
-                connectionStatus.textContent = 'Сначала создайте комнату или присоединитесь';
-                connectionStatus.style.color = '#faa61a';
-            }
-        });
-        
-        closeVoiceChatBtn.addEventListener('click', leaveVoiceChat);
-        
-        leaveBtn.addEventListener('click', leaveVoiceChat);
-        
-        muteBtn.addEventListener('click', function() {
-            if (!localStream) return;
-            
-            isMuted = !isMuted;
-            localStream.getAudioTracks().forEach(track => {
-                track.enabled = !isMuted;
-            });
-            
-            if (isMuted) {
-                muteBtn.classList.add('mute');
-                userStatus.textContent = 'Заглушен';
-                addMessage('Система', 'Вы отключили микрофон');
-            } else {
-                muteBtn.classList.remove('mute');
-                userStatus.textContent = 'Говорит';
-                addMessage('Система', 'Вы включили микрофон');
-            }
-        });
-        
-        deafenBtn.addEventListener('click', function() {
-            isDeafened = !isDeafened;
-            if (isDeafened) {
-                deafenBtn.classList.add('deafen');
-                addMessage('Система', 'Вы отключили звук');
-            } else {
-                deafenBtn.classList.remove('deafen');
-                addMessage('Система', 'Вы включили звук');
-            }
-        });
-
-        // Обработчик ввода сообщений
-        const messageInput = document.querySelector('.message-input');
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                const message = messageInput.value.trim();
-                if (message) {
-                    addMessage('Вы', message);
-                    
-                    // Отправляем сообщение другу через канал данных
-                    if (dataChannel && dataChannel.readyState === 'open') {
-                        dataChannel.send(JSON.stringify({
-                            type: 'chat_message',
-                            message: message
-                        }));
-                    }
-                    
-                    messageInput.value = '';
-                }
-            }
-        });
-
-        // Инициализация
-        friendStatus.classList.add('connecting');
-    </script>
-</body>
-</html>
+  );
+}
