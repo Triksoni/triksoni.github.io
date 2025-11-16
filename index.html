@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoundWave - Spotify Clone</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@reduxjs/toolkit@1.9.7/dist/redux-toolkit.umd.js"></script>
-    <script src="https://unpkg.com/react-redux@8.1.3/dist/react-redux.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -29,6 +28,11 @@
             background: var(--spotify-black);
             color: var(--spotify-white);
             overflow-x: hidden;
+            height: 100vh;
+        }
+
+        #root {
+            height: 100vh;
         }
 
         .app {
@@ -60,6 +64,7 @@
 
         .menu-item:hover {
             color: var(--spotify-white);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .playlist-item {
@@ -67,11 +72,12 @@
             cursor: pointer;
             color: var(--spotify-light-gray);
             font-size: 14px;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .playlist-item:hover {
             color: var(--spotify-white);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         /* Main Content */
@@ -307,17 +313,6 @@
             transform: scale(1.05);
         }
 
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--spotify-light-gray);
-            color: var(--spotify-white);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--spotify-white);
-        }
-
-        /* Icons */
         .icon-btn {
             background: none;
             border: none;
@@ -326,6 +321,7 @@
             padding: 8px;
             border-radius: 50%;
             transition: all 0.3s ease;
+            font-size: 16px;
         }
 
         .icon-btn:hover {
@@ -380,43 +376,21 @@
             margin-bottom: 16px;
         }
 
-        .p-4 {
-            padding: 16px;
-        }
-
-        .p-6 {
-            padding: 24px;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .items-center {
-            align-items: center;
-        }
-
-        .justify-between {
-            justify-content: space-between;
-        }
-
-        .gap-4 {
-            gap: 16px;
-        }
-
-        .w-full {
-            width: 100%;
-        }
-
         .hidden {
             display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--spotify-light-gray);
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script>
+    <script type="text/babel">
         // Демо-данные
         const demoData = {
             tracks: [
@@ -467,80 +441,22 @@
                     duration: '2:21',
                     image: 'https://i.scdn.co/image/ab67616d00001e026d6b3d8397bb8e6b6cd34047',
                     previewUrl: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_7e7e2dbe0c.mp3?filename=stay-117043.mp3',
-                },
-                {
-                    id: '7',
-                    name: 'Watermelon Sugar',
-                    artist: 'Harry Styles',
-                    duration: '2:54',
-                    image: 'https://i.scdn.co/image/ab67616d00001e02a4b4d6f5b8a6a6a0a7a0a7a0',
-                    previewUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_ecb733d9a8.mp3?filename=watermelon-sugar-15039.mp3',
-                },
-                {
-                    id: '8',
-                    name: 'Don\'t Start Now',
-                    artist: 'Dua Lipa',
-                    duration: '3:03',
-                    image: 'https://i.scdn.co/image/ab67616d00001e02b4b4d6f5b8a6a6a0a7a0a7a0',
-                    previewUrl: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_7e7e2dbe0c.mp3?filename=dont-start-now-117044.mp3',
                 }
             ]
         };
 
-        // Redux Store
-        const { configureStore, createSlice } = ReduxToolkit;
-
-        // Player Slice
-        const playerSlice = createSlice({
-            name: 'player',
-            initialState: {
+        // Простое состояние вместо Redux
+        let appState = {
+            player: {
                 currentTrack: null,
                 isPlaying: false,
                 volume: 50,
                 currentTime: 0,
                 duration: 0,
-                queue: [],
+                queue: demoData.tracks,
                 currentIndex: 0,
             },
-            reducers: {
-                setCurrentTrack: (state, action) => {
-                    state.currentTrack = action.payload;
-                    state.isPlaying = true;
-                },
-                togglePlay: (state) => {
-                    state.isPlaying = !state.isPlaying;
-                },
-                setVolume: (state, action) => {
-                    state.volume = action.payload;
-                },
-                setCurrentTime: (state, action) => {
-                    state.currentTime = action.payload;
-                },
-                setDuration: (state, action) => {
-                    state.duration = action.payload;
-                },
-                setQueue: (state, action) => {
-                    state.queue = action.payload;
-                },
-                nextTrack: (state) => {
-                    if (state.queue.length > 0) {
-                        state.currentIndex = (state.currentIndex + 1) % state.queue.length;
-                        state.currentTrack = state.queue[state.currentIndex];
-                    }
-                },
-                previousTrack: (state) => {
-                    if (state.queue.length > 0) {
-                        state.currentIndex = state.currentIndex > 0 ? state.currentIndex - 1 : state.queue.length - 1;
-                        state.currentTrack = state.queue[state.currentIndex];
-                    }
-                },
-            },
-        });
-
-        // Playlist Slice
-        const playlistSlice = createSlice({
-            name: 'playlists',
-            initialState: {
+            playlists: {
                 playlists: JSON.parse(localStorage.getItem('spotify-clone-playlists')) || [
                     {
                         id: '1',
@@ -553,217 +469,356 @@
                 currentPlaylist: null,
                 favorites: JSON.parse(localStorage.getItem('spotify-clone-favorites')) || [],
             },
-            reducers: {
-                createPlaylist: (state, action) => {
-                    const newPlaylist = {
-                        id: Date.now().toString(),
-                        name: action.payload,
-                        description: '',
-                        tracks: [],
-                        public: true,
-                    };
-                    state.playlists.push(newPlaylist);
-                    localStorage.setItem('spotify-clone-playlists', JSON.stringify(state.playlists));
-                },
-                addToPlaylist: (state, action) => {
-                    const { playlistId, track } = action.payload;
-                    const playlist = state.playlists.find(p => p.id === playlistId);
-                    if (playlist && !playlist.tracks.some(t => t.id === track.id)) {
-                        playlist.tracks.push(track);
-                        localStorage.setItem('spotify-clone-playlists', JSON.stringify(state.playlists));
-                    }
-                },
-                removeFromPlaylist: (state, action) => {
-                    const { playlistId, trackId } = action.payload;
-                    const playlist = state.playlists.find(p => p.id === playlistId);
-                    if (playlist) {
-                        playlist.tracks = playlist.tracks.filter(t => t.id !== trackId);
-                        localStorage.setItem('spotify-clone-playlists', JSON.stringify(state.playlists));
-                    }
-                },
-                setCurrentPlaylist: (state, action) => {
-                    state.currentPlaylist = action.payload;
-                },
-                toggleFavorite: (state, action) => {
-                    const trackId = action.payload;
-                    const index = state.favorites.indexOf(trackId);
-                    if (index > -1) {
-                        state.favorites.splice(index, 1);
-                    } else {
-                        state.favorites.push(trackId);
-                    }
-                    localStorage.setItem('spotify-clone-favorites', JSON.stringify(state.favorites));
-                },
-            },
-        });
+            search: {
+                query: '',
+                results: []
+            }
+        };
 
-        const store = configureStore({
-            reducer: {
-                player: playerSlice.reducer,
-                playlists: playlistSlice.reducer,
-            },
-        });
+        // Функции для обновления состояния
+        const setState = (updater) => {
+            if (typeof updater === 'function') {
+                appState = updater(appState);
+            } else {
+                appState = { ...appState, ...updater };
+            }
+            // Перерендерим весь апп
+            ReactDOM.render(<App />, document.getElementById('root'));
+        };
 
-        const { Provider, useDispatch, useSelector } = ReactRedux;
+        // Player actions
+        const setCurrentTrack = (track) => {
+            setState(state => ({
+                ...state,
+                player: {
+                    ...state.player,
+                    currentTrack: track,
+                    isPlaying: true
+                }
+            }));
+        };
+
+        const togglePlay = () => {
+            setState(state => ({
+                ...state,
+                player: {
+                    ...state.player,
+                    isPlaying: !state.player.isPlaying
+                }
+            }));
+        };
+
+        const setVolume = (volume) => {
+            setState(state => ({
+                ...state,
+                player: {
+                    ...state.player,
+                    volume
+                }
+            }));
+        };
+
+        const nextTrack = () => {
+            setState(state => {
+                const { queue, currentIndex } = state.player;
+                if (queue.length === 0) return state;
+                
+                const newIndex = (currentIndex + 1) % queue.length;
+                return {
+                    ...state,
+                    player: {
+                        ...state.player,
+                        currentIndex: newIndex,
+                        currentTrack: queue[newIndex],
+                        isPlaying: true
+                    }
+                };
+            });
+        };
+
+        const previousTrack = () => {
+            setState(state => {
+                const { queue, currentIndex } = state.player;
+                if (queue.length === 0) return state;
+                
+                const newIndex = currentIndex > 0 ? currentIndex - 1 : queue.length - 1;
+                return {
+                    ...state,
+                    player: {
+                        ...state.player,
+                        currentIndex: newIndex,
+                        currentTrack: queue[newIndex],
+                        isPlaying: true
+                    }
+                };
+            });
+        };
+
+        // Playlist actions
+        const createPlaylist = (name) => {
+            const newPlaylist = {
+                id: Date.now().toString(),
+                name,
+                description: '',
+                tracks: [],
+                public: true,
+            };
+            
+            setState(state => {
+                const newPlaylists = [...state.playlists.playlists, newPlaylist];
+                localStorage.setItem('spotify-clone-playlists', JSON.stringify(newPlaylists));
+                return {
+                    ...state,
+                    playlists: {
+                        ...state.playlists,
+                        playlists: newPlaylists
+                    }
+                };
+            });
+        };
+
+        const setCurrentPlaylist = (playlist) => {
+            setState(state => ({
+                ...state,
+                playlists: {
+                    ...state.playlists,
+                    currentPlaylist: playlist
+                }
+            }));
+        };
+
+        const toggleFavorite = (trackId) => {
+            setState(state => {
+                const { favorites } = state.playlists;
+                const newFavorites = favorites.includes(trackId)
+                    ? favorites.filter(id => id !== trackId)
+                    : [...favorites, trackId];
+                
+                localStorage.setItem('spotify-clone-favorites', JSON.stringify(newFavorites));
+                
+                return {
+                    ...state,
+                    playlists: {
+                        ...state.playlists,
+                        favorites: newFavorites
+                    }
+                };
+            });
+        };
+
+        const setSearchQuery = (query) => {
+            const results = query.trim() 
+                ? demoData.tracks.filter(track =>
+                    track.name.toLowerCase().includes(query.toLowerCase()) ||
+                    track.artist.toLowerCase().includes(query.toLowerCase())
+                  )
+                : [];
+            
+            setState(state => ({
+                ...state,
+                search: {
+                    query,
+                    results
+                }
+            }));
+        };
 
         // Компоненты
         const Sidebar = () => {
-            const dispatch = useDispatch();
-            const { playlists, favorites } = useSelector(state => state.playlists);
+            const { playlists } = appState.playlists;
 
             const menuItems = [
                 { id: 'home', name: 'Главная', icon: '🏠' },
                 { id: 'search', name: 'Поиск', icon: '🔍' },
                 { id: 'library', name: 'Моя медиатека', icon: '📚' },
-                { id: 'favorites', name: 'Понравившиеся', icon: '❤️', count: favorites.length },
+                { id: 'favorites', name: 'Понравившиеся', icon: '❤️', count: appState.playlists.favorites.length },
             ];
 
-            return React.createElement('div', { className: 'sidebar' },
-                React.createElement('div', { style: { padding: '0 24px' } },
-                    React.createElement('h2', { 
-                        style: { marginBottom: '24px', fontSize: '24px', fontWeight: 'bold' } 
-                    }, 'SoundWave'),
-                    
-                    React.createElement('nav', null,
-                        menuItems.map(item => 
-                            React.createElement('div', {
-                                key: item.id,
-                                className: 'menu-item',
-                                onClick: () => {
-                                    if (item.id === 'favorites') {
-                                        dispatch(playlistSlice.actions.setCurrentPlaylist({ 
-                                            id: 'favorites', 
-                                            name: 'Понравившиеся',
-                                            tracks: [] 
-                                        }));
-                                    }
-                                }
-                            },
-                                React.createElement('span', { style: { fontSize: '20px' } }, item.icon),
-                                React.createElement('span', { style: { flex: 1 } }, item.name),
-                                item.count > 0 && React.createElement('span', {
-                                    style: {
-                                        background: 'var(--spotify-green)',
-                                        borderRadius: '10px',
-                                        padding: '2px 8px',
-                                        fontSize: '12px',
-                                    }
-                                }, item.count)
-                            )
-                        )
-                    )
-                ),
+            return (
+                <div className="sidebar">
+                    <div style={{ padding: '0 24px' }}>
+                        <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 'bold' }}>
+                            SoundWave
+                        </h2>
+                        
+                        <nav>
+                            {menuItems.map(item => (
+                                <div
+                                    key={item.id}
+                                    className="menu-item"
+                                    onClick={() => {
+                                        if (item.id === 'favorites') {
+                                            setCurrentPlaylist({ 
+                                                id: 'favorites', 
+                                                name: 'Понравившиеся',
+                                                tracks: [] 
+                                            });
+                                        } else if (item.id === 'home') {
+                                            setCurrentPlaylist(null);
+                                        }
+                                    }}
+                                >
+                                    <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                                    <span style={{ flex: 1 }}>{item.name}</span>
+                                    {item.count > 0 && (
+                                        <span style={{
+                                            background: 'var(--spotify-green)',
+                                            borderRadius: '10px',
+                                            padding: '2px 8px',
+                                            fontSize: '12px',
+                                        }}>
+                                            {item.count}
+                                        </span>
+                                    )}
+                                </div>
+                            ))}
+                        </nav>
+                    </div>
 
-                React.createElement('div', { 
-                    style: { 
+                    <div style={{ 
                         marginTop: '32px', 
                         padding: '0 24px',
                         borderTop: '1px solid var(--spotify-gray)' 
-                    } },
-                    React.createElement('div', {
-                        style: {
+                    }}>
+                        <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             margin: '16px 0'
-                        }
-                    },
-                        React.createElement('h3', { 
-                            style: { fontSize: '14px', color: 'var(--spotify-light-gray)' } 
-                        }, 'Ваши плейлисты'),
-                        React.createElement('button', {
-                            className: 'icon-btn',
-                            onClick: () => {
-                                const name = prompt('Название плейлиста:');
-                                if (name) {
-                                    dispatch(playlistSlice.actions.createPlaylist(name));
-                                }
-                            }
-                        }, '+')
-                    ),
+                        }}>
+                            <h3 style={{ fontSize: '14px', color: 'var(--spotify-light-gray)' }}>
+                                Ваши плейлисты
+                            </h3>
+                            <button
+                                className="icon-btn"
+                                onClick={() => {
+                                    const name = prompt('Название плейлиста:');
+                                    if (name) {
+                                        createPlaylist(name);
+                                    }
+                                }}
+                            >
+                                +
+                            </button>
+                        </div>
 
-                    playlists.map(playlist => 
-                        React.createElement('div', {
-                            key: playlist.id,
-                            className: 'playlist-item',
-                            onClick: () => dispatch(playlistSlice.actions.setCurrentPlaylist(playlist))
-                        }, playlist.name)
-                    )
-                )
+                        {playlists.map(playlist => (
+                            <div
+                                key={playlist.id}
+                                className="playlist-item"
+                                onClick={() => setCurrentPlaylist(playlist)}
+                            >
+                                {playlist.name}
+                            </div>
+                        ))}
+                    </div>
+                </div>
             );
         };
 
         const TrackCard = ({ track }) => {
-            const dispatch = useDispatch();
-            const { favorites } = useSelector(state => state.playlists);
-            const { currentTrack, isPlaying } = useSelector(state => state.player);
+            const { favorites } = appState.playlists;
+            const { currentTrack, isPlaying } = appState.player;
             const isFavorite = favorites.includes(track.id);
             const isCurrentTrack = currentTrack && currentTrack.id === track.id;
 
-            return React.createElement('div', {
-                className: 'track-card',
-                onClick: () => {
-                    dispatch(playerSlice.actions.setCurrentTrack(track));
-                    dispatch(playerSlice.actions.setQueue(demoData.tracks));
-                }
-            },
-                React.createElement('div', { style: { position: 'relative' } },
-                    React.createElement('img', {
-                        src: track.image,
-                        alt: track.name,
-                        className: 'track-image'
-                    }),
-                    isCurrentTrack && isPlaying && React.createElement('div', {
-                        style: {
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'var(--spotify-green)',
-                            borderRadius: '50%',
-                            width: '40px',
-                            height: '40px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '16px'
-                        }
-                    }, '▶')
-                ),
-                React.createElement('div', { className: 'track-name' }, track.name),
-                React.createElement('div', { className: 'track-artist' }, track.artist),
-                React.createElement('div', {
-                    style: {
+            return (
+                <div
+                    className="track-card"
+                    onClick={() => {
+                        setCurrentTrack(track);
+                        // Находим индекс трека в демо-данных для очереди
+                        const index = demoData.tracks.findIndex(t => t.id === track.id);
+                        setState(state => ({
+                            ...state,
+                            player: {
+                                ...state.player,
+                                queue: demoData.tracks,
+                                currentIndex: Math.max(index, 0)
+                            }
+                        }));
+                    }}
+                >
+                    <div style={{ position: 'relative' }}>
+                        <img
+                            src={track.image}
+                            alt={track.name}
+                            className="track-image"
+                        />
+                        {isCurrentTrack && isPlaying && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                background: 'var(--spotify-green)',
+                                borderRadius: '50%',
+                                width: '40px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '16px',
+                                color: 'white'
+                            }}>
+                                ▶
+                            </div>
+                        )}
+                    </div>
+                    <div className="track-name">{track.name}</div>
+                    <div className="track-artist">{track.artist}</div>
+                    <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginTop: '8px'
-                    }
-                },
-                    React.createElement('span', { className: 'text-sm text-gray' }, track.duration),
-                    React.createElement('button', {
-                        className: 'icon-btn',
-                        onClick: (e) => {
-                            e.stopPropagation();
-                            dispatch(playlistSlice.actions.toggleFavorite(track.id));
-                        }
-                    }, isFavorite ? '❤️' : '🤍')
-                )
+                    }}>
+                        <span className="text-sm text-gray">{track.duration}</span>
+                        <button
+                            className="icon-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(track.id);
+                            }}
+                        >
+                            {isFavorite ? '❤️' : '🤍'}
+                        </button>
+                    </div>
+                </div>
             );
         };
 
         const Player = () => {
-            const dispatch = useDispatch();
             const audioRef = React.useRef(null);
-            const { currentTrack, isPlaying, volume, currentTime, duration } = useSelector(state => state.player);
+            const { currentTrack, isPlaying, volume, currentTime, duration } = appState.player;
 
             React.useEffect(() => {
                 const audio = audioRef.current;
                 if (!audio) return;
 
-                const updateTime = () => dispatch(playerSlice.actions.setCurrentTime(audio.currentTime));
-                const updateDuration = () => dispatch(playerSlice.actions.setDuration(audio.duration));
-                const handleEnded = () => dispatch(playerSlice.actions.nextTrack());
+                const updateTime = () => {
+                    setState(state => ({
+                        ...state,
+                        player: {
+                            ...state.player,
+                            currentTime: audio.currentTime
+                        }
+                    }));
+                };
+
+                const updateDuration = () => {
+                    setState(state => ({
+                        ...state,
+                        player: {
+                            ...state.player,
+                            duration: audio.duration
+                        }
+                    }));
+                };
+
+                const handleEnded = () => {
+                    nextTrack();
+                };
 
                 audio.addEventListener('timeupdate', updateTime);
                 audio.addEventListener('loadedmetadata', updateDuration);
@@ -774,7 +829,7 @@
                     audio.removeEventListener('loadedmetadata', updateDuration);
                     audio.removeEventListener('ended', handleEnded);
                 };
-            }, [dispatch]);
+            }, []);
 
             React.useEffect(() => {
                 if (audioRef.current) {
@@ -785,7 +840,7 @@
             React.useEffect(() => {
                 if (audioRef.current) {
                     if (isPlaying) {
-                        audioRef.current.play();
+                        audioRef.current.play().catch(console.error);
                     } else {
                         audioRef.current.pause();
                     }
@@ -793,7 +848,7 @@
             }, [isPlaying, currentTrack]);
 
             const formatTime = (seconds) => {
-                if (!seconds) return '0:00';
+                if (!seconds || isNaN(seconds)) return '0:00';
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -810,162 +865,150 @@
             const handleVolumeClick = (e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const percent = (e.clientX - rect.left) / rect.width;
-                dispatch(playerSlice.actions.setVolume(Math.round(percent * 100)));
+                setVolume(Math.round(percent * 100));
             };
 
             if (!currentTrack) {
-                return React.createElement('div', { className: 'player' },
-                    React.createElement('div', { style: { textAlign: 'center', width: '100%', color: 'var(--spotify-light-gray)' } }, 
-                        'Выберите трек для воспроизведения')
+                return (
+                    <div className="player">
+                        <div style={{ textAlign: 'center', width: '100%', color: 'var(--spotify-light-gray)' }}>
+                            Выберите трек для воспроизведения
+                        </div>
+                    </div>
                 );
             }
 
-            return React.createElement('div', { className: 'player' },
-                React.createElement('audio', {
-                    ref: audioRef,
-                    src: currentTrack.previewUrl,
-                    className: 'hidden'
-                }),
-                
-                React.createElement('div', { className: 'player-track-info' },
-                    React.createElement('img', {
-                        src: currentTrack.image,
-                        alt: currentTrack.name,
-                        className: 'player-track-image'
-                    }),
-                    React.createElement('div', null,
-                        React.createElement('div', { className: 'font-bold' }, currentTrack.name),
-                        React.createElement('div', { className: 'text-sm text-gray' }, currentTrack.artist)
-                    )
-                ),
+            return (
+                <div className="player">
+                    <audio
+                        ref={audioRef}
+                        src={currentTrack.previewUrl}
+                        className="hidden"
+                    />
+                    
+                    <div className="player-track-info">
+                        <img
+                            src={currentTrack.image}
+                            alt={currentTrack.name}
+                            className="player-track-image"
+                        />
+                        <div>
+                            <div className="font-bold">{currentTrack.name}</div>
+                            <div className="text-sm text-gray">{currentTrack.artist}</div>
+                        </div>
+                    </div>
 
-                React.createElement('div', { className: 'player-controls' },
-                    React.createElement('div', { className: 'control-buttons' },
-                        React.createElement('button', {
-                            className: 'control-btn',
-                            onClick: () => dispatch(playerSlice.actions.previousTrack())
-                        }, '⏮'),
-                        React.createElement('button', {
-                            className: 'control-btn play-btn',
-                            onClick: () => dispatch(playerSlice.actions.togglePlay())
-                        }, isPlaying ? '⏸' : '▶'),
-                        React.createElement('button', {
-                            className: 'control-btn',
-                            onClick: () => dispatch(playerSlice.actions.nextTrack())
-                        }, '⏭')
-                    ),
+                    <div className="player-controls">
+                        <div className="control-buttons">
+                            <button
+                                className="control-btn"
+                                onClick={previousTrack}
+                            >
+                                ⏮
+                            </button>
+                            <button
+                                className="control-btn play-btn"
+                                onClick={togglePlay}
+                            >
+                                {isPlaying ? '⏸' : '▶'}
+                            </button>
+                            <button
+                                className="control-btn"
+                                onClick={nextTrack}
+                            >
+                                ⏭
+                            </button>
+                        </div>
 
-                    React.createElement('div', { className: 'progress-bar' },
-                        React.createElement('span', { className: 'time' }, formatTime(currentTime)),
-                        React.createElement('div', {
-                            className: 'progress-track',
-                            onClick: handleProgressClick
-                        },
-                            React.createElement('div', {
-                                className: 'progress-fill',
-                                style: { width: `${duration ? (currentTime / duration) * 100 : 0}%` }
-                            })
-                        ),
-                        React.createElement('span', { className: 'time' }, formatTime(duration))
-                    )
-                ),
+                        <div className="progress-bar">
+                            <span className="time">{formatTime(currentTime)}</span>
+                            <div
+                                className="progress-track"
+                                onClick={handleProgressClick}
+                            >
+                                <div
+                                    className="progress-fill"
+                                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                                />
+                            </div>
+                            <span className="time">{formatTime(duration)}</span>
+                        </div>
+                    </div>
 
-                React.createElement('div', { className: 'volume-controls' },
-                    React.createElement('span', { className: 'text-sm' }, '🔊'),
-                    React.createElement('div', {
-                        className: 'volume-slider',
-                        onClick: handleVolumeClick
-                    },
-                        React.createElement('div', {
-                            className: 'volume-fill',
-                            style: { width: `${volume}%` }
-                        })
-                    )
-                )
+                    <div className="volume-controls">
+                        <span className="text-sm">🔊</span>
+                        <div
+                            className="volume-slider"
+                            onClick={handleVolumeClick}
+                        >
+                            <div
+                                className="volume-fill"
+                                style={{ width: `${volume}%` }}
+                            />
+                        </div>
+                    </div>
+                </div>
             );
         };
 
         const MainContent = () => {
-            const dispatch = useDispatch();
-            const [searchQuery, setSearchQuery] = React.useState('');
-            const [searchResults, setSearchResults] = React.useState([]);
-            const { currentPlaylist, favorites } = useSelector(state => state.playlists);
+            const { currentPlaylist, favorites } = appState.playlists;
+            const { query, results } = appState.search;
 
-            const handleSearch = (query) => {
-                setSearchQuery(query);
-                if (query.trim()) {
-                    const results = demoData.tracks.filter(track =>
-                        track.name.toLowerCase().includes(query.toLowerCase()) ||
-                        track.artist.toLowerCase().includes(query.toLowerCase())
-                    );
-                    setSearchResults(results);
-                } else {
-                    setSearchResults([]);
-                }
-            };
+            let displayedTracks = [];
+            let title = '';
 
-            const displayedTracks = searchQuery ? searchResults : demoData.tracks;
-
-            let content;
             if (currentPlaylist) {
-                const playlistTracks = currentPlaylist.id === 'favorites' 
+                title = currentPlaylist.name;
+                displayedTracks = currentPlaylist.id === 'favorites' 
                     ? demoData.tracks.filter(track => favorites.includes(track.id))
                     : currentPlaylist.tracks;
-
-                content = React.createElement(React.Fragment, null,
-                    React.createElement('h1', { className: 'section-title' }, currentPlaylist.name),
-                    playlistTracks.length > 0 
-                        ? React.createElement('div', { className: 'tracks-grid' },
-                            playlistTracks.map(track => 
-                                React.createElement(TrackCard, { key: track.id, track })
-                            )
-                          )
-                        : React.createElement('p', { className: 'text-gray' }, 'Плейлист пуст')
-                );
             } else {
-                content = React.createElement(React.Fragment, null,
-                    React.createElement('h1', { className: 'section-title' }, 
-                        searchQuery ? `Результаты поиска: "${searchQuery}"` : 'Популярные треки'),
-                    React.createElement('div', { className: 'tracks-grid' },
-                        displayedTracks.map(track => 
-                            React.createElement(TrackCard, { key: track.id, track })
-                        )
-                    )
-                );
+                title = query ? `Результаты поиска: "${query}"` : 'Популярные треки';
+                displayedTracks = query ? results : demoData.tracks;
             }
 
-            return React.createElement('div', { className: 'main-content' },
-                React.createElement('div', { className: 'top-bar' },
-                    React.createElement('input', {
-                        type: 'text',
-                        className: 'search-input',
-                        placeholder: 'Поиск музыки...',
-                        value: searchQuery,
-                        onChange: (e) => handleSearch(e.target.value)
-                    })
-                ),
-                React.createElement('div', { className: 'content' }, content)
+            return (
+                <div className="main-content">
+                    <div className="top-bar">
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Поиск музыки..."
+                            value={query}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="content">
+                        <h1 className="section-title">{title}</h1>
+                        {displayedTracks.length > 0 ? (
+                            <div className="tracks-grid">
+                                {displayedTracks.map(track => (
+                                    <TrackCard key={track.id} track={track} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="empty-state">
+                                {query ? 'Ничего не найдено' : 'Плейлист пуст'}
+                            </div>
+                        )}
+                    </div>
+                </div>
             );
         };
 
         const App = () => {
-            return React.createElement('div', { className: 'app' },
-                React.createElement(Sidebar),
-                React.createElement(MainContent),
-                React.createElement(Player)
+            return (
+                <div className="app">
+                    <Sidebar />
+                    <MainContent />
+                    <Player />
+                </div>
             );
         };
 
         // Рендер приложения
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-            React.createElement(React.StrictMode,
-                null,
-                React.createElement(Provider, { store: store },
-                    React.createElement(App)
-                )
-            )
-        );
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
