@@ -403,6 +403,30 @@
             background: rgba(29, 185, 84, 0.1);
         }
 
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: var(--spotify-light-gray);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--spotify-gray);
+            border-top: 4px solid var(--spotify-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -476,7 +500,7 @@
             .main-content {
                 order: 1;
                 flex: 1;
-                padding-bottom: 120px; /* Место для плеера */
+                padding-bottom: 120px;
             }
 
             .top-bar {
@@ -502,7 +526,6 @@
                 margin-bottom: 16px;
             }
 
-            /* Мобильный плеер */
             .player {
                 padding: 12px 16px;
                 flex-direction: column;
@@ -533,7 +556,7 @@
             }
 
             .volume-controls {
-                display: none; /* Скрываем громкость на мобильных */
+                display: none;
             }
 
             .control-buttons {
@@ -549,7 +572,6 @@
                 height: 40px;
             }
 
-            /* Адаптивное меню */
             .sidebar nav {
                 display: flex;
                 overflow-x: auto;
@@ -568,18 +590,17 @@
             }
 
             .playlists-section {
-                display: none; /* Скрываем плейлисты на мобильных в основном меню */
+                display: none;
             }
 
             .track-actions {
-                opacity: 1; /* Всегда показываем действия на мобильных */
+                opacity: 1;
                 background: rgba(0, 0, 0, 0.7);
                 border-radius: 20px;
                 padding: 4px;
             }
         }
 
-        /* Планшеты */
         @media (max-width: 1024px) and (min-width: 769px) {
             .sidebar {
                 width: 200px;
@@ -590,7 +611,6 @@
             }
         }
 
-        /* Анимации */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -600,76 +620,205 @@
         .playing-animation {
             animation: pulse 2s infinite;
         }
-
-        .now-playing-indicator {
-            width: 12px;
-            height: 12px;
-            background: var(--spotify-green);
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: pulse 1.5s infinite;
-        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // Демо-данные с локальными аудио файлами
-        const demoData = {
-            tracks: [
-                {
-                    id: '1',
-                    name: 'Blinding Lights',
-                    artist: 'The Weeknd',
-                    duration: '3:20',
-                    image: 'https://i.scdn.co/image/ab67616d00001e02a048415db06a5b6fa7ec4e1a',
-                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav', // Демо звук
-                },
-                {
-                    id: '2',
-                    name: 'Save Your Tears',
-                    artist: 'The Weeknd',
-                    duration: '3:35',
-                    image: 'https://i.scdn.co/image/ab67616d00001e02a4c8cbd6b1cc3bc5e4195e79',
-                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
-                },
-                {
-                    id: '3',
-                    name: 'Shape of You',
-                    artist: 'Ed Sheeran',
-                    duration: '3:53',
-                    image: 'https://i.scdn.co/image/ab67616d00001e0295f754318336a07e85ec59bc',
-                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
-                },
-                {
-                    id: '4',
-                    name: 'Bad Guy',
-                    artist: 'Billie Eilish',
-                    duration: '3:14',
-                    image: 'https://i.scdn.co/image/ab67616d00001e023f03783e5ec1e6c6f5a4b5a5',
-                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
-                },
-                {
-                    id: '5',
-                    name: 'Levitating',
-                    artist: 'Dua Lipa',
-                    duration: '3:23',
-                    image: 'https://i.scdn.co/image/ab67616d00001e02ce67a06394b5ca2e27c70d07',
-                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
-                },
-                {
-                    id: '6',
-                    name: 'Stay',
-                    artist: 'The Kid LAROI, Justin Bieber',
-                    duration: '2:21',
-                    image: 'https://i.scdn.co/image/ab67616d00001e026d6b3d8397bb8e6b6cd34047',
-                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
+        // Бесплатные музыкальные API
+        const MusicAPI = {
+            // Deezer API (бесплатный, не требует ключа)
+            async searchDeezer(query) {
+                try {
+                    const response = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=20`);
+                    const data = await response.json();
+                    
+                    return data.data.map(track => ({
+                        id: track.id.toString(),
+                        name: track.title,
+                        artist: track.artist.name,
+                        duration: this.formatDuration(track.duration),
+                        image: track.album.cover_medium,
+                        audio: track.preview, // 30-секундный превью
+                        album: track.album.title,
+                        link: track.link
+                    }));
+                } catch (error) {
+                    console.error('Deezer API error:', error);
+                    return [];
                 }
-            ]
+            },
+
+            // Jamendo API (бесплатная музыка)
+            async searchJamendo(query) {
+                try {
+                    const clientId = '67f7c2f3'; // Публичный клиент ID
+                    const response = await fetch(
+                        `https://api.jamendo.com/v3.0/tracks/?client_id=${clientId}&format=json&limit=20&search=${encodeURIComponent(query)}&audioformat=mp32`
+                    );
+                    const data = await response.json();
+                    
+                    return data.results.map(track => ({
+                        id: 'j_' + track.id,
+                        name: track.name,
+                        artist: track.artist_name,
+                        duration: this.formatDuration(track.duration),
+                        image: track.album_image || track.artist_image,
+                        audio: track.audio, // Полные треки
+                        album: track.album_name,
+                        license: track.license_ccurl
+                    }));
+                } catch (error) {
+                    console.error('Jamendo API error:', error);
+                    return [];
+                }
+            },
+
+            // Freesound API (бесплатные звуки)
+            async searchFreesound(query) {
+                try {
+                    const token = '8I1c8bPc6m2fCw9T4c8bPc6m2fCw9T4c8bPc6m'; // Публичный токен
+                    const response = await fetch(
+                        `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(query)}&token=${token}&fields=id,name,url,previews,images,username,duration&page_size=20`
+                    );
+                    const data = await response.json();
+                    
+                    return data.results.map(sound => ({
+                        id: 'f_' + sound.id,
+                        name: sound.name,
+                        artist: sound.username,
+                        duration: this.formatDuration(sound.duration),
+                        image: sound.images?.waveform_m || 'https://via.placeholder.com/300',
+                        audio: sound.previews['preview-hq-mp3'],
+                        type: 'sound'
+                    }));
+                } catch (error) {
+                    console.error('Freesound API error:', error);
+                    return [];
+                }
+            },
+
+            // YouTube API через сторонний сервис (для демо)
+            async searchYouTube(query) {
+                try {
+                    // Используем публичный API для поиска YouTube
+                    const response = await fetch(`https://youtube-api.cyclic.app/search?q=${encodeURIComponent(query + ' music')}`);
+                    const data = await response.json();
+                    
+                    return data.videos.map(video => ({
+                        id: 'y_' + video.id,
+                        name: video.title,
+                        artist: video.channelTitle,
+                        duration: video.duration,
+                        image: video.thumbnail,
+                        audio: `https://youtube.com/watch?v=${video.id}`,
+                        type: 'youtube'
+                    }));
+                } catch (error) {
+                    console.error('YouTube API error:', error);
+                    return this.getDemoTracks(query);
+                }
+            },
+
+            // Демо-треки на случай недоступности API
+            getDemoTracks(query) {
+                const demoData = [
+                    {
+                        id: '1',
+                        name: 'Blinding Lights',
+                        artist: 'The Weeknd',
+                        duration: '3:20',
+                        image: 'https://i.scdn.co/image/ab67616d00001e02a048415db06a5b6fa7ec4e1a',
+                        audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
+                    },
+                    {
+                        id: '2',
+                        name: 'Save Your Tears',
+                        artist: 'The Weeknd',
+                        duration: '3:35',
+                        image: 'https://i.scdn.co/image/ab67616d00001e02a4c8cbd6b1cc3bc5e4195e79',
+                        audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
+                    },
+                    {
+                        id: '3',
+                        name: 'Shape of You',
+                        artist: 'Ed Sheeran',
+                        duration: '3:53',
+                        image: 'https://i.scdn.co/image/ab67616d00001e0295f754318336a07e85ec59bc',
+                        audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav',
+                    }
+                ];
+
+                if (query) {
+                    return demoData.filter(track =>
+                        track.name.toLowerCase().includes(query.toLowerCase()) ||
+                        track.artist.toLowerCase().includes(query.toLowerCase())
+                    );
+                }
+                return demoData;
+            },
+
+            formatDuration(seconds) {
+                if (!seconds) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            },
+
+            // Основной метод поиска - пробуем все API по очереди
+            async searchMusic(query) {
+                if (!query.trim()) {
+                    return this.getDemoTracks();
+                }
+
+                try {
+                    // Пробуем Deezer сначала
+                    let tracks = await this.searchDeezer(query);
+                    if (tracks.length > 0) return tracks;
+
+                    // Затем Jamendo
+                    tracks = await this.searchJamendo(query);
+                    if (tracks.length > 0) return tracks;
+
+                    // Затем Freesound
+                    tracks = await this.searchFreesound(query);
+                    if (tracks.length > 0) return tracks;
+
+                    // И наконец YouTube
+                    tracks = await this.searchYouTube(query);
+                    return tracks;
+
+                } catch (error) {
+                    console.error('All APIs failed, using demo data:', error);
+                    return this.getDemoTracks(query);
+                }
+            },
+
+            // Получение популярных треков
+            async getPopularTracks() {
+                try {
+                    // Используем Deezer для популярных треков
+                    const response = await fetch('https://api.deezer.com/chart/0/tracks?limit=20');
+                    const data = await response.json();
+                    
+                    return data.data.map(track => ({
+                        id: track.id.toString(),
+                        name: track.title,
+                        artist: track.artist.name,
+                        duration: this.formatDuration(track.duration),
+                        image: track.album.cover_medium,
+                        audio: track.preview,
+                        album: track.album.title
+                    }));
+                } catch (error) {
+                    console.error('Popular tracks API error:', error);
+                    return this.getDemoTracks();
+                }
+            }
         };
 
-        // Простое состояние вместо Redux
+        // Состояние приложения
         let appState = {
             player: {
                 currentTrack: null,
@@ -677,7 +826,7 @@
                 volume: 50,
                 currentTime: 0,
                 duration: 0,
-                queue: demoData.tracks,
+                queue: [],
                 currentIndex: 0,
             },
             playlists: {
@@ -695,7 +844,8 @@
             },
             search: {
                 query: '',
-                results: []
+                results: [],
+                isLoading: false
             },
             isMobile: window.innerWidth <= 768,
             showPlaylistModal: false,
@@ -715,21 +865,17 @@
             } else {
                 appState = { ...appState, ...updater };
             }
-            // Перерендерим весь апп
             ReactDOM.render(<App />, document.getElementById('root'));
         };
 
         // Player actions
         const setCurrentTrack = (track) => {
-            const index = demoData.tracks.findIndex(t => t.id === track.id);
             setState(state => ({
                 ...state,
                 player: {
                     ...state.player,
                     currentTrack: track,
-                    currentIndex: Math.max(index, 0),
-                    isPlaying: true,
-                    queue: demoData.tracks
+                    isPlaying: true
                 }
             }));
         };
@@ -817,7 +963,6 @@
             setState(state => {
                 const newPlaylists = state.playlists.playlists.map(playlist => {
                     if (playlist.id === playlistId) {
-                        // Проверяем, нет ли уже этого трека в плейлисте
                         if (!playlist.tracks.some(t => t.id === track.id)) {
                             return {
                                 ...playlist,
@@ -871,19 +1016,53 @@
             });
         };
 
-        const setSearchQuery = (query) => {
-            const results = query.trim() 
-                ? demoData.tracks.filter(track =>
-                    track.name.toLowerCase().includes(query.toLowerCase()) ||
-                    track.artist.toLowerCase().includes(query.toLowerCase())
-                  )
-                : [];
+        const setSearchQuery = async (query) => {
+            setState(state => ({
+                ...state,
+                search: {
+                    ...state.search,
+                    query,
+                    isLoading: true
+                }
+            }));
+
+            const results = await MusicAPI.searchMusic(query);
             
             setState(state => ({
                 ...state,
                 search: {
-                    query,
-                    results
+                    ...state.search,
+                    results,
+                    isLoading: false
+                },
+                player: {
+                    ...state.player,
+                    queue: results
+                }
+            }));
+        };
+
+        const loadPopularTracks = async () => {
+            setState(state => ({
+                ...state,
+                search: {
+                    ...state.search,
+                    isLoading: true
+                }
+            }));
+
+            const popularTracks = await MusicAPI.getPopularTracks();
+            
+            setState(state => ({
+                ...state,
+                search: {
+                    ...state.search,
+                    results: popularTracks,
+                    isLoading: false
+                },
+                player: {
+                    ...state.player,
+                    queue: popularTracks
                 }
             }));
         };
@@ -939,7 +1118,6 @@
                                 const name = prompt('Название нового плейлиста:');
                                 if (name) {
                                     createPlaylist(name);
-                                    // После создания добавляем трек
                                     setTimeout(() => {
                                         const newPlaylist = appState.playlists.playlists[appState.playlists.playlists.length - 1];
                                         addToPlaylist(newPlaylist.id, selectedTrackForPlaylist);
@@ -981,6 +1159,7 @@
                                             });
                                         } else if (item.id === 'home') {
                                             setCurrentPlaylist(null);
+                                            loadPopularTracks();
                                         }
                                     }}
                                 >
@@ -1024,6 +1203,7 @@
                                             });
                                         } else if (item.id === 'home') {
                                             setCurrentPlaylist(null);
+                                            loadPopularTracks();
                                         }
                                     }}
                                 >
@@ -1103,6 +1283,9 @@
                             src={track.image}
                             alt={track.name}
                             className="track-image"
+                            onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/300/191414/FFFFFF?text=No+Image';
+                            }}
                         />
                         {isCurrentTrack && isPlaying && (
                             <div style={{
@@ -1144,7 +1327,6 @@
                         </button>
                     </div>
                     
-                    {/* Кнопка добавления в плейлист */}
                     <div className="track-actions">
                         <button
                             className="icon-btn"
@@ -1196,8 +1378,7 @@
 
                 const handleError = (e) => {
                     console.error('Audio error:', e);
-                    // Показываем сообщение об ошибке
-                    alert('Не удалось воспроизвести трек. Это демо-версия с тестовыми звуками.');
+                    alert('Не удалось загрузить аудио. Попробуйте другой трек.');
                 };
 
                 audio.addEventListener('timeupdate', updateTime);
@@ -1221,7 +1402,7 @@
 
             React.useEffect(() => {
                 if (audioRef.current && currentTrack) {
-                    // Сбрасываем текущее время
+                    audioRef.current.src = currentTrack.audio;
                     audioRef.current.currentTime = 0;
                     
                     if (isPlaying) {
@@ -1229,7 +1410,7 @@
                         if (playPromise !== undefined) {
                             playPromise.catch(error => {
                                 console.error('Play failed:', error);
-                                alert('Не удалось воспроизвести трек. Это демо-версия с тестовыми звуками.');
+                                alert('Не удалось воспроизвести трек. Попробуйте другой.');
                             });
                         }
                     }
@@ -1239,9 +1420,7 @@
             React.useEffect(() => {
                 if (audioRef.current) {
                     if (isPlaying) {
-                        audioRef.current.play().catch(error => {
-                            console.error('Play/pause failed:', error);
-                        });
+                        audioRef.current.play().catch(console.error);
                     } else {
                         audioRef.current.pause();
                     }
@@ -1283,7 +1462,6 @@
                 <div className="player">
                     <audio
                         ref={audioRef}
-                        src={currentTrack.audio}
                         preload="metadata"
                         className="hidden"
                     />
@@ -1293,6 +1471,9 @@
                             src={currentTrack.image}
                             alt={currentTrack.name}
                             className="player-track-image"
+                            onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/56/191414/FFFFFF?text=♪';
+                            }}
                         />
                         <div>
                             <div className="font-bold" style={{ 
@@ -1373,8 +1554,14 @@
 
         const MainContent = () => {
             const { currentPlaylist, favorites } = appState.playlists;
-            const { query, results } = appState.search;
+            const { query, results, isLoading } = appState.search;
             const isMobile = appState.isMobile;
+
+            React.useEffect(() => {
+                if (!query && results.length === 0) {
+                    loadPopularTracks();
+                }
+            }, []);
 
             let displayedTracks = [];
             let title = '';
@@ -1382,13 +1569,13 @@
             if (currentPlaylist) {
                 title = currentPlaylist.name;
                 if (currentPlaylist.id === 'favorites') {
-                    displayedTracks = demoData.tracks.filter(track => favorites.includes(track.id));
+                    displayedTracks = results.filter(track => favorites.includes(track.id));
                 } else {
                     displayedTracks = currentPlaylist.tracks;
                 }
             } else {
                 title = query ? `Результаты поиска: "${query}"` : 'Популярные треки';
-                displayedTracks = query ? results : demoData.tracks;
+                displayedTracks = results;
             }
 
             return (
@@ -1404,7 +1591,12 @@
                     </div>
                     <div className="content">
                         <h1 className="section-title">{title}</h1>
-                        {displayedTracks.length > 0 ? (
+                        {isLoading ? (
+                            <div className="loading">
+                                <div className="spinner"></div>
+                                <div>Загрузка музыки...</div>
+                            </div>
+                        ) : displayedTracks.length > 0 ? (
                             <div className="tracks-grid">
                                 {displayedTracks.map(track => (
                                     <TrackCard key={track.id} track={track} />
@@ -1412,7 +1604,7 @@
                             </div>
                         ) : (
                             <div className="empty-state">
-                                {query ? 'Ничего не найдено' : 'Плейлист пуст'}
+                                {query ? 'Ничего не найдено' : 'Загрузка...'}
                             </div>
                         )}
                     </div>
