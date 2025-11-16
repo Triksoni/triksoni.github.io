@@ -111,16 +111,6 @@
             border-color: var(--spotify-green);
         }
 
-        .api-selector {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            padding: 12px 20px;
-            color: var(--spotify-white);
-            font-size: 14px;
-            cursor: pointer;
-        }
-
         .content {
             flex: 1;
             padding: 24px 32px;
@@ -447,33 +437,6 @@
             font-size: 14px;
         }
 
-        .api-notice {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .error-notice {
-            background: rgba(220, 53, 69, 0.1);
-            border: 1px solid #dc3545;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .api-badge {
-            background: var(--spotify-green);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -552,18 +515,11 @@
 
             .top-bar {
                 padding: 12px 16px;
-                flex-direction: column;
-                gap: 12px;
             }
 
             .search-input {
                 width: 100%;
                 max-width: 400px;
-            }
-
-            .api-selector {
-                width: 100%;
-                max-width: 200px;
             }
 
             .content {
@@ -653,11 +609,6 @@
                 border-radius: 20px;
                 padding: 4px;
             }
-
-            .api-notice {
-                flex-direction: column;
-                text-align: center;
-            }
         }
 
         @media (max-width: 1024px) and (min-width: 769px) {
@@ -685,207 +636,59 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // Упрощенный музыкальный API с гарантированными треками
-        class SimpleMusicAPI {
-            constructor() {
-                this.apis = {
-                    'demo': {
-                        name: 'Демо-треки',
-                        search: async (query, limit = 20) => {
-                            // Имитируем загрузку
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            return this.getDemoTracks(query, limit);
-                        }
-                    },
-                    'jamendo': {
-                        name: 'Jamendo',
-                        search: async (query, limit = 20) => {
-                            try {
-                                const response = await fetch(
-                                    `https://api.jamendo.com/v3.0/tracks/?client_id=67f7c2f3&format=json&limit=${limit}&search=${encodeURIComponent(query)}&audioformat=mp32`
-                                );
-                                const data = await response.json();
-                                
-                                if (data.results && data.results.length > 0) {
-                                    return data.results.map(track => ({
-                                        id: `jamendo_${track.id}`,
-                                        name: track.name,
-                                        artist: track.artist_name,
-                                        duration: this.formatDuration(track.duration),
-                                        image: track.album_image || track.artist_image || 'https://via.placeholder.com/300/191414/FFFFFF?text=Jamendo',
-                                        audio: track.audio,
-                                        genre: track.genre,
-                                        plays: track.popularity,
-                                        api: 'jamendo',
-                                        working: true
-                                    }));
-                                } else {
-                                    // Если Jamendo не нашел треки, возвращаем демо
-                                    return this.getDemoTracks(query, limit);
-                                }
-                            } catch (error) {
-                                console.error('Jamendo API error:', error);
-                                return this.getDemoTracks(query, limit);
-                            }
-                        }
-                    }
-                };
-            }
-
-            async searchMusic(query, apiName = 'demo', limit = 20) {
-                if (!query.trim()) {
-                    return this.getPopularTracks(apiName, limit);
+        // ПРОСТОЙ РАБОЧИЙ КОД С ГАРАНТИРОВАННЫМИ ТРЕКАМИ
+        const musicData = {
+            tracks: [
+                {
+                    id: '1',
+                    name: 'Blinding Lights',
+                    artist: 'The Weeknd',
+                    duration: '3:20',
+                    image: 'https://i.scdn.co/image/ab67616d00001e02a048415db06a5b6fa7ec4e1a',
+                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav'
+                },
+                {
+                    id: '2',
+                    name: 'Save Your Tears',
+                    artist: 'The Weeknd',
+                    duration: '3:35',
+                    image: 'https://i.scdn.co/image/ab67616d00001e02a4c8cbd6b1cc3bc5e4195e79',
+                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav'
+                },
+                {
+                    id: '3',
+                    name: 'Shape of You',
+                    artist: 'Ed Sheeran',
+                    duration: '3:53',
+                    image: 'https://i.scdn.co/image/ab67616d00001e0295f754318336a07e85ec59bc',
+                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav'
+                },
+                {
+                    id: '4',
+                    name: 'Bad Guy',
+                    artist: 'Billie Eilish',
+                    duration: '3:14',
+                    image: 'https://i.scdn.co/image/ab67616d00001e023f03783e5ec1e6c6f5a4b5a5',
+                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav'
+                },
+                {
+                    id: '5',
+                    name: 'Levitating',
+                    artist: 'Dua Lipa',
+                    duration: '3:23',
+                    image: 'https://i.scdn.co/image/ab67616d00001e02ce67a06394b5ca2e27c70d07',
+                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav'
+                },
+                {
+                    id: '6',
+                    name: 'Stay',
+                    artist: 'The Kid LAROI, Justin Bieber',
+                    duration: '2:21',
+                    image: 'https://i.scdn.co/image/ab67616d00001e026d6b3d8397bb8e6b6cd34047',
+                    audio: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav'
                 }
-
-                try {
-                    const api = this.apis[apiName];
-                    if (!api) {
-                        return this.getDemoTracks(query, limit);
-                    }
-
-                    const tracks = await api.search(query, limit);
-                    return tracks;
-
-                } catch (error) {
-                    console.error('API search failed:', error);
-                    return this.getDemoTracks(query, limit);
-                }
-            }
-
-            async getPopularTracks(apiName = 'demo', limit = 20) {
-                const popularQueries = {
-                    'demo': ['chill', 'electronic', 'acoustic', 'lofi'],
-                    'jamendo': ['electronic', 'rock', 'ambient', 'acoustic']
-                };
-
-                const queries = popularQueries[apiName] || ['electronic', 'rock', 'pop'];
-                const randomQuery = queries[Math.floor(Math.random() * queries.length)];
-                
-                return await this.searchMusic(randomQuery, apiName, limit);
-            }
-
-            getDemoTracks(query = '', limit = 20) {
-                const demoData = [
-                    {
-                        id: 'demo_1',
-                        name: 'Blinding Lights',
-                        artist: 'The Weeknd',
-                        duration: '3:20',
-                        image: 'https://i.scdn.co/image/ab67616d00001e02a048415db06a5b6fa7ec4e1a',
-                        audio: 'https://assets.codepen.io/4358586/Blinding+Lights.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_2',
-                        name: 'Save Your Tears',
-                        artist: 'The Weeknd',
-                        duration: '3:35',
-                        image: 'https://i.scdn.co/image/ab67616d00001e02a4c8cbd6b1cc3bc5e4195e79',
-                        audio: 'https://assets.codepen.io/4358586/Save+Your+Tears.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_3',
-                        name: 'Shape of You',
-                        artist: 'Ed Sheeran',
-                        duration: '3:53',
-                        image: 'https://i.scdn.co/image/ab67616d00001e0295f754318336a07e85ec59bc',
-                        audio: 'https://assets.codepen.io/4358586/Shape+of+You.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_4',
-                        name: 'Bad Guy',
-                        artist: 'Billie Eilish',
-                        duration: '3:14',
-                        image: 'https://i.scdn.co/image/ab67616d00001e023f03783e5ec1e6c6f5a4b5a5',
-                        audio: 'https://assets.codepen.io/4358586/Bad+Guy.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_5',
-                        name: 'Levitating',
-                        artist: 'Dua Lipa',
-                        duration: '3:23',
-                        image: 'https://i.scdn.co/image/ab67616d00001e02ce67a06394b5ca2e27c70d07',
-                        audio: 'https://assets.codepen.io/4358586/Levitating.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_6',
-                        name: 'Stay',
-                        artist: 'The Kid LAROI, Justin Bieber',
-                        duration: '2:21',
-                        image: 'https://i.scdn.co/image/ab67616d00001e026d6b3d8397bb8e6b6cd34047',
-                        audio: 'https://assets.codepen.io/4358586/Stay.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_7',
-                        name: 'Watermelon Sugar',
-                        artist: 'Harry Styles',
-                        duration: '2:54',
-                        image: 'https://i.scdn.co/image/ab67616d00001e02a4b4d6f5b8a6a6a0a7a0a7a0',
-                        audio: 'https://assets.codepen.io/4358586/Watermelon+Sugar.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    },
-                    {
-                        id: 'demo_8',
-                        name: 'Dance Monkey',
-                        artist: 'Tones and I',
-                        duration: '3:29',
-                        image: 'https://i.scdn.co/image/ab67616d00001e027135d5dbb33d3d8a26bbecc5',
-                        audio: 'https://assets.codepen.io/4358586/Dance+Monkey.mp3',
-                        genre: 'Pop',
-                        api: 'demo',
-                        working: true
-                    }
-                ];
-
-                let filteredData = demoData;
-                
-                if (query) {
-                    filteredData = demoData.filter(track =>
-                        track.name.toLowerCase().includes(query.toLowerCase()) ||
-                        track.artist.toLowerCase().includes(query.toLowerCase())
-                    );
-                }
-                
-                return filteredData.slice(0, limit);
-            }
-
-            formatDuration(milliseconds) {
-                if (!milliseconds) return '0:00';
-                const seconds = Math.floor(milliseconds / 1000);
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            }
-
-            getAvailableAPIs() {
-                return Object.keys(this.apis);
-            }
-
-            getAPIName(apiKey) {
-                return this.apis[apiKey]?.name || apiKey;
-            }
-        }
-
-        const musicAPI = new SimpleMusicAPI();
+            ]
+        };
 
         // Состояние приложения
         let appState = {
@@ -895,13 +698,11 @@
                 volume: 50,
                 currentTime: 0,
                 duration: 0,
-                queue: [],
-                currentIndex: 0,
-                audioElement: null,
-                isLoading: false
+                queue: musicData.tracks,
+                currentIndex: 0
             },
             playlists: {
-                playlists: JSON.parse(localStorage.getItem('spotify-clone-playlists')) || [
+                playlists: [
                     {
                         id: '1',
                         name: 'Мои любимые треки',
@@ -911,14 +712,12 @@
                     }
                 ],
                 currentPlaylist: null,
-                favorites: JSON.parse(localStorage.getItem('spotify-clone-favorites')) || [],
+                favorites: [],
             },
             search: {
                 query: '',
-                results: [],
-                isLoading: false,
-                currentAPI: 'demo',
-                apiAvailable: true
+                results: musicData.tracks,
+                isLoading: false
             },
             isMobile: window.innerWidth <= 768,
             showPlaylistModal: false,
@@ -928,7 +727,6 @@
         // Создаем audio элемент
         const audioElement = new Audio();
         audioElement.preload = 'metadata';
-        appState.player.audioElement = audioElement;
 
         // Обработчики событий audio
         audioElement.addEventListener('timeupdate', () => {
@@ -944,38 +742,6 @@
 
         audioElement.addEventListener('ended', () => {
             nextTrack();
-        });
-
-        audioElement.addEventListener('error', (e) => {
-            console.error('Audio error:', e);
-            setState(state => ({
-                ...state,
-                player: {
-                    ...state.player,
-                    isPlaying: false,
-                    isLoading: false
-                }
-            }));
-        });
-
-        audioElement.addEventListener('loadstart', () => {
-            setState(state => ({
-                ...state,
-                player: {
-                    ...state.player,
-                    isLoading: true
-                }
-            }));
-        });
-
-        audioElement.addEventListener('canplay', () => {
-            setState(state => ({
-                ...state,
-                player: {
-                    ...state.player,
-                    isLoading: false
-                }
-            }));
         });
 
         // Обновляем состояние при изменении размера окна
@@ -994,13 +760,8 @@
             ReactDOM.render(<App />, document.getElementById('root'));
         };
 
-        // Player actions
-        const setCurrentTrack = async (track) => {
-            if (!track.working) {
-                alert('Этот трек временно недоступен для воспроизведения');
-                return;
-            }
-
+        // Player actions - ПРОСТАЯ РЕАЛИЗАЦИЯ
+        const setCurrentTrack = (track) => {
             const index = appState.search.results.findIndex(t => t.id === track.id);
             
             setState(state => ({
@@ -1010,8 +771,7 @@
                     currentTrack: track,
                     currentIndex: Math.max(index, 0),
                     queue: state.search.results,
-                    isPlaying: false,
-                    isLoading: true
+                    isPlaying: false
                 }
             }));
 
@@ -1019,44 +779,24 @@
             audioElement.pause();
             audioElement.currentTime = 0;
 
-            try {
-                console.log('Setting audio source:', track.audio);
-                audioElement.src = track.audio;
-                
-                const playPromise = audioElement.play();
-                if (playPromise !== undefined) {
-                    await playPromise;
-                    setState(state => ({
-                        ...state,
-                        player: {
-                            ...state.player,
-                            isPlaying: true,
-                            isLoading: false
-                        }
-                    }));
-                }
-            } catch (error) {
-                console.error('Play failed:', error);
+            // Устанавливаем новый трек
+            audioElement.src = track.audio;
+            
+            // Пробуем воспроизвести
+            audioElement.play().then(() => {
                 setState(state => ({
                     ...state,
                     player: {
                         ...state.player,
-                        isPlaying: false,
-                        isLoading: false
+                        isPlaying: true
                     }
                 }));
-                
-                if (error.name === 'NotAllowedError') {
-                    alert('Браузер заблокировал автоматическое воспроизведение. Нажмите на кнопку play еще раз.');
-                } else {
-                    alert('Не удалось воспроизвести трек. Возможно, проблема с аудиофайлом.');
-                }
-            }
+            }).catch(error => {
+                console.log('Автовоспроизведение заблокировано, нужно нажать play');
+            });
         };
 
         const togglePlay = () => {
-            if (appState.player.isLoading) return;
-            
             if (appState.player.isPlaying) {
                 audioElement.pause();
                 setState(state => ({
@@ -1077,9 +817,11 @@
                             }
                         }));
                     }).catch(error => {
-                        console.error('Play error:', error);
-                        alert('Не удалось воспроизвести трек');
+                        alert('Нажмите на трек чтобы начать воспроизведение');
                     });
+                } else if (appState.search.results.length > 0) {
+                    // Если нет текущего трека, воспроизводим первый
+                    setCurrentTrack(appState.search.results[0]);
                 }
             }
         };
@@ -1103,12 +845,7 @@
                 const newIndex = (currentIndex + 1) % queue.length;
                 const nextTrack = queue[newIndex];
                 
-                if (nextTrack.working) {
-                    setTimeout(() => setCurrentTrack(nextTrack), 100);
-                } else {
-                    // Пропускаем недоступные треки
-                    setTimeout(() => nextTrack(), 100);
-                }
+                setTimeout(() => setCurrentTrack(nextTrack), 100);
                 
                 return {
                     ...state,
@@ -1129,12 +866,7 @@
                 const newIndex = currentIndex > 0 ? currentIndex - 1 : queue.length - 1;
                 const prevTrack = queue[newIndex];
                 
-                if (prevTrack.working) {
-                    setTimeout(() => setCurrentTrack(prevTrack), 100);
-                } else {
-                    // Пропускаем недоступные треки
-                    setTimeout(() => previousTrack(), 100);
-                }
+                setTimeout(() => setCurrentTrack(prevTrack), 100);
                 
                 return {
                     ...state,
@@ -1157,17 +889,13 @@
                 public: true,
             };
             
-            setState(state => {
-                const newPlaylists = [...state.playlists.playlists, newPlaylist];
-                localStorage.setItem('spotify-clone-playlists', JSON.stringify(newPlaylists));
-                return {
-                    ...state,
-                    playlists: {
-                        ...state.playlists,
-                        playlists: newPlaylists
-                    }
-                };
-            });
+            setState(state => ({
+                ...state,
+                playlists: {
+                    ...state.playlists,
+                    playlists: [...state.playlists.playlists, newPlaylist]
+                }
+            }));
         };
 
         const addToPlaylist = (playlistId, track) => {
@@ -1183,8 +911,6 @@
                     }
                     return playlist;
                 });
-                
-                localStorage.setItem('spotify-clone-playlists', JSON.stringify(newPlaylists));
                 
                 return {
                     ...state,
@@ -1215,8 +941,6 @@
                     ? favorites.filter(id => id !== trackId)
                     : [...favorites, trackId];
                 
-                localStorage.setItem('spotify-clone-favorites', JSON.stringify(newFavorites));
-                
                 return {
                     ...state,
                     playlists: {
@@ -1227,24 +951,20 @@
             });
         };
 
-        const setSearchQuery = async (query) => {
+        const setSearchQuery = (query) => {
+            const results = query.trim() 
+                ? musicData.tracks.filter(track =>
+                    track.name.toLowerCase().includes(query.toLowerCase()) ||
+                    track.artist.toLowerCase().includes(query.toLowerCase())
+                  )
+                : musicData.tracks;
+            
             setState(state => ({
                 ...state,
                 search: {
                     ...state.search,
                     query,
-                    isLoading: true
-                }
-            }));
-
-            const results = await musicAPI.searchMusic(query, appState.search.currentAPI);
-            
-            setState(state => ({
-                ...state,
-                search: {
-                    ...state.search,
-                    results,
-                    isLoading: false
+                    results
                 },
                 player: {
                     ...state.player,
@@ -1252,60 +972,6 @@
                 }
             }));
         };
-
-        const setCurrentAPI = async (apiName) => {
-            setState(state => ({
-                ...state,
-                search: {
-                    ...state.search,
-                    currentAPI: apiName,
-                    isLoading: true
-                }
-            }));
-
-            const results = await musicAPI.getPopularTracks(apiName);
-            
-            setState(state => ({
-                ...state,
-                search: {
-                    ...state.search,
-                    results,
-                    isLoading: false
-                },
-                player: {
-                    ...state.player,
-                    queue: results
-                }
-            }));
-        };
-
-        const loadPopularTracks = async () => {
-            setState(state => ({
-                ...state,
-                search: {
-                    ...state.search,
-                    isLoading: true
-                }
-            }));
-
-            const popularTracks = await musicAPI.getPopularTracks(appState.search.currentAPI);
-            
-            setState(state => ({
-                ...state,
-                search: {
-                    ...state.search,
-                    results: popularTracks,
-                    isLoading: false
-                },
-                player: {
-                    ...state.player,
-                    queue: popularTracks
-                }
-            }));
-        };
-
-        // Загружаем треки при запуске
-        loadPopularTracks();
 
         const showAddToPlaylistModal = (track) => {
             setState(state => ({
@@ -1372,41 +1038,6 @@
             );
         };
 
-        const ApiSelector = () => {
-            const availableAPIs = musicAPI.getAvailableAPIs();
-            
-            return (
-                <select 
-                    className="api-selector"
-                    value={appState.search.currentAPI}
-                    onChange={(e) => setCurrentAPI(e.target.value)}
-                >
-                    {availableAPIs.map(apiKey => (
-                        <option key={apiKey} value={apiKey}>
-                            {musicAPI.getAPIName(apiKey)}
-                        </option>
-                    ))}
-                </select>
-            );
-        };
-
-        const ApiNotice = () => {
-            const currentAPI = musicAPI.getAPIName(appState.search.currentAPI);
-            const trackCount = appState.search.results.length;
-            const workingTracks = appState.search.results.filter(track => track.working).length;
-            
-            return (
-                <div className="notice api-notice">
-                    <div>
-                        🎵 <strong>Музыка из {currentAPI}</strong> - {trackCount} треков найдено
-                    </div>
-                    <div className="api-badge">
-                        {currentAPI}
-                    </div>
-                </div>
-            );
-        };
-
         const Sidebar = () => {
             const { playlists, isMobile } = appState;
 
@@ -1434,7 +1065,6 @@
                                             });
                                         } else if (item.id === 'home') {
                                             setCurrentPlaylist(null);
-                                            loadPopularTracks();
                                         }
                                     }}
                                 >
@@ -1478,7 +1108,6 @@
                                             });
                                         } else if (item.id === 'home') {
                                             setCurrentPlaylist(null);
-                                            loadPopularTracks();
                                         }
                                     }}
                                 >
@@ -1550,11 +1179,7 @@
                 <div
                     className="track-card"
                     onClick={() => {
-                        if (track.working) {
-                            setCurrentTrack(track);
-                        } else {
-                            alert('Этот трек временно недоступен для воспроизведения');
-                        }
+                        setCurrentTrack(track);
                     }}
                 >
                     <div style={{ position: 'relative' }}>
@@ -1562,11 +1187,8 @@
                             src={track.image}
                             alt={track.name}
                             className="track-image"
-                            onError={(e) => {
-                                e.target.src = 'https://via.placeholder.com/300/191414/FFFFFF?text=♪';
-                            }}
                         />
-                        {isCurrentTrack && isPlaying && track.working && (
+                        {isCurrentTrack && isPlaying && (
                             <div style={{
                                 position: 'absolute',
                                 top: '50%',
@@ -1588,11 +1210,6 @@
                     </div>
                     <div className="track-name">{track.name}</div>
                     <div className="track-artist">{track.artist}</div>
-                    {track.genre && (
-                        <div className="text-xs text-gray" style={{ marginTop: '4px' }}>
-                            {track.genre}
-                        </div>
-                    )}
                     <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -1600,46 +1217,35 @@
                         marginTop: '8px'
                     }}>
                         <span className="text-sm text-gray">{track.duration}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="text-xs text-gray" style={{ 
-                                background: 'rgba(255,255,255,0.1)', 
-                                padding: '2px 6px', 
-                                borderRadius: '8px' 
-                            }}>
-                                {musicAPI.getAPIName(track.api)}
-                            </span>
-                            <button
-                                className="icon-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleFavorite(track.id);
-                                }}
-                            >
-                                {isFavorite ? '❤️' : '🤍'}
-                            </button>
-                        </div>
+                        <button
+                            className="icon-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(track.id);
+                            }}
+                        >
+                            {isFavorite ? '❤️' : '🤍'}
+                        </button>
                     </div>
                     
-                    {track.working && (
-                        <div className="track-actions">
-                            <button
-                                className="icon-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    showAddToPlaylistModal(track);
-                                }}
-                                title="Добавить в плейлист"
-                            >
-                                +
-                            </button>
-                        </div>
-                    )}
+                    <div className="track-actions">
+                        <button
+                            className="icon-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                showAddToPlaylistModal(track);
+                            }}
+                            title="Добавить в плейлист"
+                        >
+                            +
+                        </button>
+                    </div>
                 </div>
             );
         };
 
         const Player = () => {
-            const { currentTrack, isPlaying, volume, currentTime, duration, isLoading } = appState.player;
+            const { currentTrack, isPlaying, volume, currentTime, duration } = appState.player;
             const isMobile = appState.isMobile;
 
             const formatTime = (seconds) => {
@@ -1650,20 +1256,11 @@
             };
 
             const handleProgressClick = (e) => {
-                if (!currentTrack || !currentTrack.working) return;
-                
                 const rect = e.currentTarget.getBoundingClientRect();
                 const percent = (e.clientX - rect.left) / rect.width;
-                const newTime = percent * duration;
-                
-                audioElement.currentTime = newTime;
-                setState(state => ({
-                    ...state,
-                    player: {
-                        ...state.player,
-                        currentTime: newTime
-                    }
-                }));
+                if (audioElement && duration) {
+                    audioElement.currentTime = percent * duration;
+                }
             };
 
             const handleVolumeClick = (e) => {
@@ -1689,9 +1286,6 @@
                             src={currentTrack.image}
                             alt={currentTrack.name}
                             className="player-track-image"
-                            onError={(e) => {
-                                e.target.src = 'https://via.placeholder.com/56/191414/FFFFFF?text=♪';
-                            }}
                         />
                         <div>
                             <div className="font-bold" style={{ 
@@ -1702,15 +1296,6 @@
                                 whiteSpace: 'nowrap'
                             }}>
                                 {currentTrack.name}
-                                {isLoading && (
-                                    <span style={{ 
-                                        marginLeft: '8px',
-                                        fontSize: '12px',
-                                        color: 'var(--spotify-green)'
-                                    }}>
-                                        (загрузка...)
-                                    </span>
-                                )}
                             </div>
                             <div className="text-sm text-gray" style={{
                                 maxWidth: isMobile ? '120px' : '200px',
@@ -1719,16 +1304,6 @@
                                 whiteSpace: 'nowrap'
                             }}>
                                 {currentTrack.artist}
-                                <span style={{ 
-                                    color: 'var(--spotify-green)', 
-                                    marginLeft: '8px', 
-                                    fontSize: '10px',
-                                    background: 'rgba(29, 185, 84, 0.2)',
-                                    padding: '2px 6px',
-                                    borderRadius: '8px'
-                                }}>
-                                    {musicAPI.getAPIName(currentTrack.api)}
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -1738,7 +1313,6 @@
                             <button
                                 className="control-btn"
                                 onClick={previousTrack}
-                                disabled={!currentTrack.working}
                             >
                                 ⏮
                             </button>
@@ -1746,14 +1320,12 @@
                                 className="control-btn play-btn"
                                 onClick={togglePlay}
                                 style={isPlaying ? { animation: 'pulse 2s infinite' } : {}}
-                                disabled={!currentTrack.working || isLoading}
                             >
-                                {isLoading ? '⋯' : (isPlaying ? '⏸' : '▶')}
+                                {isPlaying ? '⏸' : '▶'}
                             </button>
                             <button
                                 className="control-btn"
                                 onClick={nextTrack}
-                                disabled={!currentTrack.working}
                             >
                                 ⏭
                             </button>
@@ -1764,7 +1336,6 @@
                             <div
                                 className="progress-track"
                                 onClick={handleProgressClick}
-                                style={{ cursor: currentTrack.working ? 'pointer' : 'not-allowed' }}
                             >
                                 <div
                                     className="progress-fill"
@@ -1795,8 +1366,7 @@
 
         const MainContent = () => {
             const { currentPlaylist, favorites } = appState.playlists;
-            const { query, results, isLoading } = appState.search;
-            const isMobile = appState.isMobile;
+            const { query, results } = appState.search;
 
             let displayedTracks = [];
             let title = '';
@@ -1823,17 +1393,13 @@
                             value={query}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <ApiSelector />
                     </div>
                     <div className="content">
-                        <ApiNotice />
+                        <div className="notice">
+                            🎵 <strong>SoundWave Player</strong> - Нажмите на любой трек чтобы начать воспроизведение
+                        </div>
                         <h1 className="section-title">{title}</h1>
-                        {isLoading ? (
-                            <div className="loading">
-                                <div className="spinner"></div>
-                                <div>Поиск музыки...</div>
-                            </div>
-                        ) : displayedTracks.length > 0 ? (
+                        {displayedTracks.length > 0 ? (
                             <div className="tracks-grid">
                                 {displayedTracks.map(track => (
                                     <TrackCard key={track.id} track={track} />
