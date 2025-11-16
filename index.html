@@ -763,9 +763,10 @@
             <div class="form-group">
                 <label class="form-label">Аудио файл *</label>
                 <input type="file" class="form-input" id="audioFileInput" accept="audio/*">
+                <p style="font-size: 12px; color: #1db954; margin-top: 4px;">✨ Автоматическое сжатие: mono, 22kHz для экономии места</p>
             </div>
             <div class="form-group">
-                <label class="form-label">Обложка (опционально)</label>
+                <label class="form-label">Обложка (опционально, макс. 500 KB)</label>
                 <input type="file" class="form-input" id="coverFileInput" accept="image/*">
             </div>
             <div class="form-group">
@@ -1373,6 +1374,108 @@
             document.getElementById('uploadModal').classList.remove('show');
         }
 
+        async function compressAudio(audioFile) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const fileReader = new FileReader();
+                    
+                    fileReader.onload = async function(e) {
+                        try {
+                            const arrayBuffer = e.target.result;
+                            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                            
+                            // Reduce to mono and lower sample rate for compression
+                            const numberOfChannels = 1; // Mono
+                            const sampleRate = 22050; // Lower sample rate
+                            const duration = audioBuffer.duration;
+                            const length = sampleRate * duration;
+                            
+                            const offlineContext = new OfflineAudioContext(numberOfChannels, length, sampleRate);
+                            const source = offlineContext.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(offlineContext.destination);
+                            source.start();
+                            
+                            const renderedBuffer = await offlineContext.startRendering();
+                            
+                            // Convert to WAV (will be smaller due to mono + lower sample rate)
+                            const wav = audioBufferToWav(renderedBuffer);
+                            const blob = new Blob([wav], { type: 'audio/wav' });
+                            
+                            // Convert blob to base64
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(blob);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    
+                    fileReader.onerror = reject;
+                    fileReader.readAsArrayBuffer(audioFile);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        function audioBufferToWav(buffer) {
+            const length = buffer.length * buffer.numberOfChannels * 2;
+            const arrayBuffer = new ArrayBuffer(44 + length);
+            const view = new DataView(arrayBuffer);
+            const channels = [];
+            let offset = 0;
+            let pos = 0;
+
+            // Write WAV header
+            const setUint16 = (data) => {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            };
+            const setUint32 = (data) => {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            };
+
+            // "RIFF" chunk descriptor
+            setUint32(0x46464952); // "RIFF"
+            setUint32(36 + length); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+
+            // "fmt " sub-chunk
+            setUint32(0x20746d66); // "fmt "
+            setUint32(16); // subchunk1size (16 for PCM)
+            setUint16(1); // audio format (1 for PCM)
+            setUint16(buffer.numberOfChannels);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * buffer.numberOfChannels * 2); // byte rate
+            setUint16(buffer.numberOfChannels * 2); // block align
+            setUint16(16); // bits per sample
+
+            // "data" sub-chunk
+            setUint32(0x61746164); // "data"
+            setUint32(length);
+
+            // Write interleaved data
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            while (pos < arrayBuffer.byteLength) {
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return arrayBuffer;
+        }
+
         async function uploadTrack() {
             const audioFile = document.getElementById('audioFileInput').files[0];
             const coverFile = document.getElementById('coverFileInput').files[0];
@@ -1399,17 +1502,39 @@
 
             const uploadBtn = document.getElementById('uploadBtn');
             uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Загрузка...';
+            uploadBtn.textContent = 'Сжатие аудио...';
 
             try {
-                // Convert audio to base64
-                const audioBase64 = await fileToBase64(audioFile);
+                // Compress audio
+                let audioBase64;
+                try {
+                    audioBase64 = await compressAudio(audioFile);
+                    uploadBtn.textContent = 'Загрузка...';
+                } catch (compressError) {
+                    console.error('Compression failed, using original:', compressError);
+                    // Fallback to original file if compression fails
+                    uploadBtn.textContent = 'Загрузка...';
+                    audioBase64 = await fileToBase64(audioFile);
+                }
+                
+                // Check if base64 is too large (4.5MB limit to be safe)
+                const estimatedSize = audioBase64.length * 0.75; // rough estimate of decoded size
+                if (estimatedSize > 4.5 * 1024 * 1024) {
+                    const sizeMB = (estimatedSize / (1024 * 1024)).toFixed(2);
+                    throw new Error(`FILE_TOO_LARGE:${sizeMB}`);
+                }
                 
                 // Default cover
                 let coverBase64 = 'https://via.placeholder.com/300x300/282828/1db954?text=' + encodeURIComponent('♪');
                 
                 // Convert cover to base64 if provided
                 if (coverFile) {
+                    if (coverFile.size > 500000) {
+                        errorEl.innerHTML = '<div class="error-message">Обложка слишком большая. Максимум 500 KB</div>';
+                        uploadBtn.disabled = false;
+                        uploadBtn.textContent = 'Загрузить';
+                        return;
+                    }
                     coverBase64 = await fileToBase64(coverFile);
                 }
 
@@ -1422,8 +1547,12 @@
                     duration: 0
                 };
 
-                // Save to SHARED storage so it's accessible from all devices
-                await window.storage.set(track.id, JSON.stringify(track), true);
+                // Try to save to shared storage
+                try {
+                    await window.storage.set(track.id, JSON.stringify(track), true);
+                } catch (storageError) {
+                    throw new Error('STORAGE_ERROR');
+                }
                 
                 // Also add to local userTracks array
                 userTracks.push(track);
@@ -1454,7 +1583,24 @@
                 }
             } catch (error) {
                 console.error('Upload error:', error);
-                errorEl.innerHTML = '<div class="error-message">Ошибка при загрузке файла. Попробуйте файл меньшего размера.</div>';
+                
+                if (error.message.startsWith('FILE_TOO_LARGE')) {
+                    const sizeMB = error.message.split(':')[1] || 'неизвестно';
+                    errorEl.innerHTML = `
+                        <div class="error-message">
+                            Файл слишком большой даже после сжатия (~${sizeMB} MB)<br><br>
+                            <strong>Как уменьшить размер:</strong><br>
+                            1. Обрежьте длину трека (макс. 3-4 минуты)<br>
+                            2. Используйте файл с более низким битрейтом<br>
+                            3. Конвертируйте в MP3 64-96 kbps перед загрузкой<br><br>
+                            💡 Приложение автоматически сжимает аудио до mono 22kHz
+                        </div>
+                    `;
+                } else if (error.message === 'STORAGE_ERROR') {
+                    errorEl.innerHTML = '<div class="error-message">Ошибка сохранения. Файл слишком большой для хранилища (лимит 5MB).</div>';
+                } else {
+                    errorEl.innerHTML = '<div class="error-message">Ошибка при загрузке. Попробуйте более короткий трек или файл меньшего размера.</div>';
+                }
             } finally {
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = 'Загрузить';
