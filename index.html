@@ -685,10 +685,18 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // Исправленный музыкальный API с рабочими ссылками
-        class WorkingMusicAPI {
+        // Упрощенный музыкальный API с гарантированными треками
+        class SimpleMusicAPI {
             constructor() {
                 this.apis = {
+                    'demo': {
+                        name: 'Демо-треки',
+                        search: async (query, limit = 20) => {
+                            // Имитируем загрузку
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            return this.getDemoTracks(query, limit);
+                        }
+                    },
                     'jamendo': {
                         name: 'Jamendo',
                         search: async (query, limit = 20) => {
@@ -698,60 +706,27 @@
                                 );
                                 const data = await response.json();
                                 
-                                return data.results.map(track => ({
-                                    id: `jamendo_${track.id}`,
-                                    name: track.name,
-                                    artist: track.artist_name,
-                                    duration: this.formatDuration(track.duration),
-                                    image: track.album_image || track.artist_image || 'https://via.placeholder.com/300/191414/FFFFFF?text=Jamendo',
-                                    audio: track.audio, // Прямая ссылка на MP3
-                                    genre: track.genre,
-                                    plays: track.popularity,
-                                    api: 'jamendo',
-                                    working: true // Jamendo обычно работает
-                                }));
+                                if (data.results && data.results.length > 0) {
+                                    return data.results.map(track => ({
+                                        id: `jamendo_${track.id}`,
+                                        name: track.name,
+                                        artist: track.artist_name,
+                                        duration: this.formatDuration(track.duration),
+                                        image: track.album_image || track.artist_image || 'https://via.placeholder.com/300/191414/FFFFFF?text=Jamendo',
+                                        audio: track.audio,
+                                        genre: track.genre,
+                                        plays: track.popularity,
+                                        api: 'jamendo',
+                                        working: true
+                                    }));
+                                } else {
+                                    // Если Jamendo не нашел треки, возвращаем демо
+                                    return this.getDemoTracks(query, limit);
+                                }
                             } catch (error) {
                                 console.error('Jamendo API error:', error);
-                                return [];
+                                return this.getDemoTracks(query, limit);
                             }
-                        }
-                    },
-                    'deezer': {
-                        name: 'Deezer',
-                        search: async (query, limit = 20) => {
-                            try {
-                                const response = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`);
-                                const data = await response.json();
-                                
-                                return data.data.map(track => ({
-                                    id: `deezer_${track.id}`,
-                                    name: track.title,
-                                    artist: track.artist.name,
-                                    duration: this.formatDuration(track.duration * 1000),
-                                    image: track.album.cover_medium,
-                                    audio: track.preview, // 30-секундное превью
-                                    genre: '',
-                                    plays: track.rank,
-                                    api: 'deezer',
-                                    working: true // Deezer preview обычно работает
-                                }));
-                            } catch (error) {
-                                console.error('Deezer API error:', error);
-                                return [];
-                            }
-                        }
-                    },
-                    'demo': {
-                        name: 'Демо-треки',
-                        search: async (query, limit = 20) => {
-                            // Имитируем загрузку
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            
-                            const demoData = this.getDemoTracks(query);
-                            return demoData.slice(0, limit).map(track => ({
-                                ...track,
-                                working: true // Демо-треки всегда работают
-                            }));
                         }
                     }
                 };
@@ -765,68 +740,22 @@
                 try {
                     const api = this.apis[apiName];
                     if (!api) {
-                        throw new Error(`API ${apiName} not found`);
+                        return this.getDemoTracks(query, limit);
                     }
 
-                    let tracks = await api.search(query, limit);
-                    
-                    // Если треки найдены, проверяем их работоспособность
-                    if (tracks.length > 0) {
-                        tracks = await this.checkTracksAvailability(tracks);
-                    }
-
-                    // Если после проверки нет рабочих треков, используем демо
-                    if (tracks.filter(track => track.working).length === 0) {
-                        console.log('No working tracks found, using demo');
-                        tracks = this.getDemoTracks(query).map(track => ({
-                            ...track,
-                            working: true
-                        }));
-                    }
-
+                    const tracks = await api.search(query, limit);
                     return tracks;
 
                 } catch (error) {
                     console.error('API search failed:', error);
-                    return this.getDemoTracks(query).map(track => ({
-                        ...track,
-                        working: true
-                    }));
+                    return this.getDemoTracks(query, limit);
                 }
-            }
-
-            // Проверяем доступность треков
-            async checkTracksAvailability(tracks) {
-                const checkedTracks = [];
-                
-                for (const track of tracks) {
-                    try {
-                        // Для Jamendo и Deezer считаем, что треки рабочие
-                        if (track.api === 'jamendo' || track.api === 'deezer') {
-                            checkedTracks.push(track);
-                        } else {
-                            // Для других API проверяем доступность
-                            const response = await fetch(track.audio, { method: 'HEAD' });
-                            if (response.ok) {
-                                checkedTracks.push({...track, working: true});
-                            } else {
-                                checkedTracks.push({...track, working: false});
-                            }
-                        }
-                    } catch (error) {
-                        console.log(`Track ${track.name} is not available:`, error);
-                        checkedTracks.push({...track, working: false});
-                    }
-                }
-                
-                return checkedTracks;
             }
 
             async getPopularTracks(apiName = 'demo', limit = 20) {
                 const popularQueries = {
-                    'jamendo': ['electronic', 'rock', 'ambient', 'acoustic'],
-                    'deezer': ['pop', 'rock', 'hip hop', 'jazz'],
-                    'demo': ['chill', 'electronic', 'acoustic', 'lofi']
+                    'demo': ['chill', 'electronic', 'acoustic', 'lofi'],
+                    'jamendo': ['electronic', 'rock', 'ambient', 'acoustic']
                 };
 
                 const queries = popularQueries[apiName] || ['electronic', 'rock', 'pop'];
@@ -835,7 +764,7 @@
                 return await this.searchMusic(randomQuery, apiName, limit);
             }
 
-            getDemoTracks(query = '') {
+            getDemoTracks(query = '', limit = 20) {
                 const demoData = [
                     {
                         id: 'demo_1',
@@ -845,7 +774,8 @@
                         image: 'https://i.scdn.co/image/ab67616d00001e02a048415db06a5b6fa7ec4e1a',
                         audio: 'https://assets.codepen.io/4358586/Blinding+Lights.mp3',
                         genre: 'Pop',
-                        api: 'demo'
+                        api: 'demo',
+                        working: true
                     },
                     {
                         id: 'demo_2',
@@ -855,7 +785,8 @@
                         image: 'https://i.scdn.co/image/ab67616d00001e02a4c8cbd6b1cc3bc5e4195e79',
                         audio: 'https://assets.codepen.io/4358586/Save+Your+Tears.mp3',
                         genre: 'Pop',
-                        api: 'demo'
+                        api: 'demo',
+                        working: true
                     },
                     {
                         id: 'demo_3',
@@ -865,7 +796,8 @@
                         image: 'https://i.scdn.co/image/ab67616d00001e0295f754318336a07e85ec59bc',
                         audio: 'https://assets.codepen.io/4358586/Shape+of+You.mp3',
                         genre: 'Pop',
-                        api: 'demo'
+                        api: 'demo',
+                        working: true
                     },
                     {
                         id: 'demo_4',
@@ -875,7 +807,8 @@
                         image: 'https://i.scdn.co/image/ab67616d00001e023f03783e5ec1e6c6f5a4b5a5',
                         audio: 'https://assets.codepen.io/4358586/Bad+Guy.mp3',
                         genre: 'Pop',
-                        api: 'demo'
+                        api: 'demo',
+                        working: true
                     },
                     {
                         id: 'demo_5',
@@ -885,17 +818,54 @@
                         image: 'https://i.scdn.co/image/ab67616d00001e02ce67a06394b5ca2e27c70d07',
                         audio: 'https://assets.codepen.io/4358586/Levitating.mp3',
                         genre: 'Pop',
-                        api: 'demo'
+                        api: 'demo',
+                        working: true
+                    },
+                    {
+                        id: 'demo_6',
+                        name: 'Stay',
+                        artist: 'The Kid LAROI, Justin Bieber',
+                        duration: '2:21',
+                        image: 'https://i.scdn.co/image/ab67616d00001e026d6b3d8397bb8e6b6cd34047',
+                        audio: 'https://assets.codepen.io/4358586/Stay.mp3',
+                        genre: 'Pop',
+                        api: 'demo',
+                        working: true
+                    },
+                    {
+                        id: 'demo_7',
+                        name: 'Watermelon Sugar',
+                        artist: 'Harry Styles',
+                        duration: '2:54',
+                        image: 'https://i.scdn.co/image/ab67616d00001e02a4b4d6f5b8a6a6a0a7a0a7a0',
+                        audio: 'https://assets.codepen.io/4358586/Watermelon+Sugar.mp3',
+                        genre: 'Pop',
+                        api: 'demo',
+                        working: true
+                    },
+                    {
+                        id: 'demo_8',
+                        name: 'Dance Monkey',
+                        artist: 'Tones and I',
+                        duration: '3:29',
+                        image: 'https://i.scdn.co/image/ab67616d00001e027135d5dbb33d3d8a26bbecc5',
+                        audio: 'https://assets.codepen.io/4358586/Dance+Monkey.mp3',
+                        genre: 'Pop',
+                        api: 'demo',
+                        working: true
                     }
                 ];
 
+                let filteredData = demoData;
+                
                 if (query) {
-                    return demoData.filter(track =>
+                    filteredData = demoData.filter(track =>
                         track.name.toLowerCase().includes(query.toLowerCase()) ||
                         track.artist.toLowerCase().includes(query.toLowerCase())
                     );
                 }
-                return demoData;
+                
+                return filteredData.slice(0, limit);
             }
 
             formatDuration(milliseconds) {
@@ -915,7 +885,7 @@
             }
         }
 
-        const musicAPI = new WorkingMusicAPI();
+        const musicAPI = new SimpleMusicAPI();
 
         // Состояние приложения
         let appState = {
@@ -947,7 +917,7 @@
                 query: '',
                 results: [],
                 isLoading: false,
-                currentAPI: 'demo', // По умолчанию используем демо-треки
+                currentAPI: 'demo',
                 apiAvailable: true
             },
             isMobile: window.innerWidth <= 768,
@@ -1334,6 +1304,9 @@
             }));
         };
 
+        // Загружаем треки при запуске
+        loadPopularTracks();
+
         const showAddToPlaylistModal = (track) => {
             setState(state => ({
                 ...state,
@@ -1425,7 +1398,7 @@
             return (
                 <div className="notice api-notice">
                     <div>
-                        🎵 <strong>Музыка из {currentAPI}</strong> - {workingTracks}/{trackCount} треков доступно
+                        🎵 <strong>Музыка из {currentAPI}</strong> - {trackCount} треков найдено
                     </div>
                     <div className="api-badge">
                         {currentAPI}
@@ -1583,10 +1556,6 @@
                             alert('Этот трек временно недоступен для воспроизведения');
                         }
                     }}
-                    style={{
-                        opacity: track.working ? 1 : 0.6,
-                        cursor: track.working ? 'pointer' : 'not-allowed'
-                    }}
                 >
                     <div style={{ position: 'relative' }}>
                         <img
@@ -1597,25 +1566,6 @@
                                 e.target.src = 'https://via.placeholder.com/300/191414/FFFFFF?text=♪';
                             }}
                         />
-                        {!track.working && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                background: 'rgba(220, 53, 69, 0.8)',
-                                borderRadius: '50%',
-                                width: '40px',
-                                height: '40px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '16px',
-                                color: 'white'
-                            }}>
-                                ⚠️
-                            </div>
-                        )}
                         {isCurrentTrack && isPlaying && track.working && (
                             <div style={{
                                 position: 'absolute',
@@ -1651,16 +1601,6 @@
                     }}>
                         <span className="text-sm text-gray">{track.duration}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {!track.working && (
-                                <span className="text-xs" style={{ 
-                                    background: 'rgba(220, 53, 69, 0.2)', 
-                                    color: '#dc3545',
-                                    padding: '2px 6px', 
-                                    borderRadius: '8px' 
-                                }}>
-                                    Недоступен
-                                </span>
-                            )}
                             <span className="text-xs text-gray" style={{ 
                                 background: 'rgba(255,255,255,0.1)', 
                                 padding: '2px 6px', 
@@ -1857,12 +1797,6 @@
             const { currentPlaylist, favorites } = appState.playlists;
             const { query, results, isLoading } = appState.search;
             const isMobile = appState.isMobile;
-
-            React.useEffect(() => {
-                if (!query && results.length === 0) {
-                    loadPopularTracks();
-                }
-            }, []);
 
             let displayedTracks = [];
             let title = '';
