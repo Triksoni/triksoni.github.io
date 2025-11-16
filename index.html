@@ -853,6 +853,24 @@
         // Load tracks from Jamendo
         async function loadTracks(query = '') {
             try {
+                // Check if we have cached tracks
+                if (!query) {
+                    try {
+                        const cachedTracks = await window.storage.get('jamendo_tracks');
+                        if (cachedTracks) {
+                            const cached = JSON.parse(cachedTracks.value);
+                            // Check if cache is less than 24 hours old
+                            if (cached.timestamp && (Date.now() - cached.timestamp < 24 * 60 * 60 * 1000)) {
+                                tracks = cached.tracks;
+                                renderHomeView();
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // No cache, continue to fetch
+                    }
+                }
+
                 const url = query 
                     ? `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=30&search=${encodeURIComponent(query)}&audioformat=mp32`
                     : `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=30&order=popularity_total&audioformat=mp32`;
@@ -873,16 +891,30 @@
                     duration: track.duration
                 }));
 
+                // Cache tracks if not a search query
+                if (!query) {
+                    await window.storage.set('jamendo_tracks', JSON.stringify({
+                        tracks: tracks,
+                        timestamp: Date.now()
+                    }));
+                }
+
                 renderHomeView();
             } catch (error) {
                 console.error('Error loading tracks:', error);
-                document.getElementById('contentSection').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-title">Ошибка загрузки</div>
-                        <p>Не удалось загрузить треки с Jamendo API.</p>
-                        <p style="margin-top: 8px; font-size: 12px;">Попробуйте обновить страницу или загрузите свои треки.</p>
-                    </div>
-                `;
+                // If error and we have user tracks, show them
+                if (userTracks.length > 0) {
+                    tracks = [];
+                    renderHomeView();
+                } else {
+                    document.getElementById('contentSection').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-title">Ошибка загрузки</div>
+                            <p>Не удалось загрузить треки с Jamendo API.</p>
+                            <p style="margin-top: 8px; font-size: 12px;">Попробуйте обновить страницу или загрузите свои треки.</p>
+                        </div>
+                    `;
+                }
             }
         }
 
