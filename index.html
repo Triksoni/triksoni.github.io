@@ -251,6 +251,8 @@
             transform: translateY(8px);
             transition: all 0.3s;
             box-shadow: 0 8px 8px rgba(0,0,0,0.3);
+            font-size: 20px;
+            color: #000;
         }
 
         .play-btn:hover {
@@ -290,6 +292,7 @@
             opacity: 0;
             transition: opacity 0.3s;
             z-index: 2;
+            color: #fff;
         }
 
         .track-card:hover .like-btn {
@@ -299,6 +302,29 @@
         .like-btn.liked {
             opacity: 1;
             color: #1db954;
+        }
+
+        .add-to-playlist-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2;
+            color: #fff;
+        }
+
+        .track-card:hover .add-to-playlist-btn {
+            opacity: 1;
         }
 
         /* Player */
@@ -417,6 +443,8 @@
             justify-content: center;
             cursor: pointer;
             transition: transform 0.2s;
+            color: #000;
+            font-size: 16px;
         }
 
         .play-pause-btn:hover {
@@ -492,6 +520,7 @@
             height: 100%;
             background: #fff;
             border-radius: 2px;
+            pointer-events: none;
         }
 
         /* Modal */
@@ -614,6 +643,15 @@
             color: #fff;
             margin-bottom: 8px;
         }
+
+        .error-message {
+            background: #e22134;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -662,9 +700,7 @@
     <!-- Player -->
     <div class="player">
         <div class="player-track-info">
-            <div class="player-cover" id="playerCover">
-                <img src="" alt="" id="playerCoverImg">
-            </div>
+            <div class="player-cover" id="playerCover"></div>
             <div class="player-track-details">
                 <div class="player-track-name" id="playerTrackName">Выберите трек</div>
                 <div class="player-track-artist" id="playerTrackArtist"></div>
@@ -686,7 +722,7 @@
             </div>
             <div class="progress-bar">
                 <span class="time" id="currentTime">0:00</span>
-                <div class="progress" id="progressBar" onclick="seekTrack(event)">
+                <div class="progress" id="progressBar">
                     <div class="progress-filled" id="progressFilled" style="width: 0%"></div>
                 </div>
                 <span class="time" id="duration">0:00</span>
@@ -694,8 +730,8 @@
         </div>
 
         <div class="player-volume">
-            <button class="player-btn" onclick="toggleMute()">🔊</button>
-            <div class="volume-slider" id="volumeSlider" onclick="setVolume(event)">
+            <button class="player-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+            <div class="volume-slider" id="volumeSlider">
                 <div class="volume-filled" id="volumeFilled" style="width: 100%"></div>
             </div>
         </div>
@@ -720,8 +756,9 @@
     <div class="modal" id="uploadModal">
         <div class="modal-content">
             <div class="modal-title">Загрузить трек</div>
+            <div id="uploadError"></div>
             <div class="form-group">
-                <label class="form-label">Аудио файл</label>
+                <label class="form-label">Аудио файл *</label>
                 <input type="file" class="form-input" id="audioFileInput" accept="audio/*">
             </div>
             <div class="form-group">
@@ -729,11 +766,11 @@
                 <input type="file" class="form-input" id="coverFileInput" accept="image/*">
             </div>
             <div class="form-group">
-                <label class="form-label">Название</label>
+                <label class="form-label">Название *</label>
                 <input type="text" class="form-input" id="trackNameInput" placeholder="Название трека">
             </div>
             <div class="form-group">
-                <label class="form-label">Исполнитель</label>
+                <label class="form-label">Исполнитель *</label>
                 <input type="text" class="form-input" id="artistNameInput" placeholder="Имя исполнителя">
             </div>
             <div class="form-actions">
@@ -754,9 +791,10 @@
         let currentTrack = null;
         let isPlaying = false;
         let isShuffle = false;
-        let repeatMode = 0; // 0: off, 1: all, 2: one
+        let repeatMode = 0;
         let currentView = 'home';
         let currentPlaylist = null;
+        let currentVolume = 1;
 
         const audio = document.getElementById('audioPlayer');
         const JAMENDO_CLIENT_ID = 'b6747d04';
@@ -768,6 +806,8 @@
             renderPlaylists();
             setupAudioListeners();
             setupSearch();
+            setupVolumeControl();
+            setupProgressControl();
         }
 
         // Storage functions
@@ -801,26 +841,34 @@
         }
 
         async function saveData() {
-            await window.storage.set('liked_tracks', JSON.stringify([...likedTracks]));
-            await window.storage.set('playlists', JSON.stringify(playlists));
-            await window.storage.set('user_tracks', JSON.stringify(userTracks));
+            try {
+                await window.storage.set('liked_tracks', JSON.stringify([...likedTracks]));
+                await window.storage.set('playlists', JSON.stringify(playlists));
+                await window.storage.set('user_tracks', JSON.stringify(userTracks));
+            } catch (e) {
+                console.error('Save error:', e);
+            }
         }
 
         // Load tracks from Jamendo
         async function loadTracks(query = '') {
             try {
                 const url = query 
-                    ? `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=20&search=${encodeURIComponent(query)}&include=musicinfo&audioformat=mp32`
-                    : `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=20&include=musicinfo&audioformat=mp32`;
+                    ? `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=30&search=${encodeURIComponent(query)}&audioformat=mp32`
+                    : `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=30&order=popularity_total&audioformat=mp32`;
                 
                 const response = await fetch(url);
                 const data = await response.json();
                 
+                if (!data.results || data.results.length === 0) {
+                    throw new Error('No tracks found');
+                }
+                
                 tracks = data.results.map(track => ({
-                    id: track.id,
+                    id: 'jamendo_' + track.id,
                     name: track.name,
                     artist: track.artist_name,
-                    cover: track.image,
+                    cover: track.image || track.album_image || 'https://via.placeholder.com/300x300/282828/1db954?text=♪',
                     audio: track.audio,
                     duration: track.duration
                 }));
@@ -828,13 +876,30 @@
                 renderHomeView();
             } catch (error) {
                 console.error('Error loading tracks:', error);
-                document.getElementById('contentSection').innerHTML = '<div class="empty-state"><div class="empty-state-title">Ошибка загрузки</div><p>Не удалось загрузить треки</p></div>';
+                document.getElementById('contentSection').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-title">Ошибка загрузки</div>
+                        <p>Не удалось загрузить треки с Jamendo API.</p>
+                        <p style="margin-top: 8px; font-size: 12px;">Попробуйте обновить страницу или загрузите свои треки.</p>
+                    </div>
+                `;
             }
         }
 
         // Render functions
         function renderHomeView() {
-            const allTracks = [...tracks, ...userTracks];
+            const allTracks = [...userTracks, ...tracks];
+            
+            if (allTracks.length === 0) {
+                document.getElementById('contentSection').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-title">Нет треков</div>
+                        <p>Загрузите свои треки или обновите страницу</p>
+                    </div>
+                `;
+                return;
+            }
+            
             const content = `
                 <div class="section-title">Популярное</div>
                 <div class="tracks-grid">
@@ -845,7 +910,8 @@
         }
 
         function renderLibraryView() {
-            const likedTracksArray = [...tracks, ...userTracks].filter(t => likedTracks.has(t.id));
+            const allTracks = [...userTracks, ...tracks];
+            const likedTracksArray = allTracks.filter(t => likedTracks.has(t.id));
             
             const content = `
                 <div class="section-title">Понравившиеся треки</div>
@@ -862,7 +928,7 @@
             const playlist = playlists.find(p => p.id === playlistId);
             if (!playlist) return;
 
-            const allTracks = [...tracks, ...userTracks];
+            const allTracks = [...userTracks, ...tracks];
             const playlistTracks = playlist.tracks.map(id => allTracks.find(t => t.id === id)).filter(Boolean);
 
             const content = `
@@ -878,45 +944,61 @@
 
         function createTrackCard(track, showRemove = false, playlistId = null) {
             const isLiked = likedTracks.has(track.id);
-            const removeBtn = showRemove ? `<button class="like-btn" onclick="removeFromPlaylist('${playlistId}', '${track.id}')">✕</button>` : '';
+            const hasPlaylists = playlists.length > 0;
             
             return `
                 <div class="track-card" onclick="playTrack('${track.id}')">
                     <div class="track-cover">
-                        <img src="${track.cover}" alt="${track.name}">
-                        ${!showRemove ? `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLike('${track.id}')">♥</button>` : removeBtn}
-                        <button class="play-btn">▶</button>
+                        <img src="${track.cover}" alt="${track.name}" onerror="this.src='https://via.placeholder.com/300x300/282828/1db954?text=♪'">
+                        ${showRemove ? 
+                            `<button class="like-btn" onclick="event.stopPropagation(); removeFromPlaylist('${playlistId}', '${track.id}')" style="opacity: 1">✕</button>` :
+                            `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLike('${track.id}')">♥</button>`
+                        }
+                        ${!showRemove && hasPlaylists ? 
+                            `<button class="add-to-playlist-btn" onclick="event.stopPropagation(); showAddToPlaylistMenu('${track.id}', event)" title="Добавить в плейлист">➕</button>` : 
+                            ''
+                        }
+                        <button class="play-btn" onclick="event.stopPropagation(); playTrack('${track.id}')">▶</button>
                     </div>
-                    <div class="track-name">${track.name}</div>
-                    <div class="track-artist">${track.artist}</div>
-                    ${!showRemove && playlists.length > 0 ? `
-                        <button class="like-btn" style="left: 8px; opacity: 1" onclick="event.stopPropagation(); showAddToPlaylistMenu('${track.id}', event)" title="Добавить в плейлист">➕</button>
-                    ` : ''}
+                    <div class="track-name">${escapeHtml(track.name)}</div>
+                    <div class="track-artist">${escapeHtml(track.artist)}</div>
                 </div>
             `;
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function renderPlaylists() {
             const html = playlists.map(p => 
-                `<div class="playlist-item" onclick="showPlaylist('${p.id}')">${p.name}</div>`
+                `<div class="playlist-item" onclick="showPlaylist('${p.id}')">${escapeHtml(p.name)}</div>`
             ).join('');
             document.getElementById('playlistsList').innerHTML = html;
         }
 
         // Player functions
         function playTrack(trackId) {
-            const allTracks = [...tracks, ...userTracks];
-            const track = allTracks.find(t => t.id == trackId);
-            if (!track) return;
+            const allTracks = [...userTracks, ...tracks];
+            const track = allTracks.find(t => t.id === trackId);
+            if (!track || !track.audio) return;
 
             currentTrack = track;
             audio.src = track.audio;
-            audio.play();
+            audio.play().catch(e => {
+                console.error('Play error:', e);
+                alert('Ошибка воспроизведения трека');
+            });
             isPlaying = true;
 
             document.getElementById('playerTrackName').textContent = track.name;
             document.getElementById('playerTrackArtist').textContent = track.artist;
-            document.getElementById('playerCoverImg').src = track.cover;
+            
+            const coverEl = document.getElementById('playerCover');
+            coverEl.innerHTML = `<img src="${track.cover}" alt="${track.name}" onerror="this.src='https://via.placeholder.com/300x300/282828/1db954?text=♪'">`;
+            
             document.getElementById('playPauseBtn').textContent = '⏸';
             
             updatePlayerLikeButton();
@@ -929,7 +1011,7 @@
                 audio.pause();
                 document.getElementById('playPauseBtn').textContent = '▶';
             } else {
-                audio.play();
+                audio.play().catch(e => console.error('Play error:', e));
                 document.getElementById('playPauseBtn').textContent = '⏸';
             }
             isPlaying = !isPlaying;
@@ -938,7 +1020,7 @@
         function nextTrack() {
             if (!currentTrack) return;
             
-            const allTracks = [...tracks, ...userTracks];
+            const allTracks = [...userTracks, ...tracks];
             let currentIndex = allTracks.findIndex(t => t.id === currentTrack.id);
             
             if (isShuffle) {
@@ -947,17 +1029,21 @@
                 currentIndex = (currentIndex + 1) % allTracks.length;
             }
             
-            playTrack(allTracks[currentIndex].id);
+            if (allTracks[currentIndex]) {
+                playTrack(allTracks[currentIndex].id);
+            }
         }
 
         function previousTrack() {
             if (!currentTrack) return;
             
-            const allTracks = [...tracks, ...userTracks];
+            const allTracks = [...userTracks, ...tracks];
             let currentIndex = allTracks.findIndex(t => t.id === currentTrack.id);
             currentIndex = (currentIndex - 1 + allTracks.length) % allTracks.length;
             
-            playTrack(allTracks[currentIndex].id);
+            if (allTracks[currentIndex]) {
+                playTrack(allTracks[currentIndex].id);
+            }
         }
 
         function toggleShuffle() {
@@ -976,22 +1062,41 @@
             }
         }
 
-        function seekTrack(event) {
-            if (!currentTrack) return;
-            const rect = event.currentTarget.getBoundingClientRect();
-            const percent = (event.clientX - rect.left) / rect.width;
-            audio.currentTime = percent * audio.duration;
-        }
-
-        function setVolume(event) {
-            const rect = event.currentTarget.getBoundingClientRect();
-            const percent = (event.clientX - rect.left) / rect.width;
-            audio.volume = Math.max(0, Math.min(1, percent));
-            document.getElementById('volumeFilled').style.width = (percent * 100) + '%';
-        }
-
         function toggleMute() {
             audio.muted = !audio.muted;
+            const btn = document.getElementById('muteBtn');
+            btn.textContent = audio.muted ? '🔇' : '🔊';
+        }
+
+        function setupProgressControl() {
+            const progressBar = document.getElementById('progressBar');
+            progressBar.addEventListener('click', (e) => {
+                if (!currentTrack || !audio.duration) return;
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audio.currentTime = percent * audio.duration;
+            });
+        }
+
+        function setupVolumeControl() {
+            const volumeSlider = document.getElementById('volumeSlider');
+            
+            volumeSlider.addEventListener('click', (e) => {
+                const rect = volumeSlider.getBoundingClientRect();
+                const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                audio.volume = percent;
+                currentVolume = percent;
+                document.getElementById('volumeFilled').style.width = (percent * 100) + '%';
+                
+                const muteBtn = document.getElementById('muteBtn');
+                if (percent === 0) {
+                    muteBtn.textContent = '🔇';
+                } else if (percent < 0.5) {
+                    muteBtn.textContent = '🔉';
+                } else {
+                    muteBtn.textContent = '🔊';
+                }
+            });
         }
 
         function setupAudioListeners() {
@@ -1014,6 +1119,12 @@
                     document.getElementById('playPauseBtn').textContent = '▶';
                 }
             });
+
+            audio.addEventListener('error', (e) => {
+                console.error('Audio error:', e);
+                isPlaying = false;
+                document.getElementById('playPauseBtn').textContent = '▶';
+            });
         }
 
         function formatTime(seconds) {
@@ -1032,14 +1143,14 @@
             }
             saveData();
             
-            // Update UI
-            const allCards = document.querySelectorAll('.track-card');
-            allCards.forEach(card => {
-                const cardTrackId = card.getAttribute('onclick').match(/'([^']+)'/)[1];
-                if (cardTrackId == trackId) {
-                    const likeBtn = card.querySelector('.like-btn');
-                    if (likeBtn && likeBtn.textContent === '♥') {
-                        likeBtn.classList.toggle('liked', likedTracks.has(trackId));
+            // Update all like buttons for this track
+            const allLikeBtns = document.querySelectorAll('.like-btn');
+            allLikeBtns.forEach(btn => {
+                const card = btn.closest('.track-card');
+                if (card) {
+                    const onclick = card.getAttribute('onclick');
+                    if (onclick && onclick.includes(trackId)) {
+                        btn.classList.toggle('liked', likedTracks.has(trackId));
                     }
                 }
             });
@@ -1064,7 +1175,7 @@
         function showCreatePlaylistModal() {
             document.getElementById('createPlaylistModal').classList.add('show');
             document.getElementById('playlistNameInput').value = '';
-            document.getElementById('playlistNameInput').focus();
+            setTimeout(() => document.getElementById('playlistNameInput').focus(), 100);
         }
 
         function hideCreatePlaylistModal() {
@@ -1073,10 +1184,13 @@
 
         function createPlaylist() {
             const name = document.getElementById('playlistNameInput').value.trim();
-            if (!name) return;
+            if (!name) {
+                alert('Введите название плейлиста');
+                return;
+            }
 
             const playlist = {
-                id: Date.now().toString(),
+                id: 'playlist_' + Date.now(),
                 name: name,
                 tracks: []
             };
@@ -1096,9 +1210,12 @@
         }
 
         function showAddToPlaylistMenu(trackId, event) {
-            event.stopPropagation();
+            // Remove any existing menu
+            const existingMenu = document.querySelector('.playlist-menu');
+            if (existingMenu) existingMenu.remove();
             
             const menu = document.createElement('div');
+            menu.className = 'playlist-menu';
             menu.style.cssText = `
                 position: fixed;
                 background: #282828;
@@ -1107,16 +1224,22 @@
                 box-shadow: 0 16px 24px rgba(0,0,0,0.3);
                 z-index: 1000;
                 min-width: 160px;
+                max-height: 300px;
+                overflow-y: auto;
             `;
             
-            menu.innerHTML = playlists.map(p => `
-                <div style="padding: 12px 16px; cursor: pointer; border-radius: 2px; font-size: 14px;" 
-                     onmouseover="this.style.background='#3e3e3e'" 
-                     onmouseout="this.style.background='transparent'"
-                     onclick="addToPlaylist('${p.id}', '${trackId}'); this.parentElement.remove()">
-                    ${p.name}
-                </div>
-            `).join('');
+            if (playlists.length === 0) {
+                menu.innerHTML = '<div style="padding: 12px 16px; font-size: 14px; color: #b3b3b3;">Нет плейлистов</div>';
+            } else {
+                menu.innerHTML = playlists.map(p => `
+                    <div style="padding: 12px 16px; cursor: pointer; border-radius: 2px; font-size: 14px;" 
+                         class="playlist-menu-item"
+                         data-playlist-id="${p.id}"
+                         data-track-id="${trackId}">
+                        ${escapeHtml(p.name)}
+                    </div>
+                `).join('');
+            }
             
             const rect = event.target.getBoundingClientRect();
             menu.style.left = rect.left + 'px';
@@ -1124,6 +1247,23 @@
             
             document.body.appendChild(menu);
             
+            // Add hover effects and click handlers
+            menu.querySelectorAll('.playlist-menu-item').forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    item.style.background = '#3e3e3e';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.background = 'transparent';
+                });
+                item.addEventListener('click', () => {
+                    const playlistId = item.getAttribute('data-playlist-id');
+                    const trackId = item.getAttribute('data-track-id');
+                    addToPlaylist(playlistId, trackId);
+                    menu.remove();
+                });
+            });
+            
+            // Close menu when clicking outside
             setTimeout(() => {
                 const closeMenu = (e) => {
                     if (!menu.contains(e.target)) {
@@ -1146,7 +1286,6 @@
         }
 
         function removeFromPlaylist(playlistId, trackId) {
-            event.stopPropagation();
             const playlist = playlists.find(p => p.id === playlistId);
             if (!playlist) return;
             
@@ -1162,6 +1301,7 @@
             document.getElementById('coverFileInput').value = '';
             document.getElementById('trackNameInput').value = '';
             document.getElementById('artistNameInput').value = '';
+            document.getElementById('uploadError').innerHTML = '';
         }
 
         function hideUploadModal() {
@@ -1174,8 +1314,21 @@
             const name = document.getElementById('trackNameInput').value.trim();
             const artist = document.getElementById('artistNameInput').value.trim();
 
-            if (!audioFile || !name || !artist) {
-                alert('Заполните все обязательные поля');
+            const errorEl = document.getElementById('uploadError');
+            errorEl.innerHTML = '';
+
+            if (!audioFile) {
+                errorEl.innerHTML = '<div class="error-message">Выберите аудио файл</div>';
+                return;
+            }
+
+            if (!name) {
+                errorEl.innerHTML = '<div class="error-message">Введите название трека</div>';
+                return;
+            }
+
+            if (!artist) {
+                errorEl.innerHTML = '<div class="error-message">Введите имя исполнителя</div>';
                 return;
             }
 
@@ -1187,14 +1340,10 @@
                 // Convert audio to base64
                 const audioBase64 = await fileToBase64(audioFile);
                 
-                // Convert cover to base64 if provided
-                let coverBase64 = 'data:image/svg+xml;base64,' + btoa(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">
-                        <rect width="300" height="300" fill="#282828"/>
-                        <text x="150" y="150" font-family="Arial" font-size="48" fill="#1db954" text-anchor="middle" dominant-baseline="middle">♪</text>
-                    </svg>
-                `);
+                // Default cover
+                let coverBase64 = 'https://via.placeholder.com/300x300/282828/1db954?text=' + encodeURIComponent('♪');
                 
+                // Convert cover to base64 if provided
                 if (coverFile) {
                     coverBase64 = await fileToBase64(coverFile);
                 }
@@ -1212,10 +1361,16 @@
                 await saveData();
                 
                 hideUploadModal();
-                renderHomeView();
+                
+                // Refresh current view
+                if (currentView === 'home') {
+                    renderHomeView();
+                } else if (currentView === 'library') {
+                    renderLibraryView();
+                }
             } catch (error) {
                 console.error('Upload error:', error);
-                alert('Ошибка при загрузке файла');
+                errorEl.innerHTML = '<div class="error-message">Ошибка при загрузке файла. Попробуйте файл меньшего размера.</div>';
             } finally {
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = 'Загрузить';
@@ -1245,7 +1400,7 @@
                     renderHomeView();
                 } else if (view === 'search') {
                     renderHomeView();
-                    document.getElementById('searchInput').focus();
+                    setTimeout(() => document.getElementById('searchInput').focus(), 100);
                 } else if (view === 'library') {
                     renderLibraryView();
                 }
@@ -1261,6 +1416,7 @@
                 
                 searchTimeout = setTimeout(() => {
                     if (query) {
+                        document.getElementById('contentSection').innerHTML = '<div class="loading">Поиск...</div>';
                         loadTracks(query);
                     } else {
                         loadTracks();
