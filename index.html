@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Clone</title>
+    <title>Портфолио</title>
     <style>
         * {
             margin: 0;
@@ -12,1646 +12,302 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
-            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: #fff;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            padding: 80px 0;
+            text-align: center;
+            animation: fadeInDown 1s ease;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .nav {
             display: flex;
-            height: 100vh;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+            animation: fadeIn 1s ease 0.3s backwards;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 240px;
-            background: #000;
-            padding: 24px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 18px;
-            padding: 0 12px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-            color: #b3b3b3;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .nav-item:hover {
+        .nav a {
             color: #fff;
-            background: #282828;
-        }
-
-        .nav-item.active {
-            color: #fff;
-            background: #282828;
-        }
-
-        .nav-icon {
-            font-size: 24px;
-        }
-
-        .divider {
-            height: 1px;
-            background: #282828;
-            margin: 8px 0;
-        }
-
-        .playlists {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 16px;
-        }
-
-        .playlists::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        .playlists::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .playlists::-webkit-scrollbar-thumb {
-            background: #282828;
-            border-radius: 6px;
-        }
-
-        .playlist-item {
-            padding: 8px 12px;
-            font-size: 14px;
-            color: #b3b3b3;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-
-        .playlist-item:hover {
-            color: #fff;
-            background: #282828;
-        }
-
-        .create-playlist-btn {
-            background: transparent;
-            border: 1px solid #535353;
-            color: #b3b3b3;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-            margin: 8px 12px;
-        }
-
-        .create-playlist-btn:hover {
-            border-color: #fff;
-            color: #fff;
-            transform: scale(1.04);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            background: linear-gradient(180deg, #1f1f1f 0%, #121212 100%);
-            overflow-y: auto;
-            padding-bottom: 100px;
-        }
-
-        .main-content::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        .main-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .main-content::-webkit-scrollbar-thumb {
-            background: #282828;
-            border-radius: 6px;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 32px;
-            background: rgba(0,0,0,0.5);
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
-        .search-bar {
-            background: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            width: 400px;
-            font-size: 14px;
+        .nav a:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
-        .upload-btn {
-            background: #1db954;
-            border: none;
-            color: #fff;
-            padding: 10px 24px;
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            cursor: pointer;
+            padding: 60px 40px;
+            margin: 40px 0;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
             font-weight: 600;
-            transition: all 0.2s;
         }
 
-        .upload-btn:hover {
-            background: #1ed760;
-            transform: scale(1.04);
-        }
-
-        .content-section {
-            padding: 32px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 16px;
-        }
-
-        .tracks-grid {
+        .projects {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 24px;
-            margin-bottom: 48px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
         }
 
-        .track-card {
-            background: #181818;
-            padding: 16px;
-            border-radius: 8px;
+        .project-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
             cursor: pointer;
-            transition: background 0.3s;
-            position: relative;
         }
 
-        .track-card:hover {
-            background: #282828;
+        .project-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
 
-        .track-card:hover .play-btn {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .track-cover {
-            width: 100%;
-            aspect-ratio: 1;
-            background: #282828;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .track-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .play-btn {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            width: 48px;
-            height: 48px;
-            background: #1db954;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            opacity: 0;
-            transform: translateY(8px);
-            transition: all 0.3s;
-            box-shadow: 0 8px 8px rgba(0,0,0,0.3);
-            font-size: 20px;
-            color: #000;
-        }
-
-        .play-btn:hover {
-            background: #1ed760;
-            transform: scale(1.06) translateY(0);
-        }
-
-        .track-name {
-            font-weight: 600;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .track-artist {
-            font-size: 14px;
-            color: #b3b3b3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .like-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.7);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 2;
-            color: #fff;
-        }
-
-        .track-card:hover .like-btn {
-            opacity: 1;
-        }
-
-        .like-btn.liked {
-            opacity: 1;
-            color: #1db954;
-        }
-
-        .add-to-playlist-btn {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background: rgba(0,0,0,0.7);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 2;
-            color: #fff;
-        }
-
-        .track-card:hover .add-to-playlist-btn {
-            opacity: 1;
-        }
-
-        /* Player */
-        .player {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #181818;
-            border-top: 1px solid #282828;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            z-index: 100;
-        }
-
-        .player-track-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 30%;
-        }
-
-        .player-cover {
-            width: 56px;
-            height: 56px;
-            background: #282828;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .player-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .player-track-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .player-track-name {
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .player-track-artist {
-            font-size: 12px;
-            color: #b3b3b3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .player-like-btn {
-            background: transparent;
-            border: none;
-            color: #b3b3b3;
-            cursor: pointer;
-            font-size: 16px;
-            transition: color 0.2s;
-        }
-
-        .player-like-btn:hover {
-            color: #fff;
-        }
-
-        .player-like-btn.liked {
-            color: #1db954;
-        }
-
-        .player-controls {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .player-buttons {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .player-btn {
-            background: transparent;
-            border: none;
-            color: #b3b3b3;
-            cursor: pointer;
-            font-size: 16px;
-            transition: color 0.2s;
-        }
-
-        .player-btn:hover {
-            color: #fff;
-        }
-
-        .player-btn.active {
-            color: #1db954;
-        }
-
-        .play-pause-btn {
-            width: 32px;
-            height: 32px;
-            background: #fff;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-            color: #000;
-            font-size: 16px;
-        }
-
-        .play-pause-btn:hover {
-            transform: scale(1.06);
-        }
-
-        .progress-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .time {
-            font-size: 12px;
-            color: #b3b3b3;
-            min-width: 40px;
-        }
-
-        .progress {
-            flex: 1;
-            height: 4px;
-            background: #4d4d4d;
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .progress-filled {
-            height: 100%;
-            background: #fff;
-            border-radius: 2px;
-            position: relative;
-        }
-
-        .progress-filled::after {
-            content: '';
-            position: absolute;
-            right: -6px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
-            background: #fff;
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .progress:hover .progress-filled::after {
-            opacity: 1;
-        }
-
-        .player-volume {
-            width: 30%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .volume-slider {
-            width: 100px;
-            height: 4px;
-            background: #4d4d4d;
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .volume-filled {
-            height: 100%;
-            background: #fff;
-            border-radius: 2px;
-            pointer-events: none;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #282828;
-            border-radius: 8px;
-            padding: 32px;
-            width: 500px;
-            max-width: 90%;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
+        .project-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
             font-weight: 600;
         }
 
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            background: #3e3e3e;
-            border: none;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 14px;
+        .project-card p {
+            opacity: 0.9;
+            line-height: 1.6;
         }
 
-        .form-input:focus {
-            outline: 2px solid #1db954;
-        }
-
-        .form-actions {
+        .skills {
             display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
         }
 
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid #535353;
-            color: #fff;
-            padding: 12px 32px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
+        .skill-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
-        .btn-secondary:hover {
-            border-color: #fff;
-            transform: scale(1.04);
+        .skill-tag:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.1);
         }
 
-        .btn-primary {
-            background: #1db954;
-            border: none;
-            color: #fff;
-            padding: 12px 32px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: #1ed760;
-            transform: scale(1.04);
-        }
-
-        .btn-primary:disabled {
-            background: #535353;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .loading {
+        .contact {
             text-align: center;
-            padding: 48px;
-            color: #b3b3b3;
         }
 
-        .empty-state {
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .social-links a {
+            color: #fff;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.15);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .social-links a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        footer {
             text-align: center;
-            padding: 48px;
-            color: #b3b3b3;
+            padding: 40px 0;
+            opacity: 0.7;
         }
 
-        .empty-state-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 8px;
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .error-message {
-            background: #e22134;
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 16px;
-            font-size: 14px;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
-        .playlist-menu {
-            position: fixed;
-            background: #282828;
-            border-radius: 4px;
-            padding: 4px;
-            box-shadow: 0 16px 24px rgba(0,0,0,0.3);
-            z-index: 1000;
-            min-width: 160px;
-            max-height: 300px;
-            overflow-y: auto;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .playlist-menu-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-radius: 2px;
-            font-size: 14px;
+        .floating {
+            animation: floating 3s ease-in-out infinite;
         }
 
-        .playlist-menu-item:hover {
-            background: #3e3e3e;
+        @keyframes floating {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            .nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .section {
+                padding: 40px 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">Spotify</div>
-            
-            <div class="nav-item active" data-view="home">
-                <span class="nav-icon">🏠</span>
-                <span>Главная</span>
-            </div>
-            
-            <div class="nav-item" data-view="search">
-                <span class="nav-icon">🔍</span>
-                <span>Поиск</span>
-            </div>
-            
-            <div class="nav-item" data-view="library">
-                <span class="nav-icon">📚</span>
-                <span>Моя медиатека</span>
-            </div>
+        <header>
+            <h1 class="floating">Пирогов Антон</h1>
+            <p class="subtitle">Веб-разработчик</p>
+        </header>
 
-            <div class="divider"></div>
+        <nav class="nav">
+            <a href="#projects">Проекты</a>
+            <a href="#skills">Навыки</a>
+            <a href="#contact">Контакты</a>
+        </nav>
 
-            <button class="create-playlist-btn" onclick="showCreatePlaylistModal()">
-                + Создать плейлист
-            </button>
-
-            <div class="playlists" id="playlistsList"></div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content" id="mainContent">
-            <div class="top-bar">
-                <input type="text" class="search-bar" id="searchInput" placeholder="Что хотите послушать?">
-                <button class="upload-btn" onclick="showUploadModal()">Загрузить трек</button>
-            </div>
-
-            <div class="content-section" id="contentSection">
-                <div class="loading">Загрузка...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Player -->
-    <div class="player">
-        <div class="player-track-info">
-            <div class="player-cover" id="playerCover"></div>
-            <div class="player-track-details">
-                <div class="player-track-name" id="playerTrackName">Выберите трек</div>
-                <div class="player-track-artist" id="playerTrackArtist"></div>
-            </div>
-            <button class="player-like-btn" id="playerLikeBtn" onclick="toggleLikeCurrentTrack()">
-                ♡
-            </button>
-        </div>
-
-        <div class="player-controls">
-            <div class="player-buttons">
-                <button class="player-btn" id="shuffleBtn" onclick="toggleShuffle()">🔀</button>
-                <button class="player-btn" onclick="previousTrack()">⏮</button>
-                <button class="play-pause-btn" id="playPauseBtn" onclick="togglePlayPause()">
-                    ▶
-                </button>
-                <button class="player-btn" onclick="nextTrack()">⏭</button>
-                <button class="player-btn" id="repeatBtn" onclick="toggleRepeat()">🔁</button>
-            </div>
-            <div class="progress-bar">
-                <span class="time" id="currentTime">0:00</span>
-                <div class="progress" id="progressBar">
-                    <div class="progress-filled" id="progressFilled" style="width: 0%"></div>
+        <section id="projects" class="section">
+            <h2>Проекты</h2>
+            <div class="projects">
+                <div class="project-card">
+                    <h3>Веб и сервисы</h3>
+                    <p>Веб-приложение с использованием api из разных источников. Подробнее в репозитории</p>
                 </div>
-                <span class="time" id="duration">0:00</span>
             </div>
-        </div>
+        </section>
 
-        <div class="player-volume">
-            <button class="player-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
-            <div class="volume-slider" id="volumeSlider">
-                <div class="volume-filled" id="volumeFilled" style="width: 100%"></div>
+        <section id="skills" class="section">
+            <h2>Навыки</h2>
+            <div class="skills">
+                <span class="skill-tag">JavaScript</span>
+                <span class="skill-tag">HTML/CSS</span>
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">Git</span>
             </div>
-        </div>
+        </section>
+
+        <section id="contact" class="section contact">
+            <h2>Контакты</h2>
+            <p>Свяжитесь со мной для сотрудничества или вопросов</p>
+            <div class="social-links">
+                <a href="https://github.com/Triksoni" target="_blank" title="GitHub">GH</a>
+                <a href="mailto:anton.v.pirogov@gmail.com" title="Email">@</a>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026  С уважением, Пирогов Антон.</p>
+        </footer>
     </div>
-
-    <!-- Create Playlist Modal -->
-    <div class="modal" id="createPlaylistModal">
-        <div class="modal-content">
-            <div class="modal-title">Создать плейлист</div>
-            <div class="form-group">
-                <label class="form-label">Название</label>
-                <input type="text" class="form-input" id="playlistNameInput" placeholder="Мой плейлист #1">
-            </div>
-            <div class="form-actions">
-                <button class="btn-secondary" onclick="hideCreatePlaylistModal()">Отмена</button>
-                <button class="btn-primary" onclick="createPlaylist()">Создать</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Upload Track Modal -->
-    <div class="modal" id="uploadModal">
-        <div class="modal-content">
-            <div class="modal-title">Загрузить трек</div>
-            <div style="background: #1db954; color: #000; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; font-weight: 600;">
-                ⚠️ Ваш трек будет доступен всем пользователям
-            </div>
-            <div id="uploadError"></div>
-            <div class="form-group">
-                <label class="form-label">Аудио файл *</label>
-                <input type="file" class="form-input" id="audioFileInput" accept="audio/*">
-                <p style="font-size: 12px; color: #1db954; margin-top: 4px;">✨ Автоматическое сжатие: mono, 22kHz для экономии места</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Обложка (опционально, макс. 500 KB)</label>
-                <input type="file" class="form-input" id="coverFileInput" accept="image/*">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Название *</label>
-                <input type="text" class="form-input" id="trackNameInput" placeholder="Название трека">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Исполнитель *</label>
-                <input type="text" class="form-input" id="artistNameInput" placeholder="Имя исполнителя">
-            </div>
-            <div class="form-actions">
-                <button class="btn-secondary" onclick="hideUploadModal()">Отмена</button>
-                <button class="btn-primary" id="uploadBtn" onclick="uploadTrack()">Загрузить</button>
-            </div>
-        </div>
-    </div>
-
-    <audio id="audioPlayer"></audio>
 
     <script>
-        // Storage API для GitHub Pages
-        window.storage = {
-            async get(key, isShared = false) {
-                try {
-                    const prefix = isShared ? 'shared_' : 'local_';
-                    const value = localStorage.getItem(prefix + key);
-                    return value ? { value } : null;
-                } catch (e) {
-                    console.error('Storage get error:', e);
-                    return null;
-                }
-            },
-            
-            async set(key, value, isShared = false) {
-                try {
-                    const prefix = isShared ? 'shared_' : 'local_';
-                    localStorage.setItem(prefix + key, value);
-                    return true;
-                } catch (e) {
-                    console.error('Storage set error:', e);
-                    return false;
-                }
-            },
-            
-            async remove(key, isShared = false) {
-                try {
-                    const prefix = isShared ? 'shared_' : 'local_';
-                    localStorage.removeItem(prefix + key);
-                    return true;
-                } catch (e) {
-                    console.error('Storage remove error:', e);
-                    return false;
-                }
-            }
-        };
-
-        // State
-        let tracks = [];
-        let userTracks = [];
-        let playlists = [];
-        let likedTracks = new Set();
-        let currentTrack = null;
-        let isPlaying = false;
-        let isShuffle = false;
-        let repeatMode = 0;
-        let currentView = 'home';
-        let currentPlaylist = null;
-        let currentVolume = 1;
-
-        const audio = document.getElementById('audioPlayer');
-        const JAMENDO_CLIENT_ID = 'b6747d04';
-
-        // Initialize
-        async function init() {
-            await loadData();
-            await loadTracks();
-            renderPlaylists();
-            setupAudioListeners();
-            setupSearch();
-            setupVolumeControl();
-            setupProgressControl();
-        }
-
-        // Storage functions
-        async function loadData() {
-            try {
-                const likesData = await window.storage.get('liked_tracks');
-                if (likesData) {
-                    likedTracks = new Set(JSON.parse(likesData.value));
-                }
-            } catch (e) {
-                likedTracks = new Set();
-            }
-
-            try {
-                const playlistsData = await window.storage.get('playlists');
-                if (playlistsData) {
-                    playlists = JSON.parse(playlistsData.value);
-                }
-            } catch (e) {
-                playlists = [];
-            }
-
-            // Load shared tracks from all users
-            try {
-                const sharedTrackIds = await window.storage.get('shared_track_ids', true);
-                if (sharedTrackIds) {
-                    const ids = JSON.parse(sharedTrackIds.value);
-                    userTracks = [];
-                    
-                    // Load each shared track
-                    for (const id of ids) {
-                        try {
-                            const trackData = await window.storage.get(id, true);
-                            if (trackData) {
-                                userTracks.push(JSON.parse(trackData.value));
-                            }
-                        } catch (e) {
-                            console.error('Error loading track:', id, e);
-                        }
-                    }
-                }
-            } catch (e) {
-                userTracks = [];
-            }
-        }
-
-        async function saveData() {
-            try {
-                await window.storage.set('liked_tracks', JSON.stringify([...likedTracks]));
-                await window.storage.set('playlists', JSON.stringify(playlists));
-                // Note: user tracks are now saved individually in shared storage when uploaded
-            } catch (e) {
-                console.error('Save error:', e);
-            }
-        }
-
-        // Load tracks from Jamendo
-        async function loadTracks(query = '') {
-            // Try to load from cache first
-            if (!query) {
-                try {
-                    const cachedTracks = await window.storage.get('jamendo_tracks');
-                    if (cachedTracks) {
-                        const cached = JSON.parse(cachedTracks.value);
-                        if (cached.timestamp && (Date.now() - cached.timestamp < 24 * 60 * 60 * 1000)) {
-                            tracks = cached.tracks;
-                            renderHomeView();
-                            return;
-                        }
-                    }
-                } catch (e) {
-                    // No cache
-                }
-            }
-
-            // Try to fetch from Jamendo (will likely fail in this environment)
-            try {
-                const url = query 
-                    ? `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=30&search=${encodeURIComponent(query)}&audioformat=mp32`
-                    : `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=30&order=popularity_total&audioformat=mp32`;
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (!data.results || data.results.length === 0) {
-                    throw new Error('No tracks found');
-                }
-                
-                tracks = data.results.map(track => ({
-                    id: 'jamendo_' + track.id,
-                    name: track.name,
-                    artist: track.artist_name,
-                    cover: track.image || track.album_image || 'https://via.placeholder.com/300x300/282828/1db954?text=♪',
-                    audio: track.audio,
-                    duration: track.duration
-                }));
-
-                if (!query) {
-                    try {
-                        await window.storage.set('jamendo_tracks', JSON.stringify({
-                            tracks: tracks,
-                            timestamp: Date.now()
-                        }));
-                    } catch (e) {
-                        console.warn('Failed to cache tracks:', e);
-                    }
-                }
-
-                renderHomeView();
-            } catch (error) {
-                console.error('Jamendo API unavailable:', error.message);
-                
-                // Jamendo API не работает - используем только загруженные треки
-                tracks = [];
-                renderHomeView();
-            }
-        }
-
-        // Render functions
-        function renderHomeView() {
-            const allTracks = [...userTracks, ...tracks];
-            
-            if (allTracks.length === 0) {
-                document.getElementById('contentSection').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-title">🎵 Добро пожаловать в Spotify!</div>
-                        <p style="margin-top: 16px; font-size: 16px; color: #b3b3b3;">Загрузите первый трек, чтобы начать</p>
-                        <button onclick="showUploadModal()" style="
-                            margin-top: 24px;
-                            background: #1db954;
-                            border: none;
-                            color: #fff;
-                            padding: 14px 48px;
-                            border-radius: 24px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            font-size: 16px;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='#1ed760'; this.style.transform='scale(1.04)'" onmouseout="this.style.background='#1db954'; this.style.transform='scale(1)'">
-                            ⬆️ Загрузить трек
-                        </button>
-                        <p style="margin-top: 24px; font-size: 14px; color: #1db954; font-weight: 600;">
-                            ✨ Ваши треки будут доступны всем пользователям
-                        </p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const content = `
-                <div class="section-title">🔥 Все треки (${allTracks.length})</div>
-                <div class="tracks-grid">
-                    ${allTracks.map(track => createTrackCard(track)).join('')}
-                </div>
-            `;
-            document.getElementById('contentSection').innerHTML = content;
-        }
-
-        function renderLibraryView() {
-            const allTracks = [...userTracks, ...tracks];
-            const likedTracksArray = allTracks.filter(t => likedTracks.has(t.id));
-            
-            const content = `
-                <div class="section-title">Понравившиеся треки</div>
-                ${likedTracksArray.length > 0 ? `
-                    <div class="tracks-grid">
-                        ${likedTracksArray.map(track => createTrackCard(track)).join('')}
-                    </div>
-                ` : '<div class="empty-state"><div class="empty-state-title">Нет понравившихся треков</div><p>Треки, которые вам нравятся, появятся здесь</p></div>'}
-            `;
-            document.getElementById('contentSection').innerHTML = content;
-        }
-
-        function renderPlaylistView(playlistId) {
-            const playlist = playlists.find(p => p.id === playlistId);
-            if (!playlist) return;
-
-            const allTracks = [...userTracks, ...tracks];
-            const playlistTracks = playlist.tracks.map(id => allTracks.find(t => t.id === id)).filter(Boolean);
-
-            const content = `
-                <div class="section-title">${playlist.name}</div>
-                ${playlistTracks.length > 0 ? `
-                    <div class="tracks-grid">
-                        ${playlistTracks.map(track => createTrackCard(track, true, playlistId)).join('')}
-                    </div>
-                ` : '<div class="empty-state"><div class="empty-state-title">Плейлист пуст</div><p>Добавьте треки в плейлист</p></div>'}
-            `;
-            document.getElementById('contentSection').innerHTML = content;
-        }
-
-        function createTrackCard(track, showRemove = false, playlistId = null) {
-            const isLiked = likedTracks.has(track.id);
-            const hasPlaylists = playlists.length > 0;
-            
-            return `
-                <div class="track-card" onclick="playTrack('${track.id}')">
-                    <div class="track-cover">
-                        <img src="${track.cover}" alt="${track.name}" onerror="this.src='https://via.placeholder.com/300x300/282828/1db954?text=♪'">
-                        ${showRemove ? 
-                            `<button class="like-btn" onclick="event.stopPropagation(); removeFromPlaylist('${playlistId}', '${track.id}')" style="opacity: 1">✕</button>` :
-                            `<button class="like-btn ${isLiked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLike('${track.id}')">♥</button>`
-                        }
-                        ${!showRemove && hasPlaylists ? 
-                            `<button class="add-to-playlist-btn" onclick="event.stopPropagation(); showAddToPlaylistMenu('${track.id}', event)" title="Добавить в плейлист">➕</button>` : 
-                            ''
-                        }
-                        <button class="play-btn" onclick="event.stopPropagation(); playTrack('${track.id}')">▶</button>
-                    </div>
-                    <div class="track-name">${escapeHtml(track.name)}</div>
-                    <div class="track-artist">${escapeHtml(track.artist)}</div>
-                </div>
-            `;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function renderPlaylists() {
-            const html = playlists.map(p => 
-                `<div class="playlist-item" onclick="showPlaylist('${p.id}')">${escapeHtml(p.name)}</div>`
-            ).join('');
-            document.getElementById('playlistsList').innerHTML = html;
-        }
-
-        // Player functions
-        function playTrack(trackId) {
-            const allTracks = [...userTracks, ...tracks];
-            const track = allTracks.find(t => t.id === trackId);
-            if (!track || !track.audio) return;
-
-            currentTrack = track;
-            audio.src = track.audio;
-            audio.play().catch(e => {
-                console.error('Play error:', e);
-                alert('Ошибка воспроизведения трека');
-            });
-            isPlaying = true;
-
-            document.getElementById('playerTrackName').textContent = track.name;
-            document.getElementById('playerTrackArtist').textContent = track.artist;
-            
-            const coverEl = document.getElementById('playerCover');
-            coverEl.innerHTML = `<img src="${track.cover}" alt="${track.name}" onerror="this.src='https://via.placeholder.com/300x300/282828/1db954?text=♪'">`;
-            
-            document.getElementById('playPauseBtn').textContent = '⏸';
-            
-            updatePlayerLikeButton();
-        }
-
-        function togglePlayPause() {
-            if (!currentTrack) return;
-            
-            if (isPlaying) {
-                audio.pause();
-                document.getElementById('playPauseBtn').textContent = '▶';
-            } else {
-                audio.play().catch(e => console.error('Play error:', e));
-                document.getElementById('playPauseBtn').textContent = '⏸';
-            }
-            isPlaying = !isPlaying;
-        }
-
-        function nextTrack() {
-            if (!currentTrack) return;
-            
-            const allTracks = [...userTracks, ...tracks];
-            let currentIndex = allTracks.findIndex(t => t.id === currentTrack.id);
-            
-            if (isShuffle) {
-                currentIndex = Math.floor(Math.random() * allTracks.length);
-            } else {
-                currentIndex = (currentIndex + 1) % allTracks.length;
-            }
-            
-            if (allTracks[currentIndex]) {
-                playTrack(allTracks[currentIndex].id);
-            }
-        }
-
-        function previousTrack() {
-            if (!currentTrack) return;
-            
-            const allTracks = [...userTracks, ...tracks];
-            let currentIndex = allTracks.findIndex(t => t.id === currentTrack.id);
-            currentIndex = (currentIndex - 1 + allTracks.length) % allTracks.length;
-            
-            if (allTracks[currentIndex]) {
-                playTrack(allTracks[currentIndex].id);
-            }
-        }
-
-        function toggleShuffle() {
-            isShuffle = !isShuffle;
-            document.getElementById('shuffleBtn').classList.toggle('active', isShuffle);
-        }
-
-        function toggleRepeat() {
-            repeatMode = (repeatMode + 1) % 3;
-            const btn = document.getElementById('repeatBtn');
-            btn.classList.toggle('active', repeatMode > 0);
-            if (repeatMode === 2) {
-                btn.textContent = '🔂';
-            } else {
-                btn.textContent = '🔁';
-            }
-        }
-
-        function toggleMute() {
-            audio.muted = !audio.muted;
-            const btn = document.getElementById('muteBtn');
-            btn.textContent = audio.muted ? '🔇' : '🔊';
-        }
-
-        function setupProgressControl() {
-            const progressBar = document.getElementById('progressBar');
-            progressBar.addEventListener('click', (e) => {
-                if (!currentTrack || !audio.duration) return;
-                const rect = progressBar.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                audio.currentTime = percent * audio.duration;
-            });
-        }
-
-        function setupVolumeControl() {
-            const volumeSlider = document.getElementById('volumeSlider');
-            
-            volumeSlider.addEventListener('click', (e) => {
-                const rect = volumeSlider.getBoundingClientRect();
-                const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                audio.volume = percent;
-                currentVolume = percent;
-                document.getElementById('volumeFilled').style.width = (percent * 100) + '%';
-                
-                const muteBtn = document.getElementById('muteBtn');
-                if (percent === 0) {
-                    muteBtn.textContent = '🔇';
-                } else if (percent < 0.5) {
-                    muteBtn.textContent = '🔉';
-                } else {
-                    muteBtn.textContent = '🔊';
-                }
-            });
-        }
-
-        function setupAudioListeners() {
-            audio.addEventListener('timeupdate', () => {
-                if (!audio.duration) return;
-                const percent = (audio.currentTime / audio.duration) * 100;
-                document.getElementById('progressFilled').style.width = percent + '%';
-                document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
-                document.getElementById('duration').textContent = formatTime(audio.duration);
-            });
-
-            audio.addEventListener('ended', () => {
-                if (repeatMode === 2) {
-                    audio.currentTime = 0;
-                    audio.play();
-                } else if (repeatMode === 1) {
-                    nextTrack();
-                } else {
-                    isPlaying = false;
-                    document.getElementById('playPauseBtn').textContent = '▶';
-                }
-            });
-
-            audio.addEventListener('error', (e) => {
-                console.error('Audio error:', e);
-                isPlaying = false;
-                document.getElementById('playPauseBtn').textContent = '▶';
-            });
-        }
-
-        function formatTime(seconds) {
-            if (!seconds || isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // Like functions
-        function toggleLike(trackId) {
-            if (likedTracks.has(trackId)) {
-                likedTracks.delete(trackId);
-            } else {
-                likedTracks.add(trackId);
-            }
-            saveData();
-            
-            // Update all like buttons for this track
-            const allLikeBtns = document.querySelectorAll('.like-btn');
-            allLikeBtns.forEach(btn => {
-                const card = btn.closest('.track-card');
-                if (card) {
-                    const onclick = card.getAttribute('onclick');
-                    if (onclick && onclick.includes(trackId)) {
-                        btn.classList.toggle('liked', likedTracks.has(trackId));
-                    }
-                }
-            });
-
-            updatePlayerLikeButton();
-        }
-
-        function toggleLikeCurrentTrack() {
-            if (!currentTrack) return;
-            toggleLike(currentTrack.id);
-        }
-
-        function updatePlayerLikeButton() {
-            if (!currentTrack) return;
-            const btn = document.getElementById('playerLikeBtn');
-            const isLiked = likedTracks.has(currentTrack.id);
-            btn.classList.toggle('liked', isLiked);
-            btn.textContent = isLiked ? '♥' : '♡';
-        }
-
-        // Playlist functions
-        function showCreatePlaylistModal() {
-            document.getElementById('createPlaylistModal').classList.add('show');
-            document.getElementById('playlistNameInput').value = '';
-            setTimeout(() => document.getElementById('playlistNameInput').focus(), 100);
-        }
-
-        function hideCreatePlaylistModal() {
-            document.getElementById('createPlaylistModal').classList.remove('show');
-        }
-
-        function createPlaylist() {
-            const name = document.getElementById('playlistNameInput').value.trim();
-            if (!name) {
-                alert('Введите название плейлиста');
-                return;
-            }
-
-            const playlist = {
-                id: 'playlist_' + Date.now(),
-                name: name,
-                tracks: []
-            };
-
-            playlists.push(playlist);
-            saveData();
-            renderPlaylists();
-            hideCreatePlaylistModal();
-        }
-
-        function showPlaylist(playlistId) {
-            currentPlaylist = playlistId;
-            currentView = 'playlist';
-            renderPlaylistView(playlistId);
-            
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        }
-
-        function showAddToPlaylistMenu(trackId, event) {
-            // Remove any existing menu
-            const existingMenu = document.querySelector('.playlist-menu');
-            if (existingMenu) existingMenu.remove();
-            
-            const menu = document.createElement('div');
-            menu.className = 'playlist-menu';
-            menu.style.cssText = `
-                position: fixed;
-                background: #282828;
-                border-radius: 4px;
-                padding: 4px;
-                box-shadow: 0 16px 24px rgba(0,0,0,0.3);
-                z-index: 1000;
-                min-width: 160px;
-                max-height: 300px;
-                overflow-y: auto;
-            `;
-            
-            if (playlists.length === 0) {
-                menu.innerHTML = '<div style="padding: 12px 16px; font-size: 14px; color: #b3b3b3;">Нет плейлистов</div>';
-            } else {
-                menu.innerHTML = playlists.map(p => `
-                    <div style="padding: 12px 16px; cursor: pointer; border-radius: 2px; font-size: 14px;" 
-                         class="playlist-menu-item"
-                         data-playlist-id="${p.id}"
-                         data-track-id="${trackId}">
-                        ${escapeHtml(p.name)}
-                    </div>
-                `).join('');
-            }
-            
-            const rect = event.target.getBoundingClientRect();
-            menu.style.left = rect.left + 'px';
-            menu.style.top = (rect.bottom + 4) + 'px';
-            
-            document.body.appendChild(menu);
-            
-            // Add hover effects and click handlers
-            menu.querySelectorAll('.playlist-menu-item').forEach(item => {
-                item.addEventListener('mouseenter', () => {
-                    item.style.background = '#3e3e3e';
-                });
-                item.addEventListener('mouseleave', () => {
-                    item.style.background = 'transparent';
-                });
-                item.addEventListener('click', () => {
-                    const playlistId = item.getAttribute('data-playlist-id');
-                    const trackId = item.getAttribute('data-track-id');
-                    addToPlaylist(playlistId, trackId);
-                    menu.remove();
-                });
-            });
-            
-            // Close menu when clicking outside
-            setTimeout(() => {
-                const closeMenu = (e) => {
-                    if (!menu.contains(e.target)) {
-                        menu.remove();
-                        document.removeEventListener('click', closeMenu);
-                    }
-                };
-                document.addEventListener('click', closeMenu);
-            }, 100);
-        }
-
-        function addToPlaylist(playlistId, trackId) {
-            const playlist = playlists.find(p => p.id === playlistId);
-            if (!playlist) return;
-            
-            if (!playlist.tracks.includes(trackId)) {
-                playlist.tracks.push(trackId);
-                saveData();
-            }
-        }
-
-        function removeFromPlaylist(playlistId, trackId) {
-            const playlist = playlists.find(p => p.id === playlistId);
-            if (!playlist) return;
-            
-            playlist.tracks = playlist.tracks.filter(id => id !== trackId);
-            saveData();
-            renderPlaylistView(playlistId);
-        }
-
-        // Upload functions
-        function showUploadModal() {
-            document.getElementById('uploadModal').classList.add('show');
-            document.getElementById('audioFileInput').value = '';
-            document.getElementById('coverFileInput').value = '';
-            document.getElementById('trackNameInput').value = '';
-            document.getElementById('artistNameInput').value = '';
-            document.getElementById('uploadError').innerHTML = '';
-        }
-
-        function hideUploadModal() {
-            document.getElementById('uploadModal').classList.remove('show');
-        }
-
-        async function uploadTrack() {
-            const audioFile = document.getElementById('audioFileInput').files[0];
-            const coverFile = document.getElementById('coverFileInput').files[0];
-            const name = document.getElementById('trackNameInput').value.trim();
-            const artist = document.getElementById('artistNameInput').value.trim();
-
-            const errorEl = document.getElementById('uploadError');
-            errorEl.innerHTML = '';
-
-            if (!audioFile) {
-                errorEl.innerHTML = '<div class="error-message">Выберите аудио файл</div>';
-                return;
-            }
-
-            if (!name) {
-                errorEl.innerHTML = '<div class="error-message">Введите название трека</div>';
-                return;
-            }
-
-            if (!artist) {
-                errorEl.innerHTML = '<div class="error-message">Введите имя исполнителя</div>';
-                return;
-            }
-
-            // Check file size before upload (max ~3.5MB to leave room for base64 encoding overhead)
-            const maxSize = 3.5 * 1024 * 1024;
-            if (audioFile.size > maxSize) {
-                const sizeMB = (audioFile.size / (1024 * 1024)).toFixed(2);
-                errorEl.innerHTML = `
-                    <div class="error-message">
-                        Файл слишком большой: ${sizeMB} MB (макс. 3.5 MB)<br><br>
-                        <strong>💡 Как уменьшить:</strong><br>
-                        • Конвертируйте в MP3 с битрейтом 64-96 kbps<br>
-                        • Обрежьте длину трека (оптимально 2-3 минуты)<br>
-                        • Используйте онлайн-конвертеры (например, online-convert.com)<br><br>
-                        <strong>Пример:</strong> MP3 96kbps, 3 минуты ≈ 2.1 MB ✅
-                    </div>
-                `;
-                return;
-            }
-
-            const uploadBtn = document.getElementById('uploadBtn');
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Загрузка...';
-
-            try {
-                // Convert audio to base64
-                const audioBase64 = await fileToBase64(audioFile);
-                
-                // Check final size (base64 adds ~33% overhead)
-                const finalSize = audioBase64.length * 0.75; // approximate decoded size
-                if (finalSize > 4.8 * 1024 * 1024) {
-                    throw new Error('FINAL_TOO_LARGE');
-                }
-                
-                // Default cover
-                let coverBase64 = 'https://via.placeholder.com/300x300/282828/1db954?text=' + encodeURIComponent('♪');
-                
-                // Convert cover to base64 if provided
-                if (coverFile) {
-                    if (coverFile.size > 300000) {
-                        errorEl.innerHTML = '<div class="error-message">Обложка слишком большая. Максимум 300 KB</div>';
-                        uploadBtn.disabled = false;
-                        uploadBtn.textContent = 'Загрузить';
-                        return;
-                    }
-                    coverBase64 = await fileToBase64(coverFile);
-                }
-
-                const track = {
-                    id: 'user_' + Date.now(),
-                    name: name,
-                    artist: artist,
-                    cover: coverBase64,
-                    audio: audioBase64,
-                    duration: 0
-                };
-
-                const trackJson = JSON.stringify(track);
-                const trackSize = new Blob([trackJson]).size;
-                
-                if (trackSize > 5 * 1024 * 1024) {
-                    throw new Error('STORAGE_LIMIT');
-                }
-
-                // Try to save to shared storage
-                try {
-                    await window.storage.set(track.id, trackJson, true);
-                } catch (storageError) {
-                    console.error('Storage error:', storageError);
-                    throw new Error('STORAGE_ERROR');
-                }
-                
-                // Also add to local userTracks array
-                userTracks.push(track);
-                
-                // Update shared tracks list
-                let sharedTrackIds = [];
-                try {
-                    const sharedList = await window.storage.get('shared_track_ids', true);
-                    if (sharedList) {
-                        sharedTrackIds = JSON.parse(sharedList.value);
-                    }
-                } catch (e) {
-                    sharedTrackIds = [];
-                }
-                
-                if (!sharedTrackIds.includes(track.id)) {
-                    sharedTrackIds.push(track.id);
-                    await window.storage.set('shared_track_ids', JSON.stringify(sharedTrackIds), true);
-                }
-                
-                hideUploadModal();
-                
-                // Refresh current view
-                if (currentView === 'home') {
-                    renderHomeView();
-                } else if (currentView === 'library') {
-                    renderLibraryView();
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                
-                if (error.message === 'FINAL_TOO_LARGE' || error.message === 'STORAGE_LIMIT') {
-                    errorEl.innerHTML = `
-                        <div class="error-message">
-                            Файл превышает лимит хранилища (5 MB) 😢<br><br>
-                            <strong>Решение:</strong><br>
-                            1. Сконвертируйте файл в MP3 64-96 kbps<br>
-                            2. Сократите длительность до 2-3 минут<br>
-                            3. Используйте моно звук вместо стерео<br><br>
-                            📊 <strong>Примеры размеров:</strong><br>
-                            • MP3 64kbps, 3 мин, моно = ~1.4 MB ✅<br>
-                            • MP3 96kbps, 3 мин, стерео = ~2.1 MB ✅<br>
-                            • MP3 128kbps, 4 мин, стерео = ~3.8 MB ⚠️
-                        </div>
-                    `;
-                } else if (error.message === 'STORAGE_ERROR') {
-                    errorEl.innerHTML = '<div class="error-message">Ошибка сохранения в хранилище. Попробуйте ещё раз или используйте файл меньшего размера.</div>';
-                } else {
-                    errorEl.innerHTML = '<div class="error-message">Ошибка загрузки. Попробуйте файл меньшего размера.</div>';
-                }
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Загрузить';
-            }
-        }
-
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const view = item.getAttribute('data-view');
-                currentView = view;
-                currentPlaylist = null;
-                
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-
-                if (view === 'home') {
-                    renderHomeView();
-                } else if (view === 'search') {
-                    renderHomeView();
-                    setTimeout(() => document.getElementById('searchInput').focus(), 100);
-                } else if (view === 'library') {
-                    renderLibraryView();
+        // Плавная прокрутка
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
                 }
             });
         });
 
-        // Search
-        function setupSearch() {
-            let searchTimeout;
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                clearTimeout(searchTimeout);
-                const query = e.target.value.trim().toLowerCase();
-                
-                searchTimeout = setTimeout(() => {
-                    if (query) {
-                        // Search in user tracks only
-                        const allTracks = [...userTracks, ...tracks];
-                        const filtered = allTracks.filter(track => 
-                            track.name.toLowerCase().includes(query) || 
-                            track.artist.toLowerCase().includes(query)
-                        );
-                        
-                        if (filtered.length > 0) {
-                            const content = `
-                                <div class="section-title">🔍 Результаты поиска (${filtered.length})</div>
-                                <div class="tracks-grid">
-                                    ${filtered.map(track => createTrackCard(track)).join('')}
-                                </div>
-                            `;
-                            document.getElementById('contentSection').innerHTML = content;
-                        } else {
-                            document.getElementById('contentSection').innerHTML = `
-                                <div class="empty-state">
-                                    <div class="empty-state-title">Ничего не найдено</div>
-                                    <p>Попробуйте другой запрос</p>
-                                </div>
-                            `;
-                        }
-                    } else {
-                        renderHomeView();
-                    }
-                }, 300);
+        // Анимация появления при скролле
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
             });
-        }
+        }, { threshold: 0.1 });
 
-        // Start app
-        init();
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
     </script>
 </body>
 </html>
