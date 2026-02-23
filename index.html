@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SBELOVED</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Playfair+Display:ital,wght@1,900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
@@ -13,10 +13,10 @@
   --black: #050505;
   --white: #f5f5f0;
   --silver: #aaa9a5;
+  --pad: 20px;
 }
 
 html { scroll-behavior: smooth; }
-
 html, body { scroll-behavior: auto; }
 
 body {
@@ -24,7 +24,9 @@ body {
   color: var(--white);
   font-family: 'Space Mono', monospace;
   overflow-x: hidden;
-  cursor: none;
+  /* убран cursor: none для мобильных */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
 }
 
 body.loading {
@@ -33,6 +35,18 @@ body.loading {
   position: fixed;
   width: 100%;
   top: 0;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px;
 }
 
 /* ── LOADER ── */
@@ -45,15 +59,15 @@ body.loading {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
   animation: loaderFade 0.6s 2s forwards ease-in-out;
   pointer-events: none;
 }
 
 .loader-text {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(40px, 10vw, 120px);
-  letter-spacing: 0.15em;
+  font-size: clamp(44px, 18vw, 96px);
+  letter-spacing: 0.12em;
   color: var(--white);
   overflow: hidden;
 }
@@ -73,7 +87,7 @@ body.loading {
 .loader-text span:nth-child(8)  { animation-delay: 0.40s; }
 
 .loader-bar-wrap {
-  width: 200px;
+  width: 160px;
   height: 1px;
   background: rgba(255,255,255,0.1);
   overflow: hidden;
@@ -90,37 +104,19 @@ body.loading {
   from { transform: translateY(100%); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
-
 @keyframes loaderBar {
   from { width: 0%; }
   to   { width: 100%; }
 }
-
 @keyframes loaderFade {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden; }
 }
 
-/* ── CURSOR ── */
-.cur { position: fixed; pointer-events: none; z-index: 9999; mix-blend-mode: difference; }
-.cur-dot { width: 10px; height: 10px; background: var(--white); border-radius: 50%; transform: translate(-50%,-50%); transition: transform 0.1s; }
-.cur-ring { width: 44px; height: 44px; border: 1px solid var(--white); border-radius: 50%; transform: translate(-50%,-50%); transition: left 0.15s ease, top 0.15s ease, width 0.3s, height 0.3s, opacity 0.3s; }
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 128px;
-}
-
 /* ── HERO ── */
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -145,10 +141,10 @@ body::before {
 
 .swag-giant {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(130px, 26vw, 420px);
+  font-size: clamp(80px, 38vw, 260px);
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255,255,255,0.055);
-  letter-spacing: 0.04em;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.055);
+  letter-spacing: 0.03em;
   white-space: nowrap;
   animation: swagBreath 6s ease-in-out infinite;
   user-select: none;
@@ -167,34 +163,82 @@ body::before {
   background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
 }
 
+/* ── NAV ── */
 nav {
   position: relative;
   z-index: 20;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 36px 64px;
+  padding: 24px var(--pad);
 }
 
 .logo {
   font-family: 'Anton', sans-serif;
-  font-size: 20px;
-  letter-spacing: 0.35em;
+  font-size: 18px;
+  letter-spacing: 0.3em;
   color: var(--white);
   text-decoration: none;
 }
 
-.nav-r { display: flex; align-items: center; gap: 48px; }
-.nav-r a {
-  font-size: 10px;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: var(--silver);
-  text-decoration: none;
-  transition: color 0.25s;
+/* Гамбургер */
+.burger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  z-index: 30;
+  padding: 8px;
+  margin-right: -8px;
+  background: none;
+  border: none;
 }
-.nav-r a:hover { color: var(--white); }
 
+.burger span {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--white);
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.burger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.burger.open span:nth-child(2) { opacity: 0; }
+.burger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Мобильное меню */
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: var(--black);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.mobile-menu.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.mobile-menu a {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(40px, 14vw, 72px);
+  letter-spacing: 0.08em;
+  color: var(--white);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mobile-menu a:active { color: var(--silver); }
+
+/* ── HERO BODY ── */
 .hero-body {
   position: relative;
   z-index: 10;
@@ -202,118 +246,110 @@ nav {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 0 64px 80px;
+  padding: 0 var(--pad) 64px;
 }
 
 .eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.5em;
+  font-size: 9px;
+  letter-spacing: 0.45em;
   text-transform: uppercase;
   color: var(--silver);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   opacity: 0;
   animation: riseIn 1s 2.4s forwards;
 }
 
 .hero-name {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(80px, 14vw, 230px);
+  font-size: clamp(72px, 22vw, 180px);
   line-height: 0.88;
   letter-spacing: 0.01em;
   opacity: 0;
   animation: riseIn 1s 2.6s forwards;
 }
 
-/* ── ИСПРАВЛЕНИЕ: убрали .glitch с hero-name, сделали отдельный эффект ── */
 .hero-name .outline {
   -webkit-text-stroke: 2px var(--white);
   color: transparent;
   display: block;
-  transition: letter-spacing 0.4s cubic-bezier(0.77,0,0.175,1);
 }
 .hero-name .solid {
   color: var(--white);
   display: block;
-  transition: letter-spacing 0.4s cubic-bezier(0.77,0,0.175,1);
 }
-.hero-name:hover .outline { letter-spacing: 0.05em; }
-.hero-name:hover .solid   { letter-spacing: 0.05em; }
 
 .hero-tagline {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: clamp(18px, 2.5vw, 30px);
+  font-size: clamp(16px, 4.5vw, 24px);
   color: var(--silver);
-  margin-top: 32px;
-  letter-spacing: 0.03em;
+  margin-top: 24px;
+  letter-spacing: 0.02em;
   opacity: 0;
   animation: riseIn 1s 2.85s forwards;
-  max-width: 560px;
   line-height: 1.4;
 }
 
 .hero-cta {
-  margin-top: 56px;
+  margin-top: 40px;
   display: flex;
-  align-items: center;
-  gap: 32px;
+  flex-direction: column;
+  gap: 16px;
   opacity: 0;
   animation: riseIn 1s 3.05s forwards;
 }
 
 .btn {
   font-family: 'Anton', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.35em;
   text-transform: uppercase;
   text-decoration: none;
   display: inline-block;
-  padding: 18px 52px;
-  transition: all 0.35s;
+  padding: 18px 0;
+  text-align: center;
+  transition: all 0.3s;
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
-.btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-101%);
-  transition: transform 0.4s cubic-bezier(0.77,0,0.175,1);
+.btn-w {
+  background: var(--white);
+  color: var(--black);
 }
 
-.btn-w { background: var(--white); color: var(--black); }
-.btn-w::before { background: var(--black); }
-.btn-w:hover { color: var(--white); }
-.btn-w:hover::before { transform: translateX(0); }
-.btn-w span { position: relative; z-index: 1; }
+.btn-w:active {
+  background: var(--silver);
+}
 
 .btn-ghost-line {
   color: var(--silver);
-  border: 1px solid rgba(170,169,165,0.3);
+  border: 1px solid rgba(170,169,165,0.35);
   font-size: 10px;
   letter-spacing: 0.3em;
 }
-.btn-ghost-line:hover { color: var(--white); border-color: var(--white); }
+.btn-ghost-line:active { color: var(--white); border-color: var(--white); }
 
+/* ── HERO BOTTOM ── */
 .hero-bottom {
   position: relative;
   z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 64px;
+  padding: 16px var(--pad);
   border-top: 1px solid rgba(255,255,255,0.07);
-  font-size: 10px;
-  letter-spacing: 0.3em;
+  font-size: 9px;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--silver);
   opacity: 0;
   animation: riseIn 1s 3.2s forwards;
 }
 
-.scroll-bar { display: flex; align-items: center; gap: 16px; }
-.scroll-bar .line { width: 60px; height: 1px; background: var(--silver); position: relative; overflow: hidden; }
+.scroll-bar { display: flex; align-items: center; gap: 12px; }
+.scroll-bar .line { width: 40px; height: 1px; background: var(--silver); position: relative; overflow: hidden; }
 .scroll-bar .line::after {
   content: '';
   position: absolute;
@@ -324,14 +360,14 @@ nav {
 }
 
 @keyframes scanLine { 0% { left: -100%; } 100% { left: 100%; } }
-@keyframes riseIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── MARQUEE ── */
 .marquee-wrap {
   overflow: hidden;
   border-top: 1px solid rgba(255,255,255,0.08);
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding: 18px 0;
+  padding: 14px 0;
   opacity: 0;
   animation: pageFadeIn 0.8s 3.4s forwards ease-out;
 }
@@ -339,16 +375,16 @@ nav {
 .marquee-track {
   display: flex;
   white-space: nowrap;
-  animation: marqueeRun 18s linear infinite;
+  animation: marqueeRun 14s linear infinite;
 }
 
 .marquee-item {
   font-family: 'Anton', sans-serif;
-  font-size: 14px;
-  letter-spacing: 0.3em;
+  font-size: 12px;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.12);
-  padding: 0 48px;
+  padding: 0 32px;
   flex-shrink: 0;
 }
 
@@ -356,34 +392,34 @@ nav {
 @keyframes marqueeRun { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ── TRACKS ── */
-#music { padding: 120px 64px; }
+#music { padding: 72px var(--pad); }
 
 .section-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 72px;
+  margin-bottom: 40px;
 }
 
 .section-title {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(48px, 7vw, 100px);
+  font-size: clamp(42px, 14vw, 80px);
   line-height: 1;
   letter-spacing: 0.02em;
 }
 
 .section-label {
-  font-size: 10px;
-  letter-spacing: 0.5em;
+  font-size: 9px;
+  letter-spacing: 0.4em;
   text-transform: uppercase;
   color: var(--silver);
 }
 
 .track-row {
   display: grid;
-  grid-template-columns: 48px 1fr auto auto;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
-  gap: 0 32px;
+  gap: 0 16px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   cursor: pointer;
   overflow: hidden;
@@ -391,6 +427,7 @@ nav {
   transition: border-color 0.3s;
   text-decoration: none;
   color: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .track-row::before {
@@ -402,42 +439,28 @@ nav {
   transition: width 0.5s cubic-bezier(0.77,0,0.175,1);
 }
 
-.track-row:hover::before { width: 100%; }
-.track-row:hover { border-color: rgba(255,255,255,0.2); }
+.track-row:active::before { width: 100%; }
+.track-row:active { border-color: rgba(255,255,255,0.2); }
 
 .tr-num {
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  font-size: 10px;
+  letter-spacing: 0.15em;
   color: rgba(255,255,255,0.2);
-  padding: 28px 0;
+  padding: 22px 0;
 }
 
 .tr-title {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(22px, 3.5vw, 48px);
+  font-size: clamp(20px, 6vw, 36px);
   letter-spacing: 0.03em;
   color: var(--white);
-  padding: 28px 0;
-  transition: letter-spacing 0.4s cubic-bezier(0.77,0,0.175,1);
-  position: relative;
-  z-index: 1;
-}
-
-.track-row:hover .tr-title { letter-spacing: 0.08em; }
-
-.tr-tag {
-  font-size: 9px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--silver);
-  border: 1px solid rgba(170,169,165,0.25);
-  padding: 5px 12px;
+  padding: 22px 0;
   position: relative;
   z-index: 1;
 }
 
 .tr-dur {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--silver);
   position: relative;
@@ -446,48 +469,47 @@ nav {
 }
 
 /* ── ABOUT ── */
-#about { padding: 0 64px 160px; }
+#about { padding: 0 var(--pad) 80px; }
 
 .about-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-.about-left {
-  padding: 80px;
-  border-right: 1px solid rgba(255,255,255,0.08);
-}
+.about-left { padding: 40px 24px; }
 
 .about-body {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 2;
   color: var(--silver);
   letter-spacing: 0.04em;
 }
 
-.about-body p + p { margin-top: 20px; }
+.about-body p + p { margin-top: 16px; }
 
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid rgba(255,255,255,0.08);
-  margin-top: 72px;
+  margin-top: 48px;
 }
 
-.stat { padding: 40px 0 0; }
-.stat-n { font-family: 'Anton', sans-serif; font-size: 64px; color: var(--white); line-height: 1; }
-.stat-l { font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--silver); margin-top: 8px; }
+.stat { padding: 28px 0 0; }
+.stat-n { font-family: 'Anton', sans-serif; font-size: 52px; color: var(--white); line-height: 1; }
+.stat-l { font-size: 8px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--silver); margin-top: 6px; }
 
+/* About right — мини-версия на мобиле */
 .about-right {
   position: relative;
-  min-height: 600px;
+  height: 180px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 48px;
+  padding: 24px;
   overflow: hidden;
   background: #0a0a0a;
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 
 .about-right-bg {
@@ -500,7 +522,7 @@ nav {
 
 .big-sb {
   font-family: 'Anton', sans-serif;
-  font-size: 400px;
+  font-size: 220px;
   color: transparent;
   -webkit-text-stroke: 1px rgba(255,255,255,0.04);
   line-height: 1;
@@ -514,34 +536,12 @@ nav {
   background-image:
     linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-size: 40px 40px;
 }
 
-.badge {
-  position: relative;
-  z-index: 2;
-  display: inline-block;
-  background: var(--white);
-  color: var(--black);
-  font-family: 'Anton', sans-serif;
-  font-size: 52px;
-  letter-spacing: 0.05em;
-  padding: 20px 32px;
-  margin-bottom: 16px;
-}
-
-.badge-sub {
-  position: relative;
-  z-index: 2;
-  font-size: 10px;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: var(--silver);
-}
-
-/* ── GLITCH (только для section-title) ── */
+/* ── GLITCH ── */
 .glitch { position: relative; display: inline-block; }
-.glitch:hover { animation: glitch 0.4s steps(2) 1; }
+.glitch:active { animation: glitch 0.4s steps(2) 1; }
 
 @keyframes glitch {
   0%   { clip-path: inset(0 0 80% 0); transform: translate(-4px, 0); }
@@ -555,65 +555,61 @@ nav {
 /* ── FOOTER ── */
 .footer-band {
   border-top: 1px solid rgba(255,255,255,0.08);
-  padding: 64px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 64px;
-  align-items: end;
+  padding: 48px var(--pad);
 }
 
 .footer-left h3 {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(36px, 5vw, 72px);
+  font-size: clamp(32px, 11vw, 60px);
   line-height: 1;
   letter-spacing: 0.03em;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
-.footer-socials { display: flex; gap: 32px; flex-wrap: wrap; }
+.footer-socials {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+}
+
 .footer-socials a {
   font-size: 10px;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--silver);
   text-decoration: none;
   border-bottom: 1px solid rgba(170,169,165,0.25);
-  padding-bottom: 3px;
+  padding-bottom: 8px;
   transition: color 0.25s, border-color 0.25s;
 }
-.footer-socials a:hover { color: var(--white); border-color: var(--white); }
+.footer-socials a:active { color: var(--white); border-color: var(--white); }
 
-.footer-right { text-align: right; }
-.footer-copy { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(170,169,165,0.4); }
+.footer-huge {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(52px, 18vw, 130px);
+  color: rgba(255,255,255,0.04);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  user-select: none;
+  padding: 0 var(--pad);
+}
 
 .footer-bottom {
-  padding: 24px 64px;
+  padding: 20px var(--pad);
   border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.footer-huge {
-  font-family: 'Anton', sans-serif;
-  font-size: clamp(60px, 10vw, 160px);
-  color: rgba(255,255,255,0.04);
-  letter-spacing: 0.05em;
-  line-height: 1;
-  user-select: none;
-  padding: 0 64px;
-}
-
-@media (max-width: 768px) {
-  nav, .hero-body, #music, #about, .footer-band, .footer-bottom { padding-left: 24px; padding-right: 24px; }
-  .hero-bottom { padding: 24px; }
-  .about-grid { grid-template-columns: 1fr; }
-  .about-right { min-height: 300px; }
-  .footer-band { grid-template-columns: 1fr; gap: 32px; }
-  .footer-right { text-align: left; }
-  .footer-huge { padding: 0 24px; }
-  nav { padding: 28px 24px; }
-  .section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+/* Safe area для iPhone */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .footer-bottom {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  nav {
+    padding-top: calc(24px + env(safe-area-inset-top));
+  }
 }
 </style>
 </head>
@@ -629,8 +625,12 @@ nav {
   </div>
 </div>
 
-<div class="cur" id="curDot"><div class="cur-dot"></div></div>
-<div class="cur" id="curRing"><div class="cur-ring"></div></div>
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#music" class="menu-link">Треки</a>
+  <a href="#about" class="menu-link">О себе</a>
+  <a href="#contact" class="menu-link">Связь</a>
+</div>
 
 <section class="hero">
   <div class="swag-canvas">
@@ -640,23 +640,22 @@ nav {
 
   <nav>
     <a href="#" class="logo">SBELOVED</a>
-    <div class="nav-r">
-      <a href="#music">Треки</a>
-      <a href="#about">О себе</a>
-      <a href="#contact">Связь</a>
-    </div>
+    <button class="burger" id="burger" aria-label="Меню">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </nav>
 
   <div class="hero-body">
     <div class="eyebrow">Новосибирск · 2025</div>
-    <!-- убрали класс glitch с hero-name -->
     <div class="hero-name">
       <span class="outline">SBE</span>
       <span class="solid">LOVED</span>
     </div>
     <div class="hero-tagline"></div>
     <div class="hero-cta">
-      <a href="#music" class="btn btn-w"><span>Слушать</span></a>
+      <a href="#music" class="btn btn-w">Слушать</a>
       <a href="#about" class="btn btn-ghost-line">Моя история</a>
     </div>
   </div>
@@ -695,7 +694,7 @@ nav {
 <section id="music">
   <div class="section-head">
     <div class="section-title glitch">ТРЕКИ</div>
-    <div class="section-label">— Дискография</div>
+    <div class="section-label">— Диско</div>
   </div>
 
   <div class="track-list">
@@ -753,8 +752,6 @@ nav {
         <div class="diamond-grid"></div>
         <div class="big-sb">SB</div>
       </div>
-      <div class="badge">SBELOVED</div>
-      <div class="badge-sub">— 2025</div>
     </div>
   </div>
 </section>
@@ -769,43 +766,35 @@ nav {
       <a href="https://t.me/belovedtry">Telegram</a>
     </div>
   </div>
-  <div class="footer-right">
-    <div class="footer-copy">© 2025 SBELOVED<br>Все права защищены</div>
-  </div>
 </div>
 
 <div class="footer-huge">BELOVED</div>
 
 <div class="footer-bottom">
-  <span style="font-size:10px;letter-spacing:.3em;color:rgba(170,169,165,0.3);">SBELOVED</span>
-  <span style="font-size:10px;letter-spacing:.3em;color:rgba(170,169,165,0.3);">NOVOSIBIRSK · RUSSIA</span>
+  <span style="font-size:9px;letter-spacing:.25em;color:rgba(170,169,165,0.3);">SBELOVED</span>
+  <span style="font-size:9px;letter-spacing:.25em;color:rgba(170,169,165,0.3);">NSK · RU</span>
 </div>
 
 <script>
-  // Cursor
   window.scrollTo(0, 0);
-  const dot  = document.getElementById('curDot');
-  const ring = document.getElementById('curRing');
 
-  document.addEventListener('mousemove', e => {
-    dot.style.left  = e.clientX + 'px';
-    dot.style.top   = e.clientY + 'px';
-    ring.style.left = e.clientX + 'px';
-    ring.style.top  = e.clientY + 'px';
+  // Бургер-меню
+  const burger = document.getElementById('burger');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  burger.addEventListener('click', () => {
+    burger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
   });
 
-  document.querySelectorAll('a, .track-row, .btn').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      ring.querySelector('.cur-ring').style.width  = '72px';
-      ring.querySelector('.cur-ring').style.height = '72px';
-    });
-    el.addEventListener('mouseleave', () => {
-      ring.querySelector('.cur-ring').style.width  = '44px';
-      ring.querySelector('.cur-ring').style.height = '44px';
+  document.querySelectorAll('.menu-link').forEach(link => {
+    link.addEventListener('click', () => {
+      burger.classList.remove('open');
+      mobileMenu.classList.remove('open');
     });
   });
 
-  // Loader: убираем после анимации
+  // Loader
   setTimeout(() => {
     const loader = document.getElementById('loader');
     if (loader) loader.style.display = 'none';
@@ -822,12 +811,12 @@ nav {
         e.target.style.transform = 'translateY(0)';
       }
     });
-  }, { threshold: 0.1 });
+  }, { threshold: 0.08 });
 
   document.querySelectorAll('.track-row, .stat').forEach(el => {
     el.style.opacity = '0';
-    el.style.transform = 'translateY(24px)';
-    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
     observer.observe(el);
   });
 </script>
