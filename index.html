@@ -3,487 +3,832 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>sbeloved — musician</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
+<title>SBELOVED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Playfair+Display:ital,wght@1,900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  :root {
-    --bg: #080808;
-    --bg2: #0f0f0f;
-    --gold: #c9a84c;
-    --gold2: #e8cc80;
-    --rose: #9b4a6b;
-    --glass: rgba(255,255,255,0.04);
-    --glass-border: rgba(255,255,255,0.08);
-    --text: #e8e0d4;
-    --dim: rgba(232,224,212,0.45);
-  }
+:root {
+  --black: #050505;
+  --white: #f5f5f0;
+  --silver: #aaa9a5;
+}
 
-  html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Cormorant Garamond', serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    cursor: default;
-  }
+html, body { scroll-behavior: auto; }
 
-  /* Grain overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-    opacity: 0.35;
-    pointer-events: none;
-    z-index: 999;
-  }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+  overflow-x: hidden;
+  cursor: none;
+}
 
-  /* Ambient glow */
-  .ambient {
-    position: fixed;
-    width: 600px; height: 600px;
-    border-radius: 50%;
-    filter: blur(120px);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .ambient-1 {
-    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
-    top: -200px; left: -100px;
-    animation: drift1 12s ease-in-out infinite alternate;
-  }
-  .ambient-2 {
-    background: radial-gradient(circle, rgba(155,74,107,0.1) 0%, transparent 70%);
-    bottom: -200px; right: -100px;
-    animation: drift2 15s ease-in-out infinite alternate;
-  }
-  @keyframes drift1 { from { transform: translate(0,0); } to { transform: translate(80px, 60px); } }
-  @keyframes drift2 { from { transform: translate(0,0); } to { transform: translate(-60px, -80px); } }
+body.loading {
+  overflow: hidden;
+  height: 100vh;
+  position: fixed;
+  width: 100%;
+  top: 0;
+}
 
-  /* HERO */
-  .hero {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px 20px;
-    z-index: 1;
-  }
+/* ── LOADER ── */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 32px;
+  animation: loaderFade 0.6s 2s forwards ease-in-out;
+  pointer-events: none;
+}
 
-  .logo-ring {
-    position: relative;
-    width: 140px; height: 140px;
-    margin: 0 auto 40px;
-  }
+.loader-text {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(40px, 10vw, 120px);
+  letter-spacing: 0.15em;
+  color: var(--white);
+  overflow: hidden;
+}
 
-  .logo-ring svg {
-    position: absolute;
-    inset: 0;
-    width: 100%; height: 100%;
-    animation: spin 20s linear infinite;
-  }
+.loader-text span {
+  display: inline-block;
+  animation: loaderLetterIn 0.6s backwards cubic-bezier(0.77,0,0.175,1);
+}
 
-  @keyframes spin { to { transform: rotate(360deg); } }
+.loader-text span:nth-child(1)  { animation-delay: 0.05s; }
+.loader-text span:nth-child(2)  { animation-delay: 0.10s; }
+.loader-text span:nth-child(3)  { animation-delay: 0.15s; }
+.loader-text span:nth-child(4)  { animation-delay: 0.20s; }
+.loader-text span:nth-child(5)  { animation-delay: 0.25s; }
+.loader-text span:nth-child(6)  { animation-delay: 0.30s; }
+.loader-text span:nth-child(7)  { animation-delay: 0.35s; }
+.loader-text span:nth-child(8)  { animation-delay: 0.40s; }
 
-  .logo-inner {
-    position: absolute;
-    inset: 16px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1a1410, #0d0d0d);
-    border: 1px solid rgba(201,168,76,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-style: italic;
-    color: var(--gold);
-    box-shadow: 0 0 30px rgba(201,168,76,0.15), inset 0 0 20px rgba(0,0,0,0.5);
-  }
+.loader-bar-wrap {
+  width: 200px;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
 
-  .hero-name {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(56px, 14vw, 110px);
-    font-weight: 700;
-    letter-spacing: -2px;
-    line-height: 0.9;
-    background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 40%, var(--rose) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 16px;
-    animation: fadeUp 1.2s ease both;
-  }
+.loader-bar {
+  height: 100%;
+  background: var(--white);
+  animation: loaderBar 1.6s 0.2s cubic-bezier(0.77,0,0.175,1) forwards;
+  width: 0%;
+}
 
-  .hero-sub {
-    font-size: 13px;
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    color: var(--dim);
-    animation: fadeUp 1.2s 0.2s ease both;
-    margin-bottom: 60px;
-  }
+@keyframes loaderLetterIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+@keyframes loaderBar {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
 
-  /* SOCIAL ICONS — iPhone 17 style */
-  .socials {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    justify-content: center;
-    animation: fadeUp 1.2s 0.4s ease both;
-    margin-bottom: 60px;
-  }
+@keyframes loaderFade {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden; }
+}
 
-  .social-icon {
-    width: 58px; height: 58px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
-    flex-shrink: 0;
-  }
+/* ── CURSOR ── */
+.cur { position: fixed; pointer-events: none; z-index: 9999; mix-blend-mode: difference; }
+.cur-dot { width: 10px; height: 10px; background: var(--white); border-radius: 50%; transform: translate(-50%,-50%); transition: transform 0.1s; }
+.cur-ring { width: 44px; height: 44px; border: 1px solid var(--white); border-radius: 50%; transform: translate(-50%,-50%); transition: left 0.15s ease, top 0.15s ease, width 0.3s, height 0.3s, opacity 0.3s; }
 
-  .social-icon::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 16px;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.04));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px;
+}
 
-  .social-icon::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 50%;
-    border-radius: 16px 16px 0 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent);
-    pointer-events: none;
-  }
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  animation: pageFadeIn 0.8s 2.2s forwards ease-out;
+}
 
-  .social-icon:hover {
-    transform: scale(1.12) translateY(-3px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-  }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  .social-icon:active { transform: scale(0.95); }
+.swag-canvas {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+}
 
-  .social-icon svg { width: 26px; height: 26px; position: relative; z-index: 1; }
+.swag-giant {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(130px, 26vw, 420px);
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.055);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  animation: swagBreath 6s ease-in-out infinite;
+  user-select: none;
+}
 
-  .si-spotify { background: linear-gradient(135deg, #1c3320, #1db954); box-shadow: 0 8px 24px rgba(29,185,84,0.25); }
-  .si-youtube { background: linear-gradient(135deg, #2a0a0a, #ff0000); box-shadow: 0 8px 24px rgba(255,0,0,0.2); }
-  .si-apple  { background: linear-gradient(135deg, #1a1a2e, #4a4a8a); box-shadow: 0 8px 24px rgba(74,74,138,0.25); }
-  .si-vk     { background: linear-gradient(135deg, #0d1f3c, #2787f5); box-shadow: 0 8px 24px rgba(39,135,245,0.25); }
-  .si-tg     { background: linear-gradient(135deg, #0a2a3c, #229ed9); box-shadow: 0 8px 24px rgba(34,158,217,0.25); }
-  .si-insta  { background: linear-gradient(135deg, #3b0066, #833ab4, #fd1d1d, #fcb045); box-shadow: 0 8px 24px rgba(131,58,180,0.3); }
-  .si-sc     { background: linear-gradient(135deg, #2a1500, #ff5500); box-shadow: 0 8px 24px rgba(255,85,0,0.25); }
+@keyframes swagBreath {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.015); opacity: 1; }
+}
 
-  /* DIVIDER */
-  .divider {
-    width: 160px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 0 auto 80px;
-    opacity: 0.5;
-  }
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
+}
 
-  /* TRACKS */
-  .section {
-    position: relative;
-    z-index: 1;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0 24px 100px;
-  }
+nav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 36px 64px;
+}
 
-  .section-label {
-    font-size: 11px;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0.7;
-    margin-bottom: 32px;
-    text-align: center;
-  }
+.logo {
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.35em;
+  color: var(--white);
+  text-decoration: none;
+}
 
-  .tracks {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+.nav-r { display: flex; align-items: center; gap: 48px; }
+.nav-r a {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--silver);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+.nav-r a:hover { color: var(--white); }
 
-  .track {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 18px 20px;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    text-decoration: none;
-    color: var(--text);
-    transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(12px);
-  }
+.hero-body {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 64px 80px;
+}
 
-  .track::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-  }
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: riseIn 1s 2.4s forwards;
+}
 
-  .track:hover {
-    background: rgba(201,168,76,0.07);
-    border-color: rgba(201,168,76,0.25);
-    transform: translateX(6px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4), -4px 0 20px rgba(201,168,76,0.1);
-  }
+.hero-name {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(80px, 14vw, 230px);
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  animation: riseIn 1s 2.6s forwards;
+}
 
-  .track-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 11px;
-    color: var(--gold);
-    opacity: 0.6;
-    width: 20px;
-    flex-shrink: 0;
-  }
+/* ── ИСПРАВЛЕНИЕ: убрали .glitch с hero-name, сделали отдельный эффект ── */
+.hero-name .outline {
+  -webkit-text-stroke: 2px var(--white);
+  color: transparent;
+  display: block;
+  transition: letter-spacing 0.4s cubic-bezier(0.77,0,0.175,1);
+}
+.hero-name .solid {
+  color: var(--white);
+  display: block;
+  transition: letter-spacing 0.4s cubic-bezier(0.77,0,0.175,1);
+}
+.hero-name:hover .outline { letter-spacing: 0.05em; }
+.hero-name:hover .solid   { letter-spacing: 0.05em; }
 
-  .track-thumb {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #1a1410, #0d0d0d);
-    border: 1px solid rgba(201,168,76,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 18px;
-  }
+.hero-tagline {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(18px, 2.5vw, 30px);
+  color: var(--silver);
+  margin-top: 32px;
+  letter-spacing: 0.03em;
+  opacity: 0;
+  animation: riseIn 1s 2.85s forwards;
+  max-width: 560px;
+  line-height: 1.4;
+}
 
-  .track-info { flex: 1; min-width: 0; }
-  .track-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .track-meta { font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+.hero-cta {
+  margin-top: 56px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  opacity: 0;
+  animation: riseIn 1s 3.05s forwards;
+}
 
-  .track-play {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--gold), var(--rose));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(201,168,76,0.3);
-    transition: box-shadow 0.3s;
-  }
+.btn {
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+  padding: 18px 52px;
+  transition: all 0.35s;
+  position: relative;
+  overflow: hidden;
+}
 
-  .track:hover .track-play {
-    box-shadow: 0 6px 24px rgba(201,168,76,0.5);
-  }
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-101%);
+  transition: transform 0.4s cubic-bezier(0.77,0,0.175,1);
+}
 
-  .track-play svg { width: 14px; height: 14px; margin-left: 2px; }
+.btn-w { background: var(--white); color: var(--black); }
+.btn-w::before { background: var(--black); }
+.btn-w:hover { color: var(--white); }
+.btn-w:hover::before { transform: translateX(0); }
+.btn-w span { position: relative; z-index: 1; }
 
-  /* FOOTER */
-  footer {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 40px 20px 60px;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--dim);
-    opacity: 0.4;
-  }
+.btn-ghost-line {
+  color: var(--silver);
+  border: 1px solid rgba(170,169,165,0.3);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+}
+.btn-ghost-line:hover { color: var(--white); border-color: var(--white); }
 
-  /* Scroll reveal */
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: none;
-  }
+.hero-bottom {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 64px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--silver);
+  opacity: 0;
+  animation: riseIn 1s 3.2s forwards;
+}
+
+.scroll-bar { display: flex; align-items: center; gap: 16px; }
+.scroll-bar .line { width: 60px; height: 1px; background: var(--silver); position: relative; overflow: hidden; }
+.scroll-bar .line::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: var(--white);
+  animation: scanLine 2s ease-in-out infinite;
+}
+
+@keyframes scanLine { 0% { left: -100%; } 100% { left: 100%; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── MARQUEE ── */
+.marquee-wrap {
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 18px 0;
+  opacity: 0;
+  animation: pageFadeIn 0.8s 3.4s forwards ease-out;
+}
+
+.marquee-track {
+  display: flex;
+  white-space: nowrap;
+  animation: marqueeRun 18s linear infinite;
+}
+
+.marquee-item {
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.12);
+  padding: 0 48px;
+  flex-shrink: 0;
+}
+
+.marquee-item.hl { color: var(--white); }
+@keyframes marqueeRun { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ── TRACKS ── */
+#music { padding: 120px 64px; }
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 72px;
+}
+
+.section-title {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(48px, 7vw, 100px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+
+.track-row {
+  display: grid;
+  grid-template-columns: 48px 1fr auto auto;
+  align-items: center;
+  gap: 0 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.3s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.track-row::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: rgba(255,255,255,0.03);
+  transition: width 0.5s cubic-bezier(0.77,0,0.175,1);
+}
+
+.track-row:hover::before { width: 100%; }
+.track-row:hover { border-color: rgba(255,255,255,0.2); }
+
+.tr-num {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.2);
+  padding: 28px 0;
+}
+
+.tr-title {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(22px, 3.5vw, 48px);
+  letter-spacing: 0.03em;
+  color: var(--white);
+  padding: 28px 0;
+  transition: letter-spacing 0.4s cubic-bezier(0.77,0,0.175,1);
+  position: relative;
+  z-index: 1;
+}
+
+.track-row:hover .tr-title { letter-spacing: 0.08em; }
+
+.tr-tag {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--silver);
+  border: 1px solid rgba(170,169,165,0.25);
+  padding: 5px 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.tr-dur {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--silver);
+  position: relative;
+  z-index: 1;
+  font-family: 'Space Mono', monospace;
+}
+
+/* ── ABOUT ── */
+#about { padding: 0 64px 160px; }
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.about-left {
+  padding: 80px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.about-body {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--silver);
+  letter-spacing: 0.04em;
+}
+
+.about-body p + p { margin-top: 20px; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin-top: 72px;
+}
+
+.stat { padding: 40px 0 0; }
+.stat-n { font-family: 'Anton', sans-serif; font-size: 64px; color: var(--white); line-height: 1; }
+.stat-l { font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--silver); margin-top: 8px; }
+
+.about-right {
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 48px;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.about-right-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.big-sb {
+  font-family: 'Anton', sans-serif;
+  font-size: 400px;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.04);
+  line-height: 1;
+  user-select: none;
+  letter-spacing: -0.05em;
+}
+
+.diamond-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.badge {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  background: var(--white);
+  color: var(--black);
+  font-family: 'Anton', sans-serif;
+  font-size: 52px;
+  letter-spacing: 0.05em;
+  padding: 20px 32px;
+  margin-bottom: 16px;
+}
+
+.badge-sub {
+  position: relative;
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+
+/* ── GLITCH (только для section-title) ── */
+.glitch { position: relative; display: inline-block; }
+.glitch:hover { animation: glitch 0.4s steps(2) 1; }
+
+@keyframes glitch {
+  0%   { clip-path: inset(0 0 80% 0); transform: translate(-4px, 0); }
+  20%  { clip-path: inset(40% 0 40% 0); transform: translate(4px, 0); }
+  40%  { clip-path: inset(80% 0 0 0); transform: translate(-2px, 0); }
+  60%  { clip-path: inset(20% 0 60% 0); transform: translate(3px, 0); }
+  80%  { clip-path: inset(60% 0 20% 0); transform: translate(-3px, 0); }
+  100% { clip-path: inset(0); transform: translate(0); }
+}
+
+/* ── FOOTER ── */
+.footer-band {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 64px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 64px;
+  align-items: end;
+}
+
+.footer-left h3 {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(36px, 5vw, 72px);
+  line-height: 1;
+  letter-spacing: 0.03em;
+  margin-bottom: 28px;
+}
+
+.footer-socials { display: flex; gap: 32px; flex-wrap: wrap; }
+.footer-socials a {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--silver);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(170,169,165,0.25);
+  padding-bottom: 3px;
+  transition: color 0.25s, border-color 0.25s;
+}
+.footer-socials a:hover { color: var(--white); border-color: var(--white); }
+
+.footer-right { text-align: right; }
+.footer-copy { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(170,169,165,0.4); }
+
+.footer-bottom {
+  padding: 24px 64px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-huge {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(60px, 10vw, 160px);
+  color: rgba(255,255,255,0.04);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  user-select: none;
+  padding: 0 64px;
+}
+
+@media (max-width: 768px) {
+  nav, .hero-body, #music, #about, .footer-band, .footer-bottom { padding-left: 24px; padding-right: 24px; }
+  .hero-bottom { padding: 24px; }
+  .about-grid { grid-template-columns: 1fr; }
+  .about-right { min-height: 300px; }
+  .footer-band { grid-template-columns: 1fr; gap: 32px; }
+  .footer-right { text-align: left; }
+  .footer-huge { padding: 0 24px; }
+  nav { padding: 28px 24px; }
+  .section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
 </style>
 </head>
-<body>
+<body class="loading">
 
-<div class="ambient ambient-1"></div>
-<div class="ambient ambient-2"></div>
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-text">
+    <span>S</span><span>B</span><span>E</span><span>L</span><span>O</span><span>V</span><span>E</span><span>D</span>
+  </div>
+  <div class="loader-bar-wrap">
+    <div class="loader-bar"></div>
+  </div>
+</div>
 
-<!-- HERO -->
+<div class="cur" id="curDot"><div class="cur-dot"></div></div>
+<div class="cur" id="curRing"><div class="cur-ring"></div></div>
+
 <section class="hero">
+  <div class="swag-canvas">
+    <div class="swag-giant">BELOVED</div>
+  </div>
+  <div class="scanlines"></div>
 
-  <div class="logo-ring">
-    <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="70" cy="70" r="66" stroke="url(#ringGrad)" stroke-width="1" stroke-dasharray="6 4"/>
-      <defs>
-        <linearGradient id="ringGrad" x1="0" y1="0" x2="140" y2="140" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#c9a84c"/>
-          <stop offset="50%" stop-color="#9b4a6b"/>
-          <stop offset="100%" stop-color="#c9a84c"/>
-        </linearGradient>
-      </defs>
-    </svg>
-    <div class="logo-inner">♪</div>
+  <nav>
+    <a href="#" class="logo">SBELOVED</a>
+    <div class="nav-r">
+      <a href="#music">Треки</a>
+      <a href="#about">О себе</a>
+      <a href="#contact">Связь</a>
+    </div>
+  </nav>
+
+  <div class="hero-body">
+    <div class="eyebrow">Новосибирск · 2025</div>
+    <!-- убрали класс glitch с hero-name -->
+    <div class="hero-name">
+      <span class="outline">SBE</span>
+      <span class="solid">LOVED</span>
+    </div>
+    <div class="hero-tagline"></div>
+    <div class="hero-cta">
+      <a href="#music" class="btn btn-w"><span>Слушать</span></a>
+      <a href="#about" class="btn btn-ghost-line">Моя история</a>
+    </div>
   </div>
 
-  <h1 class="hero-name">sbeloved</h1>
-  <p class="hero-sub">musician &nbsp;·&nbsp; producer &nbsp;·&nbsp; songwriter</p>
-
-  <!-- Social icons -->
-  <div class="socials">
-
-    <!-- Spotify -->
-    <a href="https://open.spotify.com/artist/sbeloved" target="_blank" class="social-icon si-spotify" title="Spotify">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.441 17.3a.75.75 0 01-1.032.249c-2.828-1.729-6.39-2.12-10.584-1.16a.75.75 0 01-.334-1.462c4.588-1.048 8.522-.597 11.7 1.341a.75.75 0 01.25 1.032zm1.452-3.23a.937.937 0 01-1.29.309c-3.237-1.99-8.17-2.567-11.998-1.405a.938.938 0 11-.547-1.795c4.374-1.33 9.808-.686 13.527 1.602a.937.937 0 01.308 1.29zm.124-3.36c-3.879-2.303-10.278-2.515-13.98-1.392a1.124 1.124 0 11-.652-2.151c4.25-1.29 11.318-1.04 15.788 1.608a1.124 1.124 0 01-1.156 1.935z"/></svg>
-    </a>
-
-    <!-- YouTube -->
-    <a href="https://youtube.com/@sbeloved" target="_blank" class="social-icon si-youtube" title="YouTube">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-    </a>
-
-    <!-- Apple Music -->
-    <a href="https://music.apple.com/search?term=sbeloved" target="_blank" class="social-icon si-apple" title="Apple Music">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026C4.786.07 4.043.15 3.34.428 2.004.958 1.04 1.88.475 3.208A4.98 4.98 0 00.05 4.814C.017 5.19 0 5.568 0 5.946V18.06c.007.29.02.58.053.87.133 1.28.687 2.35 1.66 3.18.718.616 1.558.962 2.468 1.102.307.048.615.07.924.076h13.897c.29-.007.58-.02.866-.054 1.28-.133 2.35-.687 3.18-1.66.616-.718.962-1.558 1.1-2.468.05-.307.07-.615.078-.924V6.125zm-8.97 12.534h-1.773v-6.657H11.48v6.657H9.708V11.9H8.134v6.759H6.362V10.19h1.772v.804c.387-.55.878-.895 1.447-.895.59 0 1.06.344 1.457.92V10.19h1.772v1.014c.392-.644.896-1.014 1.494-1.014.603 0 1.068.35 1.46.954V10.19H17.6v8.469H15.83v-5.52c-.002-.55-.304-.824-.805-.824-.501 0-.803.274-.803.823l.002 5.52zM20.03 9.4a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm-.9 9.258H20.9V10.19h-1.77v8.469z"/></svg>
-    </a>
-
-    <!-- VK -->
-    <a href="https://vk.com/sbeloved" target="_blank" class="social-icon si-vk" title="ВКонтакте">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.391 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.864-.525-2.05-1.727-1.033-1-1.49-1.135-1.744-1.135-.356 0-.458.102-.458.593v1.575c0 .424-.135.678-1.253.678-1.846 0-3.896-1.118-5.335-3.202C4.624 10.857 4.03 8.57 4.03 8.096c0-.254.102-.491.593-.491h1.744c.44 0 .61.203.78.677.863 2.49 2.303 4.675 2.896 4.675.22 0 .322-.102.322-.66V9.721c-.068-1.186-.695-1.287-.695-1.71 0-.204.17-.407.44-.407h2.744c.373 0 .508.203.508.643v3.473c0 .372.17.508.271.508.22 0 .407-.136.813-.542 1.253-1.406 2.151-3.574 2.151-3.574.119-.254.322-.491.763-.491h1.744c.525 0 .644.27.525.643-.22 1.017-2.354 4.031-2.354 4.031-.186.305-.254.44 0 .78.186.254.796.779 1.203 1.253.745.847 1.32 1.558 1.473 2.05.17.49-.085.744-.576.744z"/></svg>
-    </a>
-
-    <!-- Telegram -->
-    <a href="https://t.me/sbeloved" target="_blank" class="social-icon si-tg" title="Telegram">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-    </a>
-
-    <!-- Instagram -->
-    <a href="https://instagram.com/sbeloved" target="_blank" class="social-icon si-insta" title="Instagram">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-    </a>
-
+  <div class="hero-bottom">
+    <div class="scroll-bar">
+      <div class="line"></div>
+      <span>Scroll</span>
+    </div>
+    <span>НОВЫЙ ГОД</span>
+    <span>2025</span>
   </div>
 </section>
 
-<div class="divider"></div>
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item hl">НОВЫЙ ГОД</span>
+    <span class="marquee-item">SBELOVED</span>
+    <span class="marquee-item">НОВОСИБИРСК</span>
+    <span class="marquee-item hl">SWAG</span>
+    <span class="marquee-item">NEED FOR SPEED</span>
+    <span class="marquee-item">SLIME</span>
+    <span class="marquee-item hl">ЛЮБЛЮ</span>
+    <span class="marquee-item">МУЗЫКА</span>
+    <span class="marquee-item hl">НОВЫЙ ГОД</span>
+    <span class="marquee-item">SBELOVED</span>
+    <span class="marquee-item">НОВОСИБИРСК</span>
+    <span class="marquee-item hl">SWAG</span>
+    <span class="marquee-item">NEED FOR SPEED</span>
+    <span class="marquee-item">SLIME</span>
+    <span class="marquee-item hl">ЛЮБЛЮ</span>
+    <span class="marquee-item">МУЗЫКА</span>
+  </div>
+</div>
 
-<!-- TRACKS -->
-<section class="section reveal">
-  <p class="section-label">Треки</p>
-  <div class="tracks">
+<section id="music">
+  <div class="section-head">
+    <div class="section-title glitch">ТРЕКИ</div>
+    <div class="section-label">— Дискография</div>
+  </div>
 
-    <a href="https://open.spotify.com/search/sbeloved" target="_blank" class="track">
-      <span class="track-num">01</span>
-      <div class="track-thumb">🌙</div>
-      <div class="track-info">
-        <div class="track-title">Любимая</div>
-        <div class="track-meta">sbeloved &nbsp;·&nbsp; 2024</div>
-      </div>
-      <div class="track-play">
-        <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-      </div>
+  <div class="track-list">
+    <a class="track-row" href="https://music.yandex.ru/album/39543647/track/145818072?utm_source=web&utm_medium=copy_link" target="_blank">
+      <span class="tr-num">01</span>
+      <span class="tr-title">Slime!</span>
+      <span class="tr-dur">2:11</span>
     </a>
-
-    <a href="https://open.spotify.com/search/sbeloved" target="_blank" class="track">
-      <span class="track-num">02</span>
-      <div class="track-thumb">✨</div>
-      <div class="track-info">
-        <div class="track-title">Золото</div>
-        <div class="track-meta">sbeloved &nbsp;·&nbsp; 2024</div>
-      </div>
-      <div class="track-play">
-        <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-      </div>
+    <a class="track-row" href="https://music.yandex.ru/album/39729643/track/146186108?utm_source=web&utm_medium=copy_link" target="_blank">
+      <span class="tr-num">02</span>
+      <span class="tr-title">ЛЮБЛЮ</span>
+      <span class="tr-dur">1:27</span>
     </a>
-
-    <a href="https://open.spotify.com/search/sbeloved" target="_blank" class="track">
-      <span class="track-num">03</span>
-      <div class="track-thumb">🔥</div>
-      <div class="track-info">
-        <div class="track-title">Огонь внутри</div>
-        <div class="track-meta">sbeloved &nbsp;·&nbsp; 2023</div>
-      </div>
-      <div class="track-play">
-        <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-      </div>
+    <a class="track-row" href="https://music.yandex.ru/album/38919318/track/144567878?utm_source=web&utm_medium=copy_link" target="_blank">
+      <span class="tr-num">03</span>
+      <span class="tr-title">SWAG</span>
+      <span class="tr-dur">1:56</span>
     </a>
-
-    <a href="https://open.spotify.com/search/sbeloved" target="_blank" class="track">
-      <span class="track-num">04</span>
-      <div class="track-thumb">🌹</div>
-      <div class="track-info">
-        <div class="track-title">Пустота</div>
-        <div class="track-meta">sbeloved &nbsp;·&nbsp; 2023</div>
-      </div>
-      <div class="track-play">
-        <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-      </div>
+    <a class="track-row" href="https://music.yandex.ru/album/39899066/track/146532176?utm_source=web&utm_medium=copy_link" target="_blank">
+      <span class="tr-num">04</span>
+      <span class="tr-title">НОВЫЙ ГОД</span>
+      <span class="tr-dur">1:49</span>
     </a>
-
-    <a href="https://open.spotify.com/search/sbeloved" target="_blank" class="track">
-      <span class="track-num">05</span>
-      <div class="track-thumb">🖤</div>
-      <div class="track-info">
-        <div class="track-title">Ночь без конца</div>
-        <div class="track-meta">sbeloved &nbsp;·&nbsp; 2023</div>
-      </div>
-      <div class="track-play">
-        <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-      </div>
+    <a class="track-row" href="https://music.yandex.ru/album/40628842/track/148143510?utm_source=web&utm_medium=copy_link" target="_blank">
+      <span class="tr-num">05</span>
+      <span class="tr-title">NEED FOR SPEED</span>
+      <span class="tr-dur">2:04</span>
     </a>
-
   </div>
 </section>
 
-<footer>© 2024 sbeloved &nbsp;·&nbsp; all rights reserved</footer>
+<section id="about">
+  <div class="about-grid">
+    <div class="about-left">
+      <div class="about-body">
+        <p>sbeloved — артист из Новосибирска.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-n">5</div>
+          <div class="stat-l">Треков</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">1</div>
+          <div class="stat-l">Альбом</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">25</div>
+          <div class="stat-l">Год</div>
+        </div>
+      </div>
+    </div>
+    <div class="about-right">
+      <div class="about-right-bg">
+        <div class="diamond-grid"></div>
+        <div class="big-sb">SB</div>
+      </div>
+      <div class="badge">SBELOVED</div>
+      <div class="badge-sub">— 2025</div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-band" id="contact">
+  <div class="footer-left">
+    <h3>Подписывайся.</h3>
+    <div class="footer-socials">
+      <a href="https://vk.com/sbe1oved11">VK</a>
+      <a href="https://music.yandex.ru/artist/24953158" target="_blank">Яндекс Музыка</a>
+      <a href="https://www.youtube.com/@sbe1oved11">YouTube</a>
+      <a href="https://t.me/belovedtry">Telegram</a>
+    </div>
+  </div>
+  <div class="footer-right">
+    <div class="footer-copy">© 2025 SBELOVED<br>Все права защищены</div>
+  </div>
+</div>
+
+<div class="footer-huge">BELOVED</div>
+
+<div class="footer-bottom">
+  <span style="font-size:10px;letter-spacing:.3em;color:rgba(170,169,165,0.3);">SBELOVED</span>
+  <span style="font-size:10px;letter-spacing:.3em;color:rgba(170,169,165,0.3);">NOVOSIBIRSK · RUSSIA</span>
+</div>
 
 <script>
-  // Scroll reveal
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.1 });
-  reveals.forEach(r => observer.observe(r));
+  // Cursor
+  window.scrollTo(0, 0);
+  const dot  = document.getElementById('curDot');
+  const ring = document.getElementById('curRing');
 
-  // Parallax ambient glow on mouse move
   document.addEventListener('mousemove', e => {
-    const x = (e.clientX / window.innerWidth - 0.5) * 40;
-    const y = (e.clientY / window.innerHeight - 0.5) * 40;
-    document.querySelector('.ambient-1').style.transform = `translate(${x}px, ${y}px)`;
-    document.querySelector('.ambient-2').style.transform = `translate(${-x}px, ${-y}px)`;
+    dot.style.left  = e.clientX + 'px';
+    dot.style.top   = e.clientY + 'px';
+    ring.style.left = e.clientX + 'px';
+    ring.style.top  = e.clientY + 'px';
+  });
+
+  document.querySelectorAll('a, .track-row, .btn').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      ring.querySelector('.cur-ring').style.width  = '72px';
+      ring.querySelector('.cur-ring').style.height = '72px';
+    });
+    el.addEventListener('mouseleave', () => {
+      ring.querySelector('.cur-ring').style.width  = '44px';
+      ring.querySelector('.cur-ring').style.height = '44px';
+    });
+  });
+
+  // Loader: убираем после анимации
+  setTimeout(() => {
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'none';
+    document.body.classList.remove('loading');
+    document.documentElement.style.scrollBehavior = 'smooth';
+    window.scrollTo(0, 0);
+  }, 2700);
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.track-row, .stat').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    observer.observe(el);
   });
 </script>
 </body>
